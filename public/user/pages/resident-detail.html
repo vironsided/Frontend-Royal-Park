@@ -1,0 +1,387 @@
+<div class="resident-detail-wrapper">
+    <div class="resident-detail-card">
+        <div class="resident-detail-info">
+            <div>
+                <p class="label" data-i18n="user_resident_block_label">Блок</p>
+                <p class="value">X</p>
+            </div>
+            <div>
+                <p class="label" data-i18n="user_resident_apartment_label">Квартира</p>
+                <p class="value">#2</p>
+            </div>
+            <div>
+                <p class="label" data-i18n="user_resident_status_label">Статус</p>
+                <span class="badge badge-success" data-i18n="user_resident_status_active">Активен</span>
+            </div>
+        </div>
+        <button class="back-button" data-user-route-target="dashboard">
+            <span data-i18n="user_resident_back_btn">← Назад</span>
+        </button>
+    </div>
+
+    <div class="resident-filter-card filter-grid">
+        <!-- Колонка 1: От -->
+        <div class="filter-col">
+            <label data-i18n="user_resident_date_from">От</label>
+            <input id="filterDateFrom" type="date" value="">
+        </div>
+        <!-- Колонка 2: До -->
+        <div class="filter-col">
+            <label data-i18n="user_resident_date_to">До</label>
+            <input id="filterDateTo" type="date" value="">
+        </div>
+        <!-- Колонка 3: Кнопки фильтра (без лейбла) -->
+        <div class="filter-col filter-col-buttons">
+            <label>&nbsp;</label>
+            <div class="filter-buttons-row">
+                <button type="button" class="btn btn-outline-light" id="filterApplyBtn" data-i18n="user_resident_filter_btn">Фильтр</button>
+                <button type="button" class="btn btn-outline-warning" id="filterResetBtn" data-i18n="user_resident_reset_btn">Очистить</button>
+            </div>
+        </div>
+        <!-- Колонка 4: Быстрый выбор -->
+        <div class="filter-col filter-col-quick">
+            <label data-i18n="user_resident_quick_select">Быстрый выбор</label>
+            <div class="quick-filter-buttons">
+                <button type="button" class="quick-filter-btn" data-range="month" data-i18n="user_resident_quick_month">За месяц</button>
+                <button type="button" class="quick-filter-btn" data-range="quarter" data-i18n="user_resident_quick_quarter">За 3 мес.</button>
+                <button type="button" class="quick-filter-btn" data-range="half" data-i18n="user_resident_quick_half">За 6 мес.</button>
+                <button type="button" class="quick-filter-btn" data-range="year" data-i18n="user_resident_quick_year">За год</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="meters-list">
+        <!-- Meter cards will be dynamically generated from backend data -->
+    </div>
+</div>
+
+<script>
+    (function() {
+        'use strict';
+        
+        const API_BASE_URL = window.getApiBase ? window.getApiBase() : (window.API_BASE_URL || window.BACKEND_API_BASE || 'http://localhost:8000');
+        
+        // Get resident ID from sessionStorage, dashboard data, or URL
+        let currentResidentId = null;
+        
+        // First try sessionStorage (set when clicking "Подробнее")
+        const storedId = sessionStorage.getItem('currentResidentId');
+        if (storedId) {
+            currentResidentId = parseInt(storedId);
+        }
+        
+        // If not in sessionStorage, try dashboard data
+        if (!currentResidentId && window.dashboardData && window.dashboardData.residents && window.dashboardData.residents.length > 0) {
+            currentResidentId = window.dashboardData.residents[0].id;
+        }
+        
+        // If still no ID, try to load dashboard data
+        if (!currentResidentId) {
+            loadDashboardDataForResidentId().then(id => {
+                if (id) {
+                    currentResidentId = id;
+                    initializePage();
+                } else {
+                    showResidentIdError();
+                }
+            });
+            return; // Exit early, will continue after data loads
+        }
+        
+        // Last resort: try URL params
+        if (!currentResidentId) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const residentId = urlParams.get('id') || urlParams.get('resident_id');
+            if (residentId) {
+                currentResidentId = parseInt(residentId);
+            }
+        }
+        
+        if (!currentResidentId) {
+            showResidentIdError();
+            return;
+        }
+        
+        // Initialize page if we have resident ID
+        initializePage();
+        
+        function showResidentIdError() {
+            const metersList = document.querySelector('.meters-list');
+            if (metersList) {
+                metersList.innerHTML = '<div class="text-center p-4 text-danger">Ошибка: не найден ID резидента. Пожалуйста, вернитесь на главную страницу.</div>';
+            }
+        }
+        
+        async function loadDashboardDataForResidentId() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/resident/dashboard`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    window.dashboardData = data;
+                    if (data.residents && data.residents.length > 0) {
+                        return data.residents[0].id;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+            return null;
+        }
+        
+        function initializePage() {
+            // Use block scope to avoid variable conflicts
+            {
+                const dateFromInput = document.getElementById('filterDateFrom');
+                const dateToInput = document.getElementById('filterDateTo');
+                const filterApplyBtn = document.getElementById('filterApplyBtn');
+                const filterResetBtn = document.getElementById('filterResetBtn');
+                const quickFilterBtns = document.querySelectorAll('.quick-filter-btn');
+                
+                // По умолчанию применяем быстрый фильтр "За месяц".
+                if (dateFromInput) dateFromInput.value = '';
+                if (dateToInput) dateToInput.value = '';
+
+                const formatForInput = (date) => {
+                    return date.toISOString().split('T')[0];
+                };
+
+                const formatCurrency = (amount) => {
+                    return new Intl.NumberFormat('ru-RU', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }).format(amount);
+                };
+
+                // Load resident detail data from backend
+                async function loadResidentDetail(fromDate, toDate, range) {
+            try {
+                let url = `${API_BASE_URL}/api/resident/detail/${currentResidentId}?`;
+                const params = new URLSearchParams();
+                
+                if (fromDate) params.append('from_date', fromDate);
+                if (toDate) params.append('to_date', toDate);
+                if (range) params.append('range_', range);
+                
+                url += params.toString();
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                updateResidentInfo(data.resident);
+                renderMeterTables(data.meters);
+            } catch (error) {
+                console.error('Error loading resident detail:', error);
+                showError('Не удалось загрузить данные. Проверьте подключение к серверу.');
+            }
+        }
+
+                // Update resident info card
+                function updateResidentInfo(resident) {
+                    const blockEl = document.querySelector('.resident-detail-info > div:nth-child(1) .value');
+                    const apartmentEl = document.querySelector('.resident-detail-info > div:nth-child(2) .value');
+                    
+                    if (blockEl && resident.block_name) {
+                        blockEl.textContent = resident.block_name;
+                    }
+                    if (apartmentEl && resident.unit_number) {
+                        apartmentEl.textContent = `#${resident.unit_number}`;
+                    }
+                }
+
+                // Render meter tables from backend data
+                function renderMeterTables(meters) {
+                    // Clear existing meter cards
+                    const metersList = document.querySelector('.meters-list');
+                    if (!metersList) return;
+                    
+                    metersList.innerHTML = '';
+
+                    const metersWithReadings = (meters || []).filter(meter =>
+                        meter && Array.isArray(meter.readings) && meter.readings.length > 0
+                    );
+
+                    if (metersWithReadings.length === 0) {
+                        const lang = (localStorage.getItem('language') || 'ru').toLowerCase();
+                        const noMetersText = (window.i18n && typeof window.i18n.translate === 'function')
+                            ? window.i18n.translate('user_resident_no_meters', lang)
+                            : 'Нет счётчиков';
+                        metersList.innerHTML = `<div class="text-center p-4 text-muted" data-i18n="user_resident_no_meters">${noMetersText}</div>`;
+                        return;
+                    }
+
+                    // Group meters by type for display
+                    metersWithReadings.forEach((meter, index) => {
+                        const meterCard = createMeterCard(meter, index);
+                        metersList.appendChild(meterCard);
+                    });
+                }
+
+                // Create meter card element
+                function createMeterCard(meter, index) {
+                    const card = document.createElement('div');
+                    card.className = 'meter-card';
+                    
+                    // Determine CSS class for meter tag
+                    let tagClass = 'meter-gas';
+                    if (meter.type === 'ELECTRIC') tagClass = 'meter-electric';
+                    else if (meter.type === 'WATER' || meter.type === 'SEWERAGE') tagClass = 'meter-water';
+                    else if (meter.type === 'SERVICE' || meter.type === 'RENT' || meter.type === 'CONSTRUCTION') tagClass = 'meter-service';
+
+                    const readings = meter.readings || [];
+                    const isSewerage = meter.type === 'SEWERAGE';
+                    
+                    card.innerHTML = `
+                        <div class="meter-card-header">
+                            <span class="meter-tag ${tagClass}">${meter.display_type}</span>
+                            <div class="meter-meta">
+                                <span>№ ${meter.serial_number} &nbsp; Тариф: ${meter.tariff_name}</span>
+                                <span class="meter-unit">${meter.unit}</span>
+                            </div>
+                        </div>
+                        <div class="meter-table" data-meter-id="${meter.id}">
+                            <div class="meter-row meter-head">
+                                <span data-i18n="user_resident_table_date">Дата</span>
+                                <span class="meter-head-label"><span data-i18n="user_resident_table_reading">Показание</span><span class="meter-head-unit">${meter.unit}</span></span>
+                                <span class="meter-head-label"><span data-i18n="user_resident_table_usage">Расход</span><span class="meter-head-unit">${meter.unit}</span></span>
+                                <span data-i18n="user_resident_table_charge">Начислено</span>
+                                <span>НДС, %</span>
+                                <span data-i18n="user_resident_table_comment">Комментарий</span>
+                            </div>
+                            <div class="meter-body">
+                                ${readings.length === 0 ? `
+                                    <div class="meter-row meter-empty">
+                                        <span>Записей пока нет</span>
+                                    </div>
+                                ` : readings.map(reading => `
+                                    <div class="meter-row">
+                                        <span>${reading.date}</span>
+                                        <span>${isSewerage ? '-' : (reading.reading ?? '—')}</span>
+                                        <span>${isSewerage ? '-' : (reading.consumption ?? '—')}</span>
+                                        <span>₼${formatCurrency(reading.charge)}</span>
+                                        <span>${formatCurrency(reading.vat)}%</span>
+                                        <span>${reading.comment || '—'}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                    
+                    return card;
+                }
+
+                const applyFilter = () => {
+                    // Снимаем активные быстрые фильтры при ручном выборе дат
+                    quickFilterBtns.forEach(btn => btn.classList.remove('active'));
+                    const fromVal = dateFromInput ? dateFromInput.value : '';
+                    const toVal = dateToInput ? dateToInput.value : '';
+                    console.log('Applying filter:', { from: fromVal, to: toVal });
+                    loadResidentDetail(fromVal, toVal, null);
+                };
+
+                const resetFilter = () => {
+                    // Очистить: От - пусто, До - пусто, никакой фильтр не активен
+                    if (dateFromInput) dateFromInput.value = '';
+                    if (dateToInput) dateToInput.value = '';
+                    quickFilterBtns.forEach(btn => btn.classList.remove('active'));
+                    console.log('Resetting filter');
+                    // Загружаем все данные без фильтра
+                    loadResidentDetail('', '', null);
+                };
+
+                const applyQuickRange = (range) => {
+            const endDate = new Date();
+            const startDate = new Date(endDate);
+            
+            // Map frontend range names to backend range names
+            const rangeMap = {
+                'month': 'month',
+                'quarter': '3m',
+                'half': '6m',
+                'year': 'year'
+            };
+            
+            const backendRange = rangeMap[range] || 'month';
+
+            switch (range) {
+                case 'quarter':
+                    startDate.setMonth(startDate.getMonth() - 3);
+                    break;
+                case 'half':
+                    startDate.setMonth(startDate.getMonth() - 6);
+                    break;
+                case 'year':
+                    startDate.setFullYear(startDate.getFullYear() - 1);
+                    break;
+                default:
+                    startDate.setMonth(startDate.getMonth() - 1);
+            }
+
+            dateFromInput.value = formatForInput(startDate);
+            dateToInput.value = formatForInput(endDate);
+            loadResidentDetail(formatForInput(startDate), formatForInput(endDate), backendRange);
+        };
+        
+                function showError(message) {
+                    console.error(message);
+                    // You can implement a toast notification here
+                }
+
+                if (filterApplyBtn) {
+                    filterApplyBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        applyFilter();
+                    });
+                    console.log('Filter Apply button listener attached');
+                }
+                if (filterResetBtn) {
+                    filterResetBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        resetFilter();
+                    });
+                    console.log('Filter Reset button listener attached');
+                }
+
+                quickFilterBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        quickFilterBtns.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        applyQuickRange(btn.dataset.range);
+                    });
+                });
+
+                // Load initial data with a small delay to ensure DOM is ready
+                // По умолчанию: активный быстрый фильтр "За месяц"
+                setTimeout(() => {
+                    const monthBtn = Array.from(quickFilterBtns).find(btn => btn.dataset.range === 'month');
+                    quickFilterBtns.forEach(btn => btn.classList.remove('active'));
+                    if (monthBtn) {
+                        monthBtn.classList.add('active');
+                        applyQuickRange('month');
+                    } else {
+                        loadResidentDetail('', '', 'month');
+                    }
+                }, 50);
+            }
+        }
+    })();
+</script>
+

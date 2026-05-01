@@ -1,0 +1,10 @@
+<div class="dashboard-content">
+    <div class="row g-4" id="staffList"></div>
+</div>
+
+<script>
+    (function () {
+        const container = document.getElementById('staffList');
+        if (container) container.innerHTML = TestData.staff.map((s, i) => `<div class="col-lg-4"><div class="card animate__animated animate__fadeInUp" style="animation-delay: ${i * 0.1}s;"><div class="card-body"><div class="d-flex mb-3"><div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);color:white;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:bold;margin-right:1rem;">${s.name.split(' ').map(n => n[0]).join('').substring(0, 2)}</div><div><h5 class="mb-1">${s.name}</h5><p class="text-muted mb-0">${s.position}</p></div></div><div class="mb-2"><i class="bi bi-telephone"></i> ${s.phone}</div><div class="mb-2"><i class="bi bi-building"></i> ${s.building}</div><div class="d-flex justify-content-between mb-2"><div><small>Активных:</small><br><strong class="text-primary">${s.activeRequests}</strong></div><div><small>Завершено:</small><br><strong class="text-success">${s.completedRequests}</strong></div><div><small>Рейтинг:</small><br><strong class="text-warning">${s.rating} ⭐</strong></div></div><div class="alert alert-success py-2 mb-0"><small><strong>Зарплата:</strong> ${s.salary} ₼/мес</small></div></div></div></div>`).join('');
+    })();
+</script>

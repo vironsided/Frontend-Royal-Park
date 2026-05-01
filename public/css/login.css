@@ -1,0 +1,899 @@
+/* Login — палитра Royal Park (брендбук: Cover/Background/Emblem/Text, шрифты Spectral + Times) */
+
+:root {
+    /* Только страница входа: основной текст — Times, заголовки/лого — Spectral (по брендбуку), UI — Montserrat */
+    --font-sans: "Times New Roman", Times, serif;
+    --font-serif: "Times New Roman", Times, serif;
+    --font-display: "Spectral", "Times New Roman", Times, serif;
+    --font-ui: "Montserrat", system-ui, -apple-system, sans-serif;
+
+    --rp-milky: #efefe6;
+    --rp-milky-dark: #ebede7;
+    --rp-olive: var(--olivia-soft, #c5cd9f);
+    --rp-olive-mid: var(--olivia-brand, #b1ba88);
+    --rp-olive-light: var(--olivia-highlight, #c5cd9f);
+    --rp-charcoal: #56565c;
+    --rp-charcoal-muted: #6b6b73;
+    --primary-gradient: linear-gradient(135deg, var(--olivia-soft) 0%, var(--olivia-brand) 100%);
+    --secondary-gradient: linear-gradient(135deg, var(--olivia-highlight) 0%, var(--olivia-soft) 100%);
+    --success-gradient: linear-gradient(135deg, #6d8f6d 0%, #5a7a5a 100%);
+    --orange-gradient: linear-gradient(135deg, #c9a574 0%, #b8956a 100%);
+    --blue-gradient: linear-gradient(135deg, #8a9eb8 0%, #6d8299 100%);
+    --purple-gradient: linear-gradient(135deg, #a3ae7a 0%, #b1ba88 100%);
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 🌈 ОФИГЕННЫЙ АНИМИРОВАННЫЙ ФОН */
+body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    font-family: var(--font-sans);
+}
+
+.login-box h1,
+.login-box h2,
+.login-header h1,
+.login-header h2 {
+    font-family: var(--font-display);
+}
+
+.animated-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+}
+
+/* Мягкий фон как на маркетинге */
+.gradient-bg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(160deg, #efefe6 0%, #ebede7 45%, #e3e7dc 100%);
+    background-size: 100% 100%;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* 🔥 ЛЕТАЮЩИЕ ФИГУРЫ */
+.floating-shapes {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.shape {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.5;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+}
+
+.shape-1 {
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(177, 186, 136, 0.45), transparent);
+    top: 10%;
+    left: 10%;
+    animation: float1 20s infinite;
+}
+
+.shape-2 {
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(197, 205, 159, 0.4), transparent);
+    top: 60%;
+    right: 10%;
+    animation: float2 18s infinite;
+}
+
+.shape-3 {
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(154, 169, 114, 0.35), transparent);
+    bottom: 20%;
+    left: 20%;
+    animation: float3 22s infinite;
+}
+
+.shape-4 {
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle, rgba(177, 186, 136, 0.3), transparent);
+    top: 30%;
+    right: 30%;
+    animation: float1 25s infinite;
+}
+
+.shape-5 {
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(197, 205, 159, 0.32), transparent);
+    bottom: 30%;
+    right: 20%;
+    animation: float2 19s infinite;
+}
+
+.shape-6 {
+    width: 260px;
+    height: 260px;
+    background: radial-gradient(circle, rgba(177, 186, 136, 0.28), transparent);
+    top: 50%;
+    left: 40%;
+    animation: float3 21s infinite;
+}
+
+@keyframes float1 {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(100px, -100px) rotate(90deg); }
+    50% { transform: translate(200px, 0) rotate(180deg); }
+    75% { transform: translate(100px, 100px) rotate(270deg); }
+}
+
+@keyframes float2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(-150px, 100px) scale(1.2); }
+    66% { transform: translate(50px, -80px) scale(0.8); }
+}
+
+@keyframes float3 {
+    0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+    50% { transform: translate(-100px, -100px) rotate(180deg) scale(1.3); }
+}
+
+/* Canvas для particles */
+#particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+}
+
+/* 💫 КОНТЕЙНЕР ВХОДА */
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* Карточка входа — Milky & Olivia Premium Suite */
+.login-box {
+    background: var(--milky-surface, #fafaf6) !important;
+    backdrop-filter: blur(24px);
+    border-radius: var(--border-radius-lg, 24px) !important;
+    box-shadow: var(--soft-shadow, 0 12px 32px rgba(86, 86, 92, 0.08)) !important;
+    padding: 3rem;
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(177, 186, 136, 0.28) !important;
+    animation-duration: 1s;
+}
+
+/* Светящаяся рамка */
+.login-box::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: var(--primary-gradient);
+    border-radius: 2rem;
+    z-index: -1;
+    opacity: 0;
+    transition: var(--transition-smooth);
+}
+
+.login-box:hover::before {
+    opacity: 0.85;
+    animation: rotateBorder 3s linear infinite;
+}
+
+@keyframes rotateBorder {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 🎯 HEADER С ЛОГОТИПОМ */
+.login-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.login-logo {
+    width: auto;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+    position: relative;
+    animation: logoFloat 3s ease-in-out infinite;
+}
+
+/* Как .sidebar-brand-mark в user-theme.css — wordmark webp на светлой карточке */
+.login-logo-img {
+    display: block;
+    width: auto;
+    max-width: min(100%, 300px);
+    height: auto;
+    max-height: 104px;
+    margin: 0 auto;
+    object-fit: contain;
+    object-position: center bottom;
+    filter: brightness(0) saturate(100%) invert(28%) sepia(8%) saturate(1200%) hue-rotate(38deg) brightness(0.92)
+        contrast(1.05);
+    opacity: 0.92;
+}
+
+@keyframes logoFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.login-header h1 {
+    color: var(--rp-charcoal);
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.5px;
+}
+
+.login-header p {
+    color: var(--rp-charcoal-muted);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+/* 🎭 РОЛИ - КАРТОЧКИ */
+.role-selector {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.role-selector.compact {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    margin-bottom: 1rem;
+}
+
+.role-option {
+    position: relative;
+}
+
+.role-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.role-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.2rem 1rem;
+    border: 1px solid rgba(177, 186, 136, 0.35);
+    border-radius: 1rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    background: rgba(239, 239, 230, 0.6);
+    position: relative;
+    overflow: hidden;
+}
+
+.role-label::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--primary-gradient);
+    opacity: 0;
+    transition: var(--transition-smooth);
+}
+
+.role-label:hover {
+    transform: translateY(-8px) scale(1.05);
+    box-shadow: 0 10px 30px rgba(177, 186, 136, 0.25);
+}
+
+.role-label:hover::before {
+    opacity: 0.1;
+}
+
+.role-option input[type="radio"]:checked + .role-label {
+    border-color: rgba(177, 186, 136, 0.85);
+    box-shadow: 0 15px 40px rgba(177, 186, 136, 0.3);
+    transform: scale(1.05);
+}
+
+.role-option input[type="radio"]:checked + .role-label::before {
+    opacity: 1;
+}
+
+.role-option input[type="radio"]:checked + .role-label .role-icon,
+.role-option input[type="radio"]:checked + .role-label .role-name {
+    color: #fff;
+    position: relative;
+    z-index: 1;
+}
+
+/* Иконки ролей с разными градиентами */
+.role-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    transition: var(--transition-smooth);
+    animation: iconBounce 2s ease-in-out infinite;
+}
+
+.role-admin i { background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.role-user i { background: var(--blue-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.role-maintenance i { background: var(--orange-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.role-accountant i { background: var(--success-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+@keyframes iconBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+.role-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--rp-charcoal);
+    transition: var(--transition-smooth);
+}
+
+.staff-toggle-btn {
+    margin-top: 1.2rem;
+    border-width: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--rp-charcoal-muted);
+    border-color: rgba(177, 186, 136, 0.45);
+    background: rgba(239, 239, 230, 0.5);
+}
+
+.staff-toggle-btn:hover {
+    border-color: var(--rp-olive-mid);
+    box-shadow: 0 10px 25px rgba(177, 186, 136, 0.2);
+}
+
+.staff-panel {
+    display: none;
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    border-radius: 1.5rem;
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(177, 186, 136, 0.35);
+    box-shadow: 0 20px 50px rgba(86, 86, 92, 0.1);
+    animation: fadeInPanel 0.4s ease forwards;
+    color: var(--rp-charcoal);
+}
+
+.staff-panel.show {
+    display: block;
+}
+
+.staff-panel-header h5 {
+    margin: 0;
+    font-weight: 700;
+    color: var(--rp-charcoal);
+}
+
+.staff-panel-header p {
+    margin: 0.35rem 0 1rem;
+    color: var(--rp-charcoal-muted);
+    font-size: 0.9rem;
+}
+
+.staff-login-btn {
+    width: 100%;
+    border-radius: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--primary-gradient);
+    border: none;
+}
+
+.staff-login-btn .btn-icon {
+    color: white;
+}
+
+@keyframes fadeInPanel {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 📝 ФОРМА */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.form-label i {
+    margin-right: 0.5rem;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.input-group {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.25rem;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    z-index: 2;
+}
+
+.form-control {
+    width: 100%;
+    padding: 1rem 1rem 1rem 3.5rem;
+    border: 1px solid var(--milky-dark, var(--rp-milky-dark)) !important;
+    border-radius: 12px !important;
+    font-size: 1rem;
+    transition: var(--transition-smooth);
+    background: #fff !important;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--olivia-brand, #b1ba88) !important;
+    box-shadow: 0 0 0 4px rgba(154, 169, 114, 0.1) !important;
+    transform: none;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 1.25rem;
+    color: #6c757d;
+    transition: var(--transition-smooth);
+    z-index: 2;
+}
+
+.password-toggle:hover {
+    color: var(--olivia-brand);
+    transform: translateY(-50%) scale(1.2);
+}
+
+/* 🔗 Забыли пароль */
+.forgot-password {
+    text-align: right;
+    margin-bottom: 1.5rem;
+}
+
+.forgot-password a {
+    color: #7d8759;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: var(--transition-smooth);
+    position: relative;
+}
+
+.forgot-password a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--primary-gradient);
+    transition: var(--transition-smooth);
+}
+
+.forgot-password a:hover::after {
+    width: 100%;
+}
+
+/* 🚀 ОФИГЕННАЯ КНОПКА ВХОДА */
+.login-btn {
+    width: 100%;
+    padding: 1.25rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+    background: var(--olivia-brand, #b1ba88) !important;
+    border: none;
+    border-radius: 12px !important;
+    color: white;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition-smooth);
+    box-shadow: 0 8px 24px rgba(154, 169, 114, 0.25) !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.login-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.5s;
+}
+
+.login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(154, 169, 114, 0.35) !important;
+}
+
+.login-btn:hover::before {
+    left: 100%;
+}
+
+.login-btn:active {
+    transform: translateY(-1px);
+}
+
+.btn-icon {
+    font-size: 1.5rem;
+    transition: var(--transition-smooth);
+}
+
+.login-btn:hover .btn-icon {
+    transform: translateX(5px);
+}
+
+/* Loading состояние */
+.login-btn.loading {
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.login-btn.loading .btn-text {
+    opacity: 0;
+}
+
+.login-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 📣 ALERT */
+.alert {
+    padding: 1rem 1.25rem;
+    border-radius: 1rem;
+    margin-bottom: 1.5rem;
+    display: none;
+    animation: slideInDown 0.4s ease-out;
+    font-weight: 500;
+    border: 2px solid;
+}
+
+.alert.show {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.alert-error {
+    background: linear-gradient(135deg, #fee 0%, #fdd 100%);
+    border-color: #f5576c;
+    color: #f5576c;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #efe 0%, #dfd 100%);
+    border-color: #38ef7d;
+    color: #11998e;
+}
+
+@keyframes slideInDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* 📜 FOOTER — фон olive (как --footer-bg) */
+.login-footer {
+    text-align: center;
+    margin: 2rem -3rem -3rem -3rem;
+    padding: 1.5rem 3rem 2rem;
+    background: var(--footer-bg, #b1ba88);
+    border-top: none;
+    border-radius: 0 0 var(--border-radius-lg, 24px) var(--border-radius-lg, 24px);
+}
+
+.login-footer p {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+    font-weight: 500;
+}
+
+.login-footer .copyright {
+    font-size: 0.85rem;
+    opacity: 0.88;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.login-footer i {
+    color: rgba(255, 255, 255, 0.95);
+    margin-right: 0.5rem;
+}
+
+/* 📱 RESPONSIVE */
+@media (max-width: 576px) {
+    .login-box {
+        padding: 2rem 1.5rem;
+        border-radius: 1.5rem;
+    }
+    
+    .login-logo-img {
+        max-height: 84px;
+        max-width: min(100%, 260px);
+    }
+
+    .login-header h1 {
+        font-size: 2rem;
+    }
+    
+    .login-header p {
+        font-size: 0.85rem;
+    }
+    
+    .role-selector {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .role-label {
+        padding: 1.25rem 1rem;
+    }
+    
+    .role-icon {
+        font-size: 2rem;
+    }
+    
+    .form-control {
+        padding: 0.875rem 0.875rem 0.875rem 3rem;
+    }
+    
+    .login-btn {
+        padding: 1rem;
+        font-size: 1rem;
+    }
+}
+
+/* 🎨 ДОПОЛНИТЕЛЬНЫЕ ЭФФЕКТЫ */
+
+/* Ripple эффект на кнопке */
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    transform: scale(0);
+    animation: ripple-animation 0.6s ease-out;
+    pointer-events: none;
+}
+
+@keyframes ripple-animation {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* Particle animation */
+@keyframes particleAnimation {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100vh) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* Smooth scroll */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-gradient);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-gradient);
+}
+
+/* 🌓 DARK MODE STYLES */
+[data-theme="dark"] .login-container {
+    background: linear-gradient(135deg, #1a1d23 0%, #2d1b3d 50%, #1a1d23 100%);
+}
+
+[data-theme="dark"] .gradient-bg {
+    background: linear-gradient(135deg, #1a1d23 0%, #2d1b3d 50%, #1a1d23 100%);
+}
+
+[data-theme="dark"] .login-box {
+    background: rgba(36, 40, 49, 0.85);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .login-header h1 {
+    color: #e4e6eb;
+}
+
+[data-theme="dark"] .login-header p {
+    color: #b8bcc4;
+}
+
+[data-theme="dark"] .role-label {
+    background: rgba(45, 49, 57, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #b8bcc4;
+}
+
+[data-theme="dark"] .role-label:hover {
+    background: rgba(45, 49, 57, 0.9);
+    border-color: rgba(177, 186, 136, 0.45);
+}
+
+[data-theme="dark"] .role-radio:checked + .role-label {
+    background: linear-gradient(135deg, var(--olivia-soft) 0%, var(--olivia-brand) 100%);
+    color: white;
+    border-color: var(--olivia-brand);
+}
+
+[data-theme="dark"] .form-control {
+    background: rgba(45, 49, 57, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #e4e6eb;
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: #8d9199;
+}
+
+[data-theme="dark"] .form-control:focus {
+    background: rgba(45, 49, 57, 0.9);
+    border-color: var(--olivia-soft);
+}
+
+[data-theme="dark"] .input-icon {
+    color: #8d9199;
+}
+
+[data-theme="dark"] .login-footer {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .login-footer p {
+    color: #b8bcc4;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: #242831;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--olivia-soft) 0%, var(--olivia-brand) 100%);
+}
+
+/* 🌓 THEME TOGGLE & 🌍 LANGUAGE SELECTOR - LOGIN PAGE */
+/* Override global.css positioning for login page */
+
+/* Language Selector - Right Top Corner */
+.language-selector {
+    position: fixed !important;
+    top: 90px !important;
+    right: 20px !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    z-index: 10000 !important;
+    margin-left: 0 !important;
+}
+
+/* Language Buttons - Login Page Sizing */
+.language-btn {
+    width: 60px !important;
+    height: 50px !important;
+}
+
+/* Responsive for Login Page */
+@media (max-width: 768px) {
+    .language-selector {
+        top: 75px !important;
+        right: 15px !important;
+    }
+    
+    .language-btn {
+        width: 50px !important;
+        height: 45px !important;
+    }
+}
+
+/* Языки на логине — та же оливковая гамма, что на royalpark.az */
+html[data-theme="light"] .language-btn.active,
+body[data-theme="light"] .language-btn.active {
+    background: linear-gradient(135deg, var(--olivia-soft) 0%, var(--olivia-brand) 100%);
+    border-color: transparent;
+    color: #fff;
+}
+
+html[data-theme="light"] .language-btn:hover,
+body[data-theme="light"] .language-btn:hover {
+    box-shadow: 0 4px 14px rgba(177, 186, 136, 0.35);
+    border-color: rgba(177, 186, 136, 0.5);
+}

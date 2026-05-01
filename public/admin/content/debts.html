@@ -1,0 +1,52 @@
+<link rel="stylesheet" href="/admin/content_css/debts.css">
+<div class="dashboard-content">
+    <!-- Stats -->
+    <div class="stats-grid mb-4">
+        <div class="stat-card solid-red">
+            <div class="stat-icon red">
+                <i class="bi bi-exclamation-circle-fill"></i>
+            </div>
+            <div class="stat-details">
+                <div class="stat-value" id="activeRequestsCount">0</div>
+                <div class="stat-label">Активных обращений</div>
+            </div>
+        </div>
+
+        <div class="stat-card solid-orange">
+            <div class="stat-icon orange">
+                <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="stat-details">
+                <div class="stat-value" id="todayRequestsCount">0</div>
+                <div class="stat-label">Сегодня поступило</div>
+            </div>
+        </div>
+
+        <div class="stat-card solid-purple">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
+                <i class="bi bi-eye-fill"></i>
+            </div>
+            <div class="stat-details">
+                <div class="stat-value" id="viewedRequestsCount">0</div>
+                <div class="stat-label">Просмотренные</div>
+            </div>
+        </div>
+
+        <div class="stat-card solid-blue">
+            <div class="stat-icon blue">
+                <i class="bi bi-arrow-repeat"></i>
+            </div>
+            <div class="stat-details">
+                <div class="stat-value" id="inProgressRequestsCount">0</div>
+                <div class="stat-label">В процессе</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debts List -->
+    <div id="debtsList">
+        <!-- Populated by JavaScript -->
+    </div>
+</div>
+
+<script src="/js/admin-debts.js"></script>

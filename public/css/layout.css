@@ -1,0 +1,652 @@
+/* Admin Layout Structure */
+
+/* Убираем белую полосу сверху */
+html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden !important;
+}
+
+.admin-container {
+    display: flex;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    position: relative;
+    overflow-x: hidden;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.admin-container::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(56, 239, 125, 0.08) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Modern Sidebar */
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--sidebar-gradient);
+    color: white;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    transition: width 0.3s ease, var(--transition-smooth);
+    transform: translateX(0);
+    animation: slideInLeft 0.4s ease-out;
+    backdrop-filter: blur(10px);
+}
+
+.sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 0% 50%, rgba(126, 34, 206, 0.2) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Улучшенный скроллбар для свернутого сайдбара */
+.sidebar.collapsed::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar.collapsed::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+.sidebar.collapsed::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.sidebar.collapsed {
+    width: 80px !important;
+    min-width: 80px !important;
+    max-width: 80px !important;
+    transition: width 0.3s ease !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.sidebar-header {
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(19, 22, 36, 0.95);
+    backdrop-filter: blur(6px);
+}
+
+.sidebar.collapsed .sidebar-header {
+    justify-content: center !important;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 0.5rem !important;
+}
+
+.sidebar.collapsed .toggle-sidebar {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.sidebar.collapsed .sidebar-logo {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.sidebar.collapsed .nav-item {
+    justify-content: center !important;
+    padding: 12px !important;
+    position: relative;
+}
+
+.sidebar.collapsed .nav-item .nav-icon {
+    margin-right: 0 !important;
+}
+
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0.5rem 0;
+}
+
+.logo-icon {
+    width: 55px;
+    height: 55px;
+    background: transparent;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    padding: 0;
+}
+
+.sidebar-logo-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: var(--radius-md);
+}
+
+.logo-text h2 {
+    font-size: 1.5rem;
+    margin: 0;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 0.5px;
+}
+
+.logo-text p {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    margin: 0.25rem 0 0 0;
+    color: rgba(255, 255, 255, 0.8);
+    letter-spacing: 0.5px;
+}
+
+.sidebar.collapsed .logo-text {
+    display: none !important;
+}
+
+.sidebar.collapsed .sidebar-logo h2,
+.sidebar.collapsed .sidebar-logo p {
+    display: none !important;
+}
+
+.toggle-sidebar {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    flex-shrink: 0;
+}
+
+.toggle-sidebar:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.toggle-sidebar:active {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Ensure button is always visible even when sidebar is collapsed */
+.sidebar.collapsed .toggle-sidebar {
+    display: flex;
+}
+
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+}
+
+/* Navigation Menu */
+.nav-menu {
+    padding: var(--spacing-md) 0;
+    padding-bottom: 2rem; /* Дополнительный отступ снизу для доступа к последним элементам */
+}
+
+/* Убеждаемся, что в свернутом состоянии тоже есть отступ */
+.sidebar.collapsed .nav-menu {
+    padding-bottom: 2rem;
+}
+
+.nav-section {
+    margin-bottom: var(--spacing-lg);
+}
+
+.nav-section-title {
+    padding: 0 var(--spacing-lg);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.6;
+    margin-bottom: var(--spacing-sm);
+}
+
+.sidebar.collapsed .nav-section-title {
+    display: none !important;
+}
+
+.sidebar.collapsed .nav-section {
+    margin-bottom: 0.5rem !important;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 0.875rem var(--spacing-lg);
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: var(--transition-smooth);
+    position: relative;
+    cursor: pointer;
+    margin: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.nav-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    transition: var(--transition-smooth);
+    z-index: -1;
+}
+
+.nav-item:hover {
+    color: white;
+    transform: translateX(5px);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-item:hover::before {
+    width: 4px;
+}
+
+.nav-item.active {
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.2) 100%);
+    color: white;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: translateX(5px);
+    border-radius: 12px;
+}
+
+/* Logout Button Styles */
+.nav-item.logout-btn {
+    margin-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 1rem;
+}
+
+/* Убеждаемся, что кнопка выхода видна в свернутом состоянии */
+.sidebar.collapsed .nav-item.logout-btn {
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    justify-content: center;
+}
+
+.nav-item.logout-btn:hover {
+    background: linear-gradient(135deg, #f5576c 0%, #e53935 100%) !important;
+    color: white !important;
+    box-shadow: 0 4px 20px rgba(245, 87, 108, 0.4);
+}
+
+.nav-item.logout-btn:hover::before {
+    background: #ff1744 !important;
+}
+
+.nav-item.active::before {
+    width: 4px;
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 0 10px rgba(102, 126, 234, 0.8);
+}
+
+/* Mobile sidebar */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        height: 100vh !important;
+        width: 80px !important;
+        min-width: 80px !important;
+        max-width: 80px !important;
+        transform: none !important;
+        z-index: 1000 !important;
+    }
+
+    .sidebar.open {
+        width: 260px !important;
+        min-width: 260px !important;
+        max-width: 260px !important;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    .main-content {
+        /* На мобильных убираем зависимость от viewport-width,
+           чтобы не было скачков при появлении/исчезновении скроллбара */
+        margin-left: 80px !important;
+        width: calc(100% - 80px) !important;
+        max-height: none;
+    }
+
+    .sidebar.open ~ .main-content {
+        margin-left: 260px !important;
+        width: calc(100% - 260px) !important;
+    }
+
+    .sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(2px);
+        z-index: 900;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .sidebar-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
+.nav-item:active {
+    transform: scale(0.98);
+}
+
+.nav-icon {
+    font-size: 1.25rem;
+    margin-right: var(--spacing-sm);
+    min-width: 30px;
+    text-align: center;
+}
+
+.sidebar.collapsed .nav-text {
+    display: none !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+}
+
+.nav-badge {
+    margin-left: auto;
+    background: var(--danger-color);
+    padding: 0.125rem 0.5rem;
+    border-radius: var(--radius-xl);
+    font-size: 0.75rem;
+}
+
+.sidebar.collapsed .nav-badge {
+    display: none !important;
+    opacity: 0 !important;
+}
+
+/* Tooltip for collapsed sidebar */
+.sidebar.collapsed .nav-item::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 15px;
+    padding: 8px 12px;
+    background: rgba(45, 50, 60, 0.95);
+    color: white;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, margin-left 0.3s ease;
+    z-index: 10000;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar.collapsed .nav-item:hover::after {
+    opacity: 1;
+    margin-left: 10px;
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    margin-left: 280px !important;
+    transition: margin-left 0.3s ease, width 0.3s ease !important;
+    width: calc(100vw - 280px) !important;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+}
+
+.sidebar.collapsed ~ .main-content {
+    margin-left: 80px !important;
+    width: calc(100vw - 80px) !important;
+    transition: margin-left 0.3s ease, width 0.3s ease !important;
+}
+
+#spa-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+    scroll-behavior: smooth;
+}
+
+#spa-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+#spa-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+#spa-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.35);
+}
+
+/* Modern Top Bar */
+.top-bar {
+    background: var(--glass-bg);
+    backdrop-filter: blur(30px);
+    padding: 1.25rem 2rem;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    border-bottom: 1px solid var(--glass-border);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.top-bar::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary-gradient);
+    opacity: 0.3;
+}
+
+.page-title h1 {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.page-breadcrumb {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.breadcrumb-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.top-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.search-box {
+    position: relative;
+}
+
+.search-box input {
+    padding: 0.625rem 1rem 0.625rem 2.5rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    width: 300px;
+    transition: all var(--transition-base);
+}
+
+.search-box input:focus {
+    width: 400px;
+    border-color: var(--accent-color);
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.875rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+}
+
+.notification-btn,
+.user-profile {
+    position: relative;
+    cursor: pointer;
+}
+
+.notification-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    position: relative;
+    padding: 0.5rem;
+    border-radius: 0.75rem;
+    transition: var(--transition-smooth);
+}
+
+.notification-btn:hover {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    transform: scale(1.1) rotate(15deg);
+}
+
+.notification-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--danger-color);
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    z-index: 2;
+    border: 2px solid rgba(0,0,0,0.22);
+    text-shadow: 0 1px 1px rgba(0,0,0,0.35);
+}
+
+[data-theme="dark"] .notification-badge {
+    border-color: #1a1d2e;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+
+.user-role {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}

@@ -1,0 +1,2393 @@
+<!DOCTYPE html>
+<html lang="az" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoyalPark - Панель администратора</title>
+
+    <!-- Favicon: Royal Park tree emblem (брендбук Logo new.pdf) -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/branding/favicon-32.png?v=rp1">
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/branding/favicon-192.png?v=rp1">
+    <link rel="apple-touch-icon" href="/images/branding/apple-touch-icon.png?v=rp1">
+    <link rel="shortcut icon" href="/favicon.ico?v=rp1">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+
+    <!-- Material Design Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.3.67/css/materialdesignicons.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/global.css?v=brand-spectral-1">
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/dark-theme.css?v=dark-select-3">
+
+    <!-- Role-based UI guard: применяется максимально рано, чтобы не было "вспышки" лишних пунктов меню -->
+    <script>
+        (function applyRoleGuardEarly() {
+            try {
+                var storedRole = (localStorage.getItem('userRole') || '').trim().toUpperCase();
+                if (storedRole) {
+                    document.documentElement.setAttribute('data-user-role', storedRole);
+                }
+                if (storedRole === 'SALES') {
+                    var rawHash = (window.location.hash || '').slice(1);
+                    var path = rawHash.split('?')[0];
+                    if (path !== '/sales') {
+                        window.location.hash = '#/sales';
+                    }
+                }
+                if (storedRole === 'OPERATOR') {
+                    var opHash = (window.location.hash || '').slice(1);
+                    var opPath = opHash.split('?')[0];
+                    var opAllowed = ['/tariffs', '/residents', '/readings', '/payments', '/payment-view', '/invoices', '/invoice-view', '/account'];
+                    if (opPath && opAllowed.indexOf(opPath) === -1) {
+                        window.location.hash = '#/tariffs';
+                    }
+                }
+            } catch (_e) { /* ignore */ }
+        })();
+    </script>
+
+    <!-- КРИТИЧЕСКИ ВАЖНЫЕ СТИЛИ ДЛЯ SIDEBAR - МАКСИМАЛЬНЫЙ ПРИОРИТЕТ -->
+    <style>
+        /* Убираем белую полосу сверху */
+        html,
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow-x: hidden !important;
+            background-color: #1a1d2e !important;
+        }
+
+        body {
+            min-height: 100vh !important;
+        }
+
+        .app-bootstrap-loader {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1a1d2e;
+            z-index: 99999;
+            transition: opacity 0.25s ease;
+        }
+
+        .app-bootstrap-loader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .app-bootstrap-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #8f7bff;
+            border-radius: 50%;
+            animation: app-bootstrap-spin 0.9s linear infinite;
+        }
+
+        @keyframes app-bootstrap-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .admin-container {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .sidebar {
+            width: 280px !important;
+            transition: width 0.3s ease !important;
+            display: flex !important;
+            flex-direction: column !important;
+            height: 100vh !important;
+            overflow: hidden !important;
+            /* скролл убираем с всего сайдбара */
+        }
+
+        .sidebar.collapsed {
+            width: 80px !important;
+            min-width: 80px !important;
+            max-width: 80px !important;
+        }
+
+        .sidebar.collapsed .logo-text,
+        .sidebar.collapsed .nav-text,
+        .sidebar.collapsed .nav-badge,
+        .sidebar.collapsed .nav-section-title {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+
+        .sidebar.collapsed .nav-item {
+            justify-content: center !important;
+        }
+
+        .sidebar-header {
+            flex-shrink: 0 !important;
+            padding: 20px !important;
+        }
+
+        .sidebar-scroll {
+            flex: 1 1 auto !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            padding-bottom: 20px !important;
+        }
+
+        .nav-menu {
+            padding-top: 10px !important;
+            /* чтобы скролл начинался сразу под header */
+        }
+
+        .main-content {
+            margin-left: 280px !important;
+            width: calc(100vw - 280px) !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .sidebar.collapsed~.main-content {
+            margin-left: 80px !important;
+            width: calc(100vw - 80px) !important;
+        }
+
+        /* ========================================================== */
+        /*  Ограничения по ролям (role-based UI restrictions)          */
+        /*  Применяются через атрибут <html data-user-role="...">      */
+        /* ========================================================== */
+
+        /* SALES: видит только раздел «Продажи» + выход, без таймера   */
+        html[data-user-role="SALES"] #monthlyIssueBlock {
+            display: none !important;
+        }
+
+        html[data-user-role="SALES"] .nav-section-title {
+            display: none !important;
+        }
+
+        html[data-user-role="SALES"] .nav-item {
+            display: none !important;
+        }
+
+        html[data-user-role="SALES"] .nav-item[data-route="/sales"],
+        html[data-user-role="SALES"] #logoutBtn {
+            display: flex !important;
+        }
+
+        /* Небольшой отступ между единственным пунктом и кнопкой выхода */
+        html[data-user-role="SALES"] .nav-section {
+            padding-top: 6px !important;
+        }
+
+        /* Для SALES «Выход» прижимается к нижней части сайдбара,
+           а не располагается сразу под единственным пунктом «Продажи». */
+        html[data-user-role="SALES"] .sidebar-scroll {
+            display: flex !important;
+            flex-direction: column !important;
+            min-height: 96% !important;
+        }
+        html[data-user-role="SALES"] .nav-menu {
+            display: flex !important;
+            flex-direction: column !important;
+            flex: 1 1 auto !important;
+            min-height: 100% !important;
+        }
+        html[data-user-role="SALES"] .nav-section:has(#logoutBtn) {
+            margin-top: auto !important;
+        }
+
+        /* ----------------------------------------------------------- */
+        /*  OPERATOR: ограниченный набор разделов, без экспорта/CRUD   */
+        /* ----------------------------------------------------------- */
+
+        /* Скрываем пункты меню, недоступные оператору. */
+        html[data-user-role="OPERATOR"] a.nav-item[data-route="/dashboard"],
+        html[data-user-role="OPERATOR"] a.nav-item[data-route="/blocks"],
+        html[data-user-role="OPERATOR"] a.nav-item[data-route="/tenants"],
+        html[data-user-role="OPERATOR"] a.nav-item[data-route="/users"],
+        html[data-user-role="OPERATOR"] a.nav-item[data-route="/sales"],
+        html[data-user-role="OPERATOR"] a.nav-item[data-route="/appeals2"],
+        html[data-user-role="OPERATOR"] a.nav-item[data-route="/news"],
+        html[data-user-role="OPERATOR"] a.nav-item[data-route="/logs"] {
+            display: none !important;
+        }
+
+        /* Скрываем заголовки «ƏSAS» / «SİSTEM» — у оператора под ними нет смысловой группировки. */
+        html[data-user-role="OPERATOR"] .nav-section-title[data-i18n="nav_main"],
+        html[data-user-role="OPERATOR"] .nav-section-title[data-i18n="nav_system"] {
+            display: none !important;
+        }
+
+        /* Глобальные элементы шапки, недоступные оператору. */
+        html[data-user-role="OPERATOR"] #monthlyIssueBlock,
+        html[data-user-role="OPERATOR"] #openNotifications {
+            display: none !important;
+        }
+
+        /* Tariflər: скрываем статистику, экспорт, создание и столбец действий. */
+        html[data-user-role="OPERATOR"] #spa-content .stats-grid,
+        html[data-user-role="OPERATOR"] #spa-content button[onclick="exportTariffs()"],
+        html[data-user-role="OPERATOR"] #spa-content #tariffExportFormat,
+        html[data-user-role="OPERATOR"] #spa-content button[onclick="openCreateModal()"] {
+            display: none !important;
+        }
+        html[data-user-role="OPERATOR"] #tariffsTableBody .table-actions,
+        html[data-user-role="OPERATOR"] .tariffs-table th[data-i18n="tariffs_col_actions"] {
+            visibility: hidden !important;
+        }
+
+        /* Rezidentlər: скрываем экспорт, создание и действия в таблице/модалке. */
+        html[data-user-role="OPERATOR"] #spa-content button[onclick="exportResidents()"],
+        html[data-user-role="OPERATOR"] #spa-content #residentExportFormat,
+        html[data-user-role="OPERATOR"] #spa-content #exportCustomerType,
+        html[data-user-role="OPERATOR"] #spa-content #exportContactsFilter,
+        html[data-user-role="OPERATOR"] #spa-content button[onclick="openCreateModal()"] {
+            display: none !important;
+        }
+        html[data-user-role="OPERATOR"] #residentsTableBody td.actions-column {
+            visibility: hidden !important;
+        }
+        /* На случай, если где-то рендерится отдельная карточка/модалка резидента
+           с кнопками редактирования/удаления — скрываем такие кнопки глобально. */
+        html[data-user-role="OPERATOR"] button[onclick^="openEditResident"],
+        html[data-user-role="OPERATOR"] button[onclick^="openDeleteModal"] {
+            display: none !important;
+        }
+
+        /* Göstəricilər: скрываем блок экспорта. */
+        html[data-user-role="OPERATOR"] #readingsExportToggleBtn,
+        html[data-user-role="OPERATOR"] #readingsExportPanel,
+        html[data-user-role="OPERATOR"] .readings-export-toolbar {
+            display: none !important;
+        }
+
+        /* Ödənişlər: скрываем экспорт и приём платежа. */
+        html[data-user-role="OPERATOR"] #spa-content button[onclick="exportPayments()"],
+        html[data-user-role="OPERATOR"] #spa-content #paymentExportFormat,
+        html[data-user-role="OPERATOR"] #spa-content button.btn-accept-payment {
+            display: none !important;
+        }
+
+        /* Hesablar: скрываем верхний блок действий и экспорт. */
+        html[data-user-role="OPERATOR"] #spa-content .invoices-actions,
+        html[data-user-role="OPERATOR"] #invoicesExportToggleBtn,
+        html[data-user-role="OPERATOR"] #invoicesExportPanel {
+            display: none !important;
+        }
+
+        /* Invoice view: скрываем блок действий над счётом. */
+        html[data-user-role="OPERATOR"] .invoice-actions-section {
+            display: none !important;
+        }
+
+        /* ----------------------------------------------------------- */
+        /*  ADMIN: скрываем разделы, доступные только ROOT             */
+        /* ----------------------------------------------------------- */
+
+        html[data-user-role="ADMIN"] a.nav-item[data-route="/logs"],
+        html[data-user-role="ADMIN"] a.nav-item[data-route="/sales"] {
+            display: none !important;
+        }
+
+        /* В платежах админ не должен видеть кнопку «Принять платёж». */
+        html[data-user-role="ADMIN"] #spa-content button.btn-accept-payment {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="appBootstrapLoader" class="app-bootstrap-loader" aria-live="polite" aria-label="Loading">
+        <div class="app-bootstrap-spinner"></div>
+    </div>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <div class="logo-text">
+                        <h2>RoyalPark</h2>
+                        <p id="sidebarPanelLabel" data-i18n="panel_admin">Admin Panel</p>
+                    </div>
+                </div>
+                <button class="toggle-sidebar" id="toggleSidebar">
+                    <svg width="20" height="20" fill="currentColor">
+                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="sidebar-scroll">
+                <nav class="nav-menu">
+                    <div class="nav-section">
+                        <div class="nav-section-title" data-i18n="nav_main">Главное</div>
+                        <a href="/dashboard" class="nav-item" data-route="/dashboard">
+                            <span class="nav-icon">
+                                <svg width="20" height="20" fill="currentColor">
+                                    <use href="/images/icons.svg#icon-dashboard"></use>
+                                </svg>
+                            </span>
+                            <span class="nav-text" data-i18n="nav_dashboard">Панель управления</span>
+                        </a>
+                        <!-- <a href="/analytics" class="nav-item" data-route="/analytics">
+                        <span class="nav-icon">
+                            <svg width="20" height="20" fill="currentColor">
+                                <use href="/images/icons.svg#icon-analytics"></use>
+                            </svg>
+                        </span>
+                        <span class="nav-text">Аналитика</span>
+                    </a>
+                    <a href="/reports" class="nav-item" data-route="/reports">
+                        <span class="nav-icon">
+                            <svg width="20" height="20" fill="currentColor">
+                                <use href="/images/icons.svg#icon-reports"></use>
+                            </svg>
+                        </span>
+                        <span class="nav-text">Отчеты</span>
+                    </a> -->
+                    </div>
+
+                    <div class="nav-section">
+                        <div class="nav-section-title" data-i18n="nav_management">Управление</div>
+                        <a href="/blocks" class="nav-item" data-route="/blocks">
+                            <span class="nav-icon">
+                                <svg width="20" height="20" fill="currentColor">
+                                    <use href="/images/icons.svg#icon-buildings"></use>
+                                </svg>
+                            </span>
+                            <span class="nav-text" data-i18n="nav_blocks">Блоки</span>
+                        </a>
+                        <a href="/tariffs" class="nav-item" data-route="/tariffs">
+                            <span class="nav-icon">
+                                <svg width="20" height="20" fill="currentColor">
+                                    <use href="/images/icons.svg#icon-payments"></use>
+                                </svg>
+                            </span>
+                            <span class="nav-text" data-i18n="nav_tariffs">Тарифы</span>
+                        </a>
+                        <a href="/residents" class="nav-item" data-route="/residents">
+                            <span class="nav-icon">
+                                <svg width="20" height="20" fill="currentColor">
+                                    <use href="/images/icons.svg#icon-users"></use>
+                                </svg>
+                            </span>
+                            <span class="nav-text" data-i18n="nav_residents">Резиденты</span>
+                            <!-- <span class="nav-badge">245</span> -->
+                        </a>
+                        <a href="/tenants" class="nav-item" data-route="/tenants">
+                            <span class="nav-icon">
+                                <svg width="20" height="20" fill="currentColor">
+                                    <use href="/images/icons.svg#icon-apartments"></use>
+                                </svg>
+                            </span>
+                            <span class="nav-text" data-i18n="nav_tenants">Жители</span>
+                        </a>
+                        <a href="/readings" class="nav-item" data-route="/readings">
+                            <span class="nav-icon">
+                                <svg width="20" height="20" fill="currentColor">
+                                    <use href="/images/icons.svg#icon-meters"></use>
+                                </svg>
+                            </span>
+                            <span class="nav-text" data-i18n="nav_readings">Показатели</span>
+                        </a>
+                        <a href="/users" class="nav-item" data-route="/users">
+                            <span class="nav-icon">
+                                <svg width="20" height="20" fill="currentColor">
+                                    <use href="/images/icons.svg#icon-users"></use>
+                                </svg>
+                            </span>
+                            <span class="nav-text" data-i18n="nav_users">Пользователи</span>
+                        </a>
+                        <a href="/sales" class="nav-item" data-route="/sales">
+                            <span class="nav-icon">
+                                <i class="bi bi-house-heart"></i>
+                            </span>
+                            <span class="nav-text" data-i18n="nav_sales">Продажи</span>
+                        </a>
+                    </div>
+
+                    <div class="nav-section">
+                        <div class="nav-section-title" data-i18n="nav_finance">Финансы</div>
+                        <a href="/payments" class="nav-item" data-route="/payments">
+                            <span class="nav-icon">
+                                <svg width="20" height="20" fill="currentColor">
+                                    <use href="/images/icons.svg#icon-payments"></use>
+                                </svg>
+                            </span>
+                            <span class="nav-text" data-i18n="nav_payments">Платежи</span>
+                        </a>
+                        <a href="/invoices" class="nav-item" data-route="/invoices">
+                            <span class="nav-icon">
+                                <svg width="20" height="20" fill="currentColor">
+                                    <use href="/images/icons.svg#icon-bills"></use>
+                                </svg>
+                            </span>
+                            <span class="nav-text" data-i18n="nav_accounts">Счета</span>
+                            <!-- <span class="nav-badge">12</span> -->
+                        </a>
+                        <!-- <a href="/debts" class="nav-item" data-route="/debts">
+                        <span class="nav-icon">
+                            <svg width="20" height="20" fill="currentColor">
+                                <use href="/images/icons.svg#icon-debts"></use>
+                            </svg>
+                        </span>
+                        <span class="nav-text">Обращения</span>
+                    </a> -->
+                        <a href="/appeals2" class="nav-item" data-route="/appeals2">
+                            <span class="nav-icon">
+                                <svg width="20" height="20" fill="currentColor">
+                                    <use href="/images/icons.svg#icon-debts"></use>
+                                </svg>
+                            </span>
+                            <span class="nav-text" data-i18n="nav_appeals">Обращения</span>
+                            <span class="nav-badge" style="display: none;">0</span>
+                        </a>
+                    </div>
+
+                    <!-- <div class="nav-section">
+                    <div class="nav-section-title">Обслуживание</div>
+                    <a href="/repair-requests" class="nav-item" data-route="/repair-requests">
+                        <span class="nav-icon">
+                            <svg width="20" height="20" fill="currentColor">
+                                <use href="/images/icons.svg#icon-maintenance"></use>
+                            </svg>
+                        </span>
+                        <span class="nav-text">Заявки на ремонт</span>
+                        <span class="nav-badge">8</span>
+                    </a>
+                    <a href="/inspections" class="nav-item" data-route="/inspections">
+                        <span class="nav-icon">
+                            <svg width="20" height="20" fill="currentColor">
+                                <use href="/images/icons.svg#icon-inspections"></use>
+                            </svg>
+                        </span>
+                        <span class="nav-text">Проверки</span>
+                    </a>
+                    <a href="/staff" class="nav-item" data-route="/staff">
+                        <span class="nav-icon">
+                            <svg width="20" height="20" fill="currentColor">
+                                <use href="/images/icons.svg#icon-personnel"></use>
+                            </svg>
+                        </span>
+                        <span class="nav-text">Персонал</span>
+                    </a>
+                </div> -->
+
+                    <div class="nav-section">
+                        <div class="nav-section-title" data-i18n="nav_system">Система</div>
+                        <!-- <a href="/settings" class="nav-item" data-route="/settings">
+                        <span class="nav-icon">
+                            <svg width="20" height="20" fill="currentColor">
+                                <use href="/images/icons.svg#icon-settings"></use>
+                            </svg>
+                        </span>
+                        <span class="nav-text">Настройки</span>
+                    </a> -->
+                        <a href="/news" class="nav-item" data-route="/news">
+                            <span class="nav-icon"><i class="bi bi-newspaper"></i></span>
+                            <span class="nav-text" data-i18n="nav_news">Новости</span>
+                        </a>
+                        <a href="/logs" class="nav-item" data-route="/logs">
+                            <span class="nav-icon">
+                                <svg width="20" height="20" fill="currentColor">
+                                    <use href="/images/icons.svg#icon-reports"></use>
+                                </svg>
+                            </span>
+                            <span class="nav-text" data-i18n="nav_logs">Логи</span>
+                        </a>
+                        <!-- <a href="/backup" class="nav-item" data-route="/backup">
+                        <span class="nav-icon">
+                            <svg width="20" height="20" fill="currentColor">
+                                <use href="/images/icons.svg#icon-reports"></use>
+                            </svg>
+                        </span>
+                        <span class="nav-text">Резервное копирование</span>
+                    </a> -->
+                        <a href="/" class="nav-item logout-btn" id="logoutBtn">
+                            <span class="nav-icon">
+                                <svg width="20" height="20" fill="currentColor">
+                                    <use href="/images/icons.svg#icon-logout"></use>
+                                </svg>
+                            </span>
+                            <span class="nav-text" data-i18n="logout">Выход</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </aside>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="page-title" id="page-title-container">
+                    <h1 data-i18n="nav_dashboard">Панель управления</h1>
+                    <div class="page-breadcrumb">
+                        <span class="breadcrumb-item">
+                            <svg width="14" height="14" fill="currentColor"
+                                style="margin-right: 0.25rem; vertical-align: middle;">
+                                <use href="/images/icons.svg#icon-apartments"></use>
+                            </svg>
+                            <span data-i18n="home">Главная</span>
+                        </span>
+                        <span>›</span>
+                        <span class="breadcrumb-item" data-i18n="nav_dashboard">Панель управления</span>
+                    </div>
+                </div>
+
+                <div class="top-bar-actions">
+                    <!-- Monthly Issue Block -->
+                    <div class="monthly-issue-topbar" id="monthlyIssueBlock">
+                        <span class="monthly-issue-label" data-i18n="monthly_issue_label">Ежемесячные счета:</span>
+                        <div class="quick-days-selector">
+                            <label class="radio-tag">
+                                <input type="radio" name="paymentDaysTop" value="3" checked>
+                                <span data-i18n="monthly_issue_days_3">3д</span>
+                            </label>
+                            <label class="radio-tag">
+                                <input type="radio" name="paymentDaysTop" value="5">
+                                <span data-i18n="monthly_issue_days_5">5д</span>
+                            </label>
+                            <label class="radio-tag">
+                                <input type="radio" name="paymentDaysTop" value="7">
+                                <span data-i18n="monthly_issue_days_7">7д</span>
+                            </label>
+                        </div>
+                                <button id="btnMonthlyIssue" class="btn btn-primary btn-sm" onclick="issueMonthlyInvoices()" disabled data-i18n-title="monthly_issue_ready_title" title="Активируется за 1 день до конца месяца">
+                                    <i class="bi bi-calendar-check"></i> <span data-i18n="monthly_issue_notify">Уведомить</span>
+                                </button>
+                                <div id="monthlyCountdown" class="monthly-timer-badge" style="display: none;">
+                                    <i class="bi bi-clock-history"></i> <span id="timerValue">--:--:--</span>
+                                </div>
+                            </div>
+
+                    <button class="notification-btn" id="openNotifications" data-i18n-title="notifications" title="Уведомления">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path
+                                d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2z" />
+                        </svg>
+                        <span class="notification-badge" id="notificationsCount">3</span>
+                    </button>
+
+                    <!-- Language Selector -->
+                    <div class="language-selector">
+                        <button class="lang-btn active" data-lang="az" title="Azərbaycan">AZ</button>
+                        <button class="lang-btn" data-lang="en" title="English">EN</button>
+                        <button class="lang-btn" data-lang="ru" title="Русский">RU</button>
+                    </div>
+
+                    <div class="user-profile" id="accountProfileBtn">
+                        <div class="user-avatar">АД</div>
+                        <div class="user-info">
+                            <div class="user-name">Администратор</div>
+                            <div class="user-role" data-i18n="system_admin">Системный администратор</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SPA Content Container -->
+            <div id="spa-content">
+                <!-- Контент будет загружаться сюда динамически -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Account Settings Modal (same structure as user dashboard) -->
+    <div class="account-modal-overlay" id="accountModal">
+        <div class="account-modal">
+            <div class="account-modal-header">
+                <h2 data-i18n="account_settings_title">Настройки аккаунта</h2>
+                <button class="account-modal-close" id="accountModalClose">&times;</button>
+            </div>
+            <div class="account-modal-body">
+                <!-- Tabs -->
+                <div class="account-tabs">
+                    <button class="account-tab-btn active" data-tab="profile" data-i18n="account_tab_profile">Профиль</button>
+                    <button class="account-tab-btn" data-tab="password" data-i18n="account_tab_password">Пароль</button>
+                </div>
+
+                <!-- Profile tab -->
+                <div class="account-tab-panel active" id="accountTabProfile">
+                    <div class="account-profile-grid">
+                        <div class="account-profile-form">
+                            <div class="account-form-group">
+                                <label data-i18n="account_full_name">Ф.И.О.</label>
+                                <input type="text" id="accountFullName" placeholder="Введите Ф.И.О." data-i18n-placeholder="account_full_name_placeholder">
+                            </div>
+                            <div class="account-form-row">
+                                <div class="account-form-group">
+                                    <label data-i18n="account_phone">Телефон</label>
+                                    <input type="tel" id="accountPhoneInput" placeholder="Номер телефона" data-i18n-placeholder="account_phone_placeholder">
+                                </div>
+                                <div class="account-form-group">
+                                    <label data-i18n="account_email">E-mail</label>
+                                    <input type="email" id="accountEmailInput" placeholder="E-mail" data-i18n-placeholder="account_email_placeholder">
+                                </div>
+                            </div>
+                            <div class="account-form-row">
+                                <div class="account-form-group">
+                                    <label data-i18n="account_interface_language">Язык интерфейса</label>
+                                    <select id="accountLanguage">
+                                        <option value="ru">Русский</option>
+                                        <option value="az">Azərbaycan</option>
+                                        <option value="en">English</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="account-profile-avatar">
+                            <div class="account-avatar-large" id="accountModalAvatar">CA</div>
+                            <div class="account-form-group">
+                                <label for="accountAvatarInput" data-i18n="account_avatar">Аватар</label>
+                                <div class="account-file-input-wrapper">
+                                    <input type="file" id="accountAvatarInput" accept="image/*" style="display: none;">
+                                    <button type="button" class="account-file-select-btn" id="accountFileSelectBtn" data-i18n="account_file_select_btn">Выбор файла</button>
+                                    <button type="button" class="account-file-select-btn" id="accountAvatarRemoveBtn" data-i18n="account_avatar_remove_btn" style="display: none;">Удалить фото</button>
+                                    <div class="account-file-status" id="accountFileStatus" data-i18n="account_file_no_selected">Не выбран ни один файл</div>
+                                </div>
+                            </div>
+                            <p class="account-hint">PNG/JPG/WebP, до 4 МБ.</p>
+                        </div>
+                        <button class="account-btn account-btn-primary" id="accountModalSave" data-i18n="account_save_changes">Сохранить изменения</button>
+                    </div>
+                </div>
+
+                <!-- Password tab -->
+                <div class="account-tab-panel" id="accountTabPassword">
+                    <div class="account-info-section">
+                        <div class="account-form-group">
+                            <label data-i18n="account_current_password">Текущий пароль</label>
+                            <input type="password" id="currentPassword" placeholder="Введите текущий пароль" data-i18n-placeholder="account_current_password_placeholder"
+                                autocomplete="current-password">
+                        </div>
+                        <div class="account-form-group">
+                            <label data-i18n="account_new_password">Новый пароль</label>
+                            <input type="password" id="newPassword" placeholder="Введите новый пароль" data-i18n-placeholder="account_new_password_placeholder"
+                                autocomplete="new-password">
+                        </div>
+                        <div class="account-form-group">
+                            <label data-i18n="account_confirm_password">Подтвердите пароль</label>
+                            <input type="password" id="confirmPassword" placeholder="Подтвердите новый пароль" data-i18n-placeholder="account_confirm_password_placeholder"
+                                autocomplete="new-password">
+                        </div>
+                        <button class="account-btn account-btn-primary" type="button"
+                            id="changePasswordBtn" data-i18n="account_change_password">Изменить пароль</button>
+                    </div>
+                </div>
+            </div>
+            <div class="account-modal-footer">
+                <button class="account-btn account-btn-secondary" id="accountModalCancel" data-i18n="cancel">Отмена</button>
+                <!-- <button class="account-btn account-btn-primary" id="accountModalSave">Сохранить изменения</button> -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Modal -->
+    <div class="account-modal-overlay" id="notificationsModal">
+        <div class="account-modal" style="max-width:680px;">
+            <div class="account-modal-header">
+                <h2 data-i18n="notifications">Уведомления</h2>
+                <button class="account-modal-close" id="notificationsClose">&times;</button>
+            </div>
+            <div class="account-modal-body">
+                <div class="account-info-section" style="margin-bottom:1rem;">
+                    <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+                        <button class="account-btn account-btn-secondary" id="notifFilterAll"
+                            style="display:none;" data-i18n="all">Все</button>
+                        <button class="account-btn account-btn-secondary active"
+                            id="notifFilterImportant" data-i18n="notifications_filter_unread">Непрочитанные</button>
+                        <button class="account-btn account-btn-secondary" id="notifFilterSystem"
+                            style="display:none;" data-i18n="notifications_filter_system">Системные</button>
+                    </div>
+                </div>
+                <div id="notificationsList"></div>
+            </div>
+            <div class="account-modal-footer">
+                <button class="account-btn account-btn-secondary" id="notificationsMarkRead" data-i18n="notifications_mark_all_read">Отметить все
+                    прочитанными</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+
+    <!-- Notifications System -->
+    <script src="/js/notifications.js"></script>
+
+    <!-- Test Data (mock data for SPA pages) -->
+    <script src="/js/test-data.js"></script>
+
+    <!-- Sidebar Toggle (для совместимости со старыми страницами) -->
+    <script src="/js/sidebar-toggle.js"></script>
+
+    <!-- Theme Management -->
+    <script src="/js/theme.js"></script>
+
+    <!-- Global App Config -->
+    <script src="/js/config.js"></script>
+
+    <!-- Language Management -->
+    <script src="/js/i18n.js"></script>
+    <script src="/js/i18n-auto.js"></script>
+
+    <!-- Custom JS -->
+    <script src="/js/admin.js"></script>
+
+    <!-- SPA Router -->
+    <script src="/js/spa-router.js"></script>
+
+    <!-- Initialize Theme Toggle and Language Selector -->
+    <script>
+        const APP_API_BASE = window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BASE || 'http://localhost:8000');
+
+        // Session validation - redirect to login if not authenticated
+        (async function checkSession() {
+            // Hide body until session is validated
+            document.body.style.visibility = 'hidden';
+            
+            try {
+                const response = await fetch(`${APP_API_BASE}/api/auth/check`, {
+                    credentials: 'include'
+                });
+                if (!response.ok) {
+                    // Not authenticated, redirect to login
+                    window.location.replace('/');
+                    return;
+                }
+                // Session valid, show the page
+                document.body.style.visibility = 'visible';
+            } catch (error) {
+                console.error('Session check failed:', error);
+                // On error, redirect to login for safety
+                window.location.replace('/');
+            }
+        })();
+
+        // Global function to hide plan tooltip from blocks page
+        function hidePlanTooltip() {
+            const tooltip = document.getElementById('planTooltip');
+            if (tooltip) {
+                tooltip.classList.add('hidden');
+                tooltip.style.display = 'none';
+                tooltip.style.visibility = 'hidden';
+                tooltip.style.opacity = '0';
+            }
+        }
+
+        // Hide tooltip on page load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', hidePlanTooltip);
+        } else {
+            hidePlanTooltip();
+        }
+
+        // Hide tooltip on hash change (navigation)
+        window.addEventListener('hashchange', hidePlanTooltip);
+
+        // Hide tooltip on popstate (browser back/forward)
+        window.addEventListener('popstate', hidePlanTooltip);
+
+        // Make function globally accessible
+        window.hidePlanTooltip = hidePlanTooltip;
+
+        // Функции для обновления счетчика непрочитанных обращений
+        function setAppealsBadge(unreadCount) {
+            const appealsNavItem = document.querySelector('a[data-route="/appeals2"]');
+            if (!appealsNavItem) return;
+            let badge = appealsNavItem.querySelector('.nav-badge');
+            if (unreadCount > 0) {
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'nav-badge';
+                    appealsNavItem.appendChild(badge);
+                }
+                badge.textContent = unreadCount;
+                badge.style.display = 'flex';
+            } else if (badge) {
+                badge.style.display = 'none';
+            }
+        }
+
+        async function updateAppealsBadge() {
+            // Для SALES раздел «Обращения» недоступен — бадж не обновляем
+            try {
+                const role = (localStorage.getItem('userRole') || '').trim().toUpperCase();
+                if (role === 'SALES') {
+                    setAppealsBadge(0);
+                    return;
+                }
+            } catch (_e) { /* ignore */ }
+            try {
+                const response = await fetch(`${APP_API_BASE}/api/notifications/unread-count`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                const unreadCount = data.count || 0;
+                setAppealsBadge(unreadCount);
+            } catch (error) {
+                console.error('Error updating appeals badge:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Устанавливаем темную тему по умолчанию (интерфейс всегда будет темным)
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+
+            // Профиль пользователя загружается в блоке Account Settings Modal
+
+            // Ранний guard для ролей SALES/OPERATOR на основе сохранённой роли,
+            // чтобы заблокировать переходы ещё до ответа API /users/me.
+            try {
+                const storedRole = (localStorage.getItem('userRole') || '').trim().toUpperCase();
+                if (storedRole === 'SALES' && typeof applySalesRouteGuard === 'function') {
+                    applySalesRouteGuard('SALES');
+                }
+                if (storedRole === 'OPERATOR' && typeof applyOperatorRouteGuard === 'function') {
+                    applyOperatorRouteGuard('OPERATOR');
+                }
+            } catch (_e) { /* ignore */ }
+
+            // Загружаем количество непрочитанных обращений
+            updateAppealsBadge();
+
+            // Обновляем чаще, чтобы обращения и системные уведомления приходили быстрее (каждые 10 секунд)
+            setInterval(updateAppealsBadge, 10000);
+
+            // Language Selector Buttons
+            const langButtons = document.querySelectorAll('.lang-btn');
+            langButtons.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const lang = this.getAttribute('data-lang');
+
+                    // Remove active from all buttons
+                    langButtons.forEach(b => b.classList.remove('active'));
+
+                    // Add active to clicked button
+                    this.classList.add('active');
+
+                    // Apply language if i18n is available
+                    if (window.i18n) {
+                        // Use unified language switch flow so dynamic widgets
+                        // (like dashboard payment statuses) can react on languageChanged.
+                        if (typeof window.i18n.changeLanguage === 'function') {
+                            window.i18n.changeLanguage(lang);
+                        } else {
+                            window.i18n.applyLanguage(lang);
+                            localStorage.setItem('language', lang);
+                        }
+                        // Re-render SPA header/breadcrumb in the new language
+                        if (window.spaRouter && typeof window.spaRouter.updatePageTitle === 'function') {
+                            const currentRoute = window.spaRouter.currentRoute
+                                || (typeof window.spaRouter.normalizeRoute === 'function'
+                                    ? window.spaRouter.normalizeRoute((window.location.hash || '').slice(1) || '/dashboard')
+                                    : '/dashboard');
+                            window.spaRouter.updatePageTitle(currentRoute);
+                        }
+                        if (typeof window.refreshPageTranslations === 'function') {
+                            window.refreshPageTranslations();
+                        }
+                        if (currentUserData) {
+                            updateHeaderUserInfo(currentUserData);
+                        }
+                    }
+                });
+            });
+
+            // Initialize language on load
+            const savedLang = localStorage.getItem('language') || 'az';
+            const activeLangBtn = document.querySelector(`.lang-btn[data-lang="${savedLang}"]`);
+            if (activeLangBtn) {
+                langButtons.forEach(b => b.classList.remove('active'));
+                activeLangBtn.classList.add('active');
+            }
+
+            // Apply saved language
+            if (window.i18n) {
+                window.i18n.applyLanguage(savedLang);
+            }
+
+            // Sidebar Toggle Button - FIXED VERSION
+            let toggleSidebarBtn = document.getElementById('toggleSidebar');
+            const sidebar = document.getElementById('sidebar') || document.querySelector('.sidebar');
+
+            console.log('=== SIDEBAR DEBUG ===');
+            console.log('Toggle button found:', !!toggleSidebarBtn);
+            console.log('Sidebar found:', !!sidebar);
+
+            if (toggleSidebarBtn && sidebar) {
+                // Remove any existing event listeners by cloning the button
+                const newToggleBtn = toggleSidebarBtn.cloneNode(true);
+                toggleSidebarBtn.parentNode.replaceChild(newToggleBtn, toggleSidebarBtn);
+                toggleSidebarBtn = newToggleBtn;
+
+                // Add tooltips to nav items
+                const navItems = sidebar.querySelectorAll('.nav-item');
+                navItems.forEach(item => {
+                    const textEl = item.querySelector('.nav-text');
+                    if (textEl && textEl.textContent.trim()) {
+                        item.setAttribute('data-tooltip', textEl.textContent.trim());
+                    }
+                });
+
+                // Load saved state
+                let storedSidebarState = localStorage.getItem('sidebarCollapsed');
+                if (storedSidebarState === null) {
+                    // по умолчанию sidebar открыт
+                    storedSidebarState = 'false';
+                    localStorage.setItem('sidebarCollapsed', 'false');
+                }
+                const sidebarCollapsed = storedSidebarState === 'true';
+                console.log('Saved collapsed state:', sidebarCollapsed);
+
+                if (sidebarCollapsed) {
+                    sidebar.classList.add('collapsed');
+                    console.log('Applied collapsed class from saved state');
+                } else {
+                    sidebar.classList.remove('collapsed');
+                    console.log('Sidebar is open by default');
+                }
+
+                // Elements for mobile overlay
+                const sidebarOverlay = document.getElementById('sidebarOverlay');
+                let wasMobileViewport = window.innerWidth <= 768;
+
+                function syncSidebarViewportState(isMobile) {
+                    if (isMobile) {
+                        // Entering mobile: force a safe closed state.
+                        // This prevents broken intermediate state when desktop-open sidebar
+                        // is resized into mobile layout.
+                        sidebar.classList.remove('open');
+                        sidebar.classList.add('collapsed');
+                        if (sidebarOverlay) sidebarOverlay.classList.remove('show');
+                        return;
+                    }
+
+                    // Returning to desktop: remove mobile-only classes and restore preference.
+                    sidebar.classList.remove('open');
+                    if (sidebarOverlay) sidebarOverlay.classList.remove('show');
+                    const desktopCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                    sidebar.classList.toggle('collapsed', desktopCollapsed);
+                }
+
+                const handleToggleClick = function (e) {
+                    console.log('=== CLICK EVENT FIRED ===');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+
+                    const isMobile = window.innerWidth <= 768;
+                    if (isMobile) {
+                        const willOpen = !sidebar.classList.contains('open');
+                        sidebar.classList.toggle('open', willOpen);
+                        sidebar.classList.toggle('collapsed', !willOpen);
+                        localStorage.setItem('sidebarCollapsed', willOpen ? 'false' : 'true');
+                        if (sidebarOverlay) sidebarOverlay.classList.toggle('show', willOpen);
+                        return;
+                    }
+
+                    const isCurrentlyCollapsed = sidebar.classList.contains('collapsed');
+                    console.log('Current collapsed state:', isCurrentlyCollapsed);
+
+                    if (isCurrentlyCollapsed) {
+                        console.log('Expanding sidebar...');
+                        sidebar.classList.remove('collapsed');
+                        localStorage.setItem('sidebarCollapsed', 'false');
+                    } else {
+                        console.log('Collapsing sidebar...');
+                        sidebar.classList.add('collapsed');
+                        localStorage.setItem('sidebarCollapsed', 'true');
+                    }
+
+                    console.log('New collapsed state:', sidebar.classList.contains('collapsed'));
+                };
+
+                toggleSidebarBtn.addEventListener('click', function (e) {
+                    handleToggleClick(e);
+                }, true);
+
+                // Close on overlay click (mobile)
+                if (sidebarOverlay) {
+                    sidebarOverlay.addEventListener('click', function () {
+                        sidebar.classList.remove('open');
+                        sidebarOverlay.classList.remove('show');
+                    });
+                }
+
+                // ESC to toggle sidebar (works on both mobile and desktop)
+                document.addEventListener('keydown', function (ev) {
+                    if (ev.key === 'Escape' || ev.keyCode === 27) {
+                        const isMobile = window.innerWidth <= 768;
+                        if (isMobile) {
+                            // On mobile, close sidebar if open
+                            if (sidebar.classList.contains('open')) {
+                                sidebar.classList.remove('open');
+                                if (sidebarOverlay) sidebarOverlay.classList.remove('show');
+                            }
+                        } else {
+                            // On desktop, toggle collapsed state
+                            const isCurrentlyCollapsed = sidebar.classList.contains('collapsed');
+                            if (isCurrentlyCollapsed) {
+                                sidebar.classList.remove('collapsed');
+                                localStorage.setItem('sidebarCollapsed', 'false');
+                            } else {
+                                sidebar.classList.add('collapsed');
+                                localStorage.setItem('sidebarCollapsed', 'true');
+                            }
+                        }
+                    }
+                });
+
+                // Handle resize - cleanup mobile classes when returning to desktop
+                window.addEventListener('resize', function () {
+                    const isMobile = window.innerWidth <= 768;
+                    if (isMobile !== wasMobileViewport) {
+                        syncSidebarViewportState(isMobile);
+                        wasMobileViewport = isMobile;
+                    } else if (!isMobile) {
+                        // Keep desktop clean even for regular desktop resizes.
+                        sidebar.classList.remove('open');
+                        if (sidebarOverlay) sidebarOverlay.classList.remove('show');
+                    }
+                });
+
+                // Debug: log current state
+                console.log('Sidebar initialized successfully');
+                console.log('Initial collapsed state:', sidebar.classList.contains('collapsed'));
+                console.log('Initial width:', sidebar.offsetWidth);
+
+                // Add global function for debugging
+                window.debugSidebar = function () {
+                    console.log('=== SIDEBAR DEBUG INFO ===');
+                    console.log('Has collapsed class:', sidebar.classList.contains('collapsed'));
+                    console.log('Current width:', sidebar.offsetWidth);
+                    console.log('Computed width:', window.getComputedStyle(sidebar).width);
+                    console.log('localStorage value:', localStorage.getItem('sidebarCollapsed'));
+                    console.log('All classes:', Array.from(sidebar.classList));
+                };
+
+                window.resetSidebar = function () {
+                    localStorage.removeItem('sidebarCollapsed');
+                    sidebar.classList.remove('collapsed');
+                    console.log('✅ Sidebar reset! Reload the page.');
+                };
+
+                console.log('💡 Type debugSidebar() to see current state');
+                console.log('💡 Type resetSidebar() to reset and reload');
+            } else {
+                console.error('❌ ERROR: Sidebar or toggle button not found!');
+                if (!toggleSidebarBtn) {
+                    console.error('Toggle button element is missing!');
+                }
+                if (!sidebar) console.error('Sidebar element is missing!');
+            }
+
+            // Logout Button Handler
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async function (e) {
+                    e.preventDefault();
+
+                    try {
+                        // Call backend logout to clear session cookie
+                        await fetch(`${APP_API_BASE}/api/auth/logout`, {
+                            method: 'POST',
+                            credentials: 'include'
+                        });
+                    } catch (error) {
+                        console.error('Logout error:', error);
+                    }
+
+                    // Clear all local session data
+                    localStorage.clear();
+                    sessionStorage.clear();
+
+                    // Show notification
+                    if (window.showInfo) {
+                        showInfo(t('logout_goodbye', 'До свидания!'));
+                    }
+
+                    // Redirect to login page after a short delay
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 500);
+                });
+            }
+
+            // Notifications Modal logic
+            const openNotificationsBtn = document.getElementById('openNotifications');
+            const notificationsModal = document.getElementById('notificationsModal');
+            const notificationsClose = document.getElementById('notificationsClose');
+            const notificationsList = document.getElementById('notificationsList');
+            const notificationsCount = document.getElementById('notificationsCount');
+            const notifFilterAll = document.getElementById('notifFilterAll');
+            const notifFilterImportant = document.getElementById('notifFilterImportant');
+            const notifFilterSystem = document.getElementById('notifFilterSystem');
+            const notificationsMarkRead = document.getElementById('notificationsMarkRead');
+
+            // API Configuration
+            if (typeof window.API_BASE === 'undefined') {
+                window.API_BASE = APP_API_BASE;
+            }
+            const API_BASE = window.API_BASE;
+
+            let notifications = [];
+            let activeFilter = 'unread'; // По умолчанию показываем только непрочитанные
+            const t = (key, fallback = '') => window.i18n?.translate?.(key) || fallback || key;
+
+            // Текущая роль пользователя (сначала из localStorage, затем обновляется из API)
+            function getCurrentRole() {
+                try {
+                    if (window.currentUserData && window.currentUserData.role) {
+                        const r = window.currentUserData.role;
+                        return typeof r === 'string' ? r : (r?.value || '');
+                    }
+                    return (localStorage.getItem('userRole') || '').trim().toUpperCase();
+                } catch (_e) {
+                    return '';
+                }
+            }
+            // SALES видит только уведомления о решении по его договорам
+            function isSalesRole() { return getCurrentRole() === 'SALES'; }
+            function filterNotificationsForRole(list) {
+                if (!Array.isArray(list)) return list;
+                if (isSalesRole()) {
+                    return list.filter(n => String(n.type || '').toUpperCase() === 'CONTRACT_DECISION');
+                }
+                return list;
+            }
+
+            function escapeHtmlNotif(s) {
+                if (s == null || s === undefined) return '';
+                const div = document.createElement('div');
+                div.textContent = String(s);
+                return div.innerHTML;
+            }
+
+            function initAdminNotificationTextClamp() {
+                if (!notificationsList) return;
+                notificationsList.querySelectorAll('.admin-notification-text-wrap').forEach((wrap) => {
+                    const textEl = wrap.querySelector('.admin-notification-text');
+                    const btn = wrap.querySelector('.admin-notification-toggle-more');
+                    if (!textEl || !btn) return;
+                    textEl.classList.remove('admin-notification-text--expanded');
+                    btn.textContent = t('notifications_show_more', 'Подробнее');
+                    requestAnimationFrame(() => {
+                        const needs = textEl.scrollHeight > textEl.clientHeight + 2;
+                        btn.style.display = needs ? 'inline' : 'none';
+                    });
+                });
+            }
+
+            if (notificationsList && !notificationsList._adminNotifToggleBound) {
+                notificationsList._adminNotifToggleBound = true;
+                notificationsList.addEventListener('click', (e) => {
+                    const btn = e.target.closest('.admin-notification-toggle-more');
+                    if (!btn || btn.style.display === 'none') return;
+                    e.stopPropagation();
+                    const wrap = btn.closest('.admin-notification-text-wrap');
+                    const textEl = wrap && wrap.querySelector('.admin-notification-text');
+                    if (!textEl) return;
+                    const expanded = textEl.classList.toggle('admin-notification-text--expanded');
+                    btn.textContent = expanded
+                        ? t('notifications_show_less', 'Свернуть')
+                        : t('notifications_show_more', 'Подробнее');
+                });
+            }
+
+            // Форматирование времени
+            function parseServerDate(dateStr) {
+                if (!dateStr) return null;
+                let s = String(dateStr).trim();
+                if (!s) return null;
+
+                if (s.indexOf('T') === -1 && s.indexOf(' ') !== -1) {
+                    s = s.replace(' ', 'T');
+                }
+
+                const hasTimezone = /Z$|[+-]\d{2}:?\d{2}$/.test(s);
+                if (!hasTimezone) {
+                    s = `${s}Z`;
+                }
+
+                let d = new Date(s);
+                if (!isNaN(d.getTime())) {
+                    return d;
+                }
+
+                const m = s.match(/(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/);
+                if (m) {
+                    const year = parseInt(m[1], 10);
+                    const month = parseInt(m[2], 10) - 1;
+                    const day = parseInt(m[3], 10);
+                    const hour = parseInt(m[4], 10);
+                    const minute = parseInt(m[5], 10);
+                    const second = m[6] ? parseInt(m[6], 10) : 0;
+                    d = new Date(Date.UTC(year, month, day, hour, minute, second));
+                }
+
+                return isNaN(d.getTime()) ? null : d;
+            }
+
+            function formatTime(dateStr) {
+                const date = parseServerDate(dateStr);
+                if (!date) return '—';
+                const now = new Date();
+                const diffMs = now - date;
+                const diffMins = Math.floor(diffMs / 60000);
+                const diffHours = Math.floor(diffMs / 3600000);
+                const diffDays = Math.floor(diffMs / 86400000);
+
+                const currentLang = localStorage.getItem('language') || 'az';
+                const localeMap = { ru: 'ru-RU', az: 'az-AZ', en: 'en-US' };
+                const locale = localeMap[currentLang] || 'az-AZ';
+                if (diffMins < 1) return t('time_just_now', 'Только что');
+                if (diffMins < 60) return `${diffMins} ${t('time_minutes_ago', 'мин назад')}`;
+                if (diffHours < 24) return `${diffHours} ${t('time_hours_ago', 'ч назад')}`;
+                if (diffDays === 1) return `${t('time_yesterday', 'Вчера')}, ` + date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+                if (diffDays < 7) return `${diffDays} ${t('time_days_ago', 'дн назад')}`;
+                return date.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }
+
+            // Получить точное число непрочитанных с сервера
+            async function fetchUnreadCount() {
+                try {
+                    const resp = await fetch(`${API_BASE}/api/notifications/unread-count`, { credentials: 'include' });
+                    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                    const data = await resp.json();
+                    return data.count || 0;
+                } catch (e) {
+                    console.error('Error fetching unread count:', e);
+                    // fallback на локальный подсчет
+                    return notifications.filter(n => n.unread).length;
+                }
+            }
+
+            // Загрузка уведомлений с сервера (список) + обновление счётчика
+            async function loadNotifications() {
+                try {
+                    const url = `${API_BASE}/api/notifications/public?page=1&per_page=200`;
+                    const response = await fetch(url, { credentials: 'include' });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const tryParseJson = (text) => {
+                        if (!text || typeof text !== 'string') return null;
+                        const s = text.trim();
+                        if (!s.startsWith('{')) return null;
+                        try { return JSON.parse(s); } catch (_e) { return null; }
+                    };
+
+                    const localizeNotificationText = (item) => {
+                        const text = String(item?.message || '—');
+                        const type = String(item?.notification_type || '').toUpperCase();
+
+                        if (type === 'CONTRACT_APPROVAL') {
+                            const data = tryParseJson(text) || {};
+                            const template = t(
+                                'notifications_contract_approval_template',
+                                'Договор №{number} (дом «{house}», покупатель «{buyer}») отправлен на одобрение менеджером {actor}.'
+                            );
+                            return template
+                                .replace('{number}', data.contract_number || (item?.related_id ? `#${item.related_id}` : '—'))
+                                .replace('{house}', data.house || '—')
+                                .replace('{buyer}', data.buyer || '—')
+                                .replace('{actor}', data.actor || '—');
+                        }
+
+                        if (type === 'CONTRACT_DECISION') {
+                            const data = tryParseJson(text) || {};
+                            const decision = String(data.decision || '').toUpperCase();
+                            const key = decision === 'APPROVED'
+                                ? 'notifications_contract_approved_template'
+                                : 'notifications_contract_rejected_template';
+                            const fallback = decision === 'APPROVED'
+                                ? 'Договор №{number} ({buyer}) одобрен пользователем {actor}.'
+                                : 'Договор №{number} ({buyer}) отклонён пользователем {actor}.';
+                            let out = t(key, fallback)
+                                .replace('{number}', data.contract_number || (item?.related_id ? `#${item.related_id}` : '—'))
+                                .replace('{buyer}', data.buyer || '—')
+                                .replace('{actor}', data.actor || '—');
+                            if (data.comment) {
+                                const tail = t('notifications_comment_tail', ' Комментарий: {comment}')
+                                    .replace('{comment}', data.comment);
+                                out += tail;
+                            }
+                            return out;
+                        }
+
+                        if (type !== 'TARIFF_EXPIRED') return text;
+
+                        const m = text.match(/["“](.+?)["”].*?(\d{2}\.\d{2}\.\d{4})/);
+                        const name = (m && m[1]) ? m[1] : (item?.related_id ? `#${item.related_id}` : '');
+                        const date = (m && m[2]) ? m[2] : '';
+                        const purpose = t('tariffs_purpose_construction', 'Строительство');
+                        const template = t(
+                            'notifications_tariff_expired_template',
+                            'Срок тарифа "{name}" ({purpose}) истёк {date}. Проверьте и обновите период действия.'
+                        );
+                        return template
+                            .replace('{name}', name || '—')
+                            .replace('{purpose}', purpose)
+                            .replace('{date}', date || '—');
+                    };
+
+                    notifications = (data.notifications || []).map(n => {
+                        const typeUp = String(n.notification_type || '').toUpperCase();
+                        let title;
+                        if (typeUp === 'TARIFF_EXPIRED') {
+                            title = t('notifications_system_title', 'Системное уведомление');
+                        } else if (typeUp === 'CONTRACT_APPROVAL') {
+                            title = t('notifications_contract_approval_title', 'Договор на одобрение');
+                        } else if (typeUp === 'CONTRACT_DECISION') {
+                            title = t('notifications_contract_decision_title', 'Решение по договору');
+                        } else {
+                            title = t('notifications_resident_appeal_title', 'Обращение жителя');
+                        }
+                        return {
+                            id: n.id,
+                            type: typeUp,
+                            related_id: n.related_id,
+                            title: title,
+                            text: localizeNotificationText(n),
+                            time: formatTime(n.created_at),
+                            unread: n.status === 'UNREAD',
+                            status: n.status
+                        };
+                    });
+
+                    // Для роли SALES оставляем только решения root по его договорам
+                    notifications = filterNotificationsForRole(notifications);
+
+                    renderNotifications();
+                    if (isSalesRole()) {
+                        updateNotificationCount(notifications.filter(n => n.unread).length);
+                    } else {
+                        const unread = await fetchUnreadCount();
+                        updateNotificationCount(unread);
+                    }
+                } catch (error) {
+                    console.error('Error loading notifications:', error);
+                    notifications = [];
+                    renderNotifications();
+                    if (isSalesRole()) {
+                        updateNotificationCount(0);
+                    } else {
+                        const unread = await fetchUnreadCount();
+                        updateNotificationCount(unread);
+                    }
+                }
+            }
+
+            async function markNotificationRead(id) {
+                // Обновляем локально мгновенно
+                let changed = false;
+                notifications = notifications.map(n => {
+                    if (n.id === Number(id) && n.unread) {
+                        changed = true;
+                        return { ...n, unread: false, status: 'READ' };
+                    }
+                    return n;
+                });
+                if (changed) {
+                    const unreadLocal = notifications.filter(n => n.unread).length;
+                    renderNotifications(false);
+                    updateNotificationCount(unreadLocal);
+                    setAppealsBadge(unreadLocal);
+                }
+                // Дёргаем сервер, чтобы статус сохранился
+                try {
+                    await fetch(`${API_BASE}/api/notifications/${id}/public`, { method: 'GET', credentials: 'include' });
+                    // После ответа уточняем реальное количество
+                    const unread = await fetchUnreadCount();
+                    updateNotificationCount(unread);
+                    setAppealsBadge(unread);
+                } catch (e) {
+                    console.error('Error marking notification as read:', e);
+                }
+            }
+
+            function renderNotifications(rebind = true) {
+                if (!notificationsList) return;
+
+                // Фильтруем по статусу - по умолчанию показываем только непрочитанные
+                let filtered = notifications;
+                if (activeFilter === 'unread') {
+                    filtered = notifications.filter(n => n.unread);
+                }
+                // Если фильтр 'all', показываем все
+
+                const items = filtered.map(n => {
+                    const color = '#8b5cf6'; // Фиолетовый цвет для всех уведомлений
+                    return `
+                        <div class="notification-item" data-id="${n.id}" style="display:flex; gap:12px; align-items:flex-start; padding:12px 14px; border:1px solid rgba(0,0,0,.08); border-radius:12px; margin-bottom:10px; background:${n.unread ? 'rgba(102,126,234,0.08)' : 'transparent'}; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='rgba(102,126,234,0.15)'" onmouseout="this.style.background='${n.unread ? 'rgba(102,126,234,0.08)' : 'transparent'}'">
+                            <div style="width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#fff; background:${color}; box-shadow:0 6px 16px rgba(0,0,0,.15); flex-shrink:0;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2z"/>
+                                </svg>
+                            </div>
+                            <div style="flex:1; min-width:0;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                                    <strong style="color:var(--text-primary); overflow-wrap:anywhere; word-break:break-word;">${escapeHtmlNotif(n.title)}</strong>
+                                    <span style="font-size:.8rem; color:var(--text-secondary); flex-shrink:0;">${n.time}</span>
+                                </div>
+                                <div class="admin-notification-msg-block" style="margin-top:4px;">
+                                    <div class="admin-notification-text-wrap">
+                                        <div class="admin-notification-text" style="color:var(--text-secondary);">${escapeHtmlNotif(n.text)}</div>
+                                        <button type="button" class="admin-notification-toggle-more" style="display:none;">${t('notifications_show_more', 'Подробнее')}</button>
+                                    </div>
+                                </div>
+                            </div>
+                            ${n.unread ? `<span class="badge" style="background:#10b981; height:22px; display:flex; align-items:center; flex-shrink:0;">${t('notifications_badge_new', 'НОВАЯ')}</span>` : ''}
+                        </div>`;
+                }).join('');
+
+                notificationsList.innerHTML = items || `<div class="empty-state" style="text-align:center; padding:2rem; color:var(--text-secondary);">${t('notifications_empty', 'Нет уведомлений')}</div>`;
+
+                initAdminNotificationTextClamp();
+
+                if (rebind) {
+                    // Добавляем обработчики кликов на уведомления
+                    notificationsList.querySelectorAll('.notification-item').forEach(item => {
+                        item.addEventListener('click', async function () {
+                            const notificationId = this.dataset.id;
+                            const notif = notifications.find(x => String(x.id) === String(notificationId));
+                            // Только системные (например, истёкший тариф) помечаем прочитанными по клику.
+                            // Обращения жителя (APPEAL / без типа): прочитано только после выбора стадии и сохранения в appeals2.
+                            const t = notif ? String(notif.type || '').toUpperCase() : '';
+                            if (t === 'TARIFF_EXPIRED' || t === 'CONTRACT_APPROVAL' || t === 'CONTRACT_DECISION') {
+                                await markNotificationRead(notificationId);
+                            }
+                            closeNotifications();
+                            if (notif && t === 'TARIFF_EXPIRED') {
+                                if (window.spaRouter) {
+                                    window.spaRouter.navigate('/tariffs');
+                                } else {
+                                    window.location.hash = '#/tariffs';
+                                }
+                            } else if (notif && (t === 'CONTRACT_APPROVAL' || t === 'CONTRACT_DECISION')) {
+                                const contractId = notif.related_id || '';
+                                const target = contractId ? `/sales?contract_id=${contractId}` : '/sales';
+                                if (window.spaRouter) {
+                                    window.spaRouter.navigate(target);
+                                } else {
+                                    window.location.hash = '#' + target;
+                                }
+                            } else {
+                                if (window.spaRouter) {
+                                    window.spaRouter.navigate(`/appeals2?id=${notificationId}`);
+                                } else {
+                                    window.location.hash = `#/appeals2?id=${notificationId}`;
+                                }
+                            }
+                        });
+                    });
+                }
+            }
+
+            async function updateNotificationCount(unreadFromApi) {
+                const unread = typeof unreadFromApi === 'number'
+                    ? unreadFromApi
+                    : notifications.filter(n => n.unread).length;
+                if (notificationsCount) {
+                    notificationsCount.textContent = String(unread);
+                    notificationsCount.style.display = unread > 0 ? 'flex' : 'none';
+                }
+            }
+
+            function openNotifications() {
+                if (!notificationsModal) return;
+                notificationsModal.classList.add('show');
+                document.body.style.overflow = 'hidden';
+                loadNotifications(); // Перезагружаем при открытии
+            }
+
+            function closeNotifications() {
+                if (!notificationsModal) return;
+                if (notificationsModal.classList.contains('hiding')) return;
+
+                notificationsModal.classList.add('hiding');
+
+                const onAnimationEnd = (e) => {
+                    if (e.target !== notificationsModal) return;
+                    notificationsModal.classList.remove('show', 'hiding');
+                    document.body.style.overflow = '';
+                    notificationsModal.removeEventListener('animationend', onAnimationEnd);
+                };
+
+                notificationsModal.addEventListener('animationend', onAnimationEnd);
+            }
+
+            if (openNotificationsBtn) openNotificationsBtn.addEventListener('click', openNotifications);
+            if (notificationsClose) notificationsClose.addEventListener('click', closeNotifications);
+            if (notificationsModal) notificationsModal.addEventListener('click', (e) => { if (e.target === notificationsModal) closeNotifications(); });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && notificationsModal && notificationsModal.classList.contains('show')) closeNotifications(); });
+
+            // Обновляем фильтры - убираем типы, оставляем только "Все" и "Непрочитанные"
+            if (notifFilterAll) {
+                notifFilterAll.addEventListener('click', function () {
+                    activeFilter = 'all';
+                    notifFilterAll.classList.add('active');
+                    notifFilterImportant?.classList.remove('active');
+                    notifFilterSystem?.classList.remove('active');
+                    renderNotifications();
+                });
+            }
+            if (notifFilterImportant) {
+                notifFilterImportant.addEventListener('click', function () {
+                    activeFilter = 'unread';
+                    notifFilterAll?.classList.remove('active');
+                    notifFilterImportant.classList.add('active');
+                    notifFilterSystem?.classList.remove('active');
+                    renderNotifications();
+                });
+            }
+            if (notifFilterSystem) {
+                notifFilterSystem.style.display = 'none'; // Скрываем системные фильтры
+            }
+
+            if (notificationsMarkRead) {
+                notificationsMarkRead.addEventListener('click', async () => {
+                    // Помечаем все как прочитанные на сервере
+                    const unreadIds = notifications.filter(n => n.unread).map(n => n.id);
+                    // Локально сразу ставим прочитанными
+                    notifications = notifications.map(n => ({ ...n, unread: false, status: 'READ' }));
+                    renderNotifications(false);
+                    updateNotificationCount(0);
+                    setAppealsBadge(0);
+
+                    // Параллельно дергаем сервер (не блокируем UI)
+                    Promise.all(unreadIds.map(id => fetch(`${API_BASE}/api/notifications/${id}/public`, { method: 'GET', credentials: 'include' }).catch(() => null)))
+                        .finally(async () => {
+                            const unread = await fetchUnreadCount();
+                            updateNotificationCount(unread);
+                            setAppealsBadge(unread);
+                        });
+                });
+            }
+
+            // Загружаем уведомления при загрузке страницы
+            loadNotifications();
+            // Обновляем чаще, чтобы административные уведомления приходили быстрее (каждые 10 секунд)
+            setInterval(loadNotifications, 10000);
+
+            // Expose API
+            window.AdminNotifications = {
+                load: loadNotifications,
+                updateCount: updateNotificationCount,
+                getUnreadCount: () => notifications.filter(n => n.unread).length
+            };
+
+            // Делаем loadUserProfile доступной глобально для вызова при загрузке страницы
+            window.loadUserProfile = loadUserProfile;
+
+            // Account Settings Modal (copied logic from user dashboard)
+            const accountProfileBtn = document.getElementById('accountProfileBtn');
+            const accountModal = document.getElementById('accountModal');
+            const accountModalClose = document.getElementById('accountModalClose');
+            const accountModalCancel = document.getElementById('accountModalCancel');
+            const accountModalSave = document.getElementById('accountModalSave');
+
+            let currentUserData = null;
+            let initialAccountState = null;
+            let removeAccountAvatarRequested = false;
+
+            async function loadUserProfile() {
+                try {
+                    const response = await fetch(`${API_BASE}/api/users/me`, {
+                        method: 'GET',
+                        credentials: 'include', // Отправляем cookies для сессии
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            // Неавторизован - перенаправляем на страницу входа
+                            console.warn('Unauthorized access, redirecting to login');
+                            window.location.href = '/';
+                            return;
+                        }
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const user = await response.json();
+                    currentUserData = user;
+                    window.currentUserData = user;
+                    removeAccountAvatarRequested = false;
+
+                    // Заполняем поля формы
+                    const fullNameInput = document.getElementById('accountFullName');
+                    const phoneInput = document.getElementById('accountPhoneInput');
+                    const emailInput = document.getElementById('accountEmailInput');
+                    const avatarPreview = document.getElementById('accountModalAvatar');
+
+                    if (fullNameInput) fullNameInput.value = user.full_name || '';
+                    if (phoneInput) phoneInput.value = user.phone || '';
+                    if (emailInput) emailInput.value = user.email || '';
+                    const fileStatusEl = document.getElementById('accountFileStatus');
+                    if (fileStatusEl) {
+                        fileStatusEl.textContent = t('account_file_no_selected', 'Не выбран ни один файл');
+                        fileStatusEl.classList.remove('has-file');
+                    }
+
+                    // Обновляем аватар
+                    if (avatarPreview) {
+                        const initials = (user.full_name || user.username || 'U').substring(0, 2).toUpperCase();
+                        
+                        if (user.avatar_path) {
+                            // Создаем изображение для проверки загрузки
+                            const img = new Image();
+                            img.onload = function() {
+                                avatarPreview.style.background = 'none';
+                                avatarPreview.style.backgroundImage = `url('${API_BASE}${user.avatar_path}')`;
+                                avatarPreview.style.backgroundSize = 'cover';
+                                avatarPreview.style.backgroundPosition = 'center';
+                                avatarPreview.style.backgroundRepeat = 'no-repeat';
+                                avatarPreview.textContent = '';
+                            };
+                            img.onerror = function() {
+                                // Если изображение не загрузилось, показываем инициалы
+                                avatarPreview.style.background = '';
+                                // ВАЖНО: не ставим backgroundImage = 'none' — это убивает CSS-градиент (он тоже background-image)
+                                avatarPreview.style.backgroundImage = '';
+                                avatarPreview.style.backgroundSize = '';
+                                avatarPreview.style.backgroundPosition = '';
+                                avatarPreview.style.backgroundRepeat = '';
+                                avatarPreview.textContent = initials;
+                            };
+                            img.src = `${API_BASE}${user.avatar_path}`;
+                        } else {
+                            // Показываем инициалы если нет аватара
+                            avatarPreview.style.background = '';
+                            // ВАЖНО: не ставим backgroundImage = 'none' — это убивает CSS-градиент (он тоже background-image)
+                            avatarPreview.style.backgroundImage = '';
+                            avatarPreview.style.backgroundSize = '';
+                            avatarPreview.style.backgroundPosition = '';
+                            avatarPreview.style.backgroundRepeat = '';
+                            avatarPreview.textContent = initials;
+                        }
+                    }
+
+                    // Обновляем аватар и имя в шапке
+                    updateHeaderUserInfo(user);
+                    if (typeof syncRemoveAvatarButtonState === 'function') syncRemoveAvatarButtonState();
+
+                    initialAccountState = getAccountState();
+                } catch (error) {
+                    console.error('Error loading user profile:', error);
+                    // Не показываем ошибку, если это 401 - уже перенаправили на логин
+                    if (error.message && !error.message.includes('401')) {
+                        if (window.showError) {
+                            showError(`${t('profile_load_error_prefix', 'Ошибка загрузки профиля')}: ${error.message}`);
+                        }
+                    }
+                }
+            }
+
+            function updateHeaderUserInfo(user) {
+                // Обновляем аватар в шапке
+                const headerAvatar = document.querySelector('.user-avatar');
+                if (headerAvatar) {
+                    const initials = (user.full_name || user.username || 'U').substring(0, 2).toUpperCase();
+                    
+                    if (user.avatar_path) {
+                        // Создаем изображение для проверки загрузки
+                        const img = new Image();
+                        img.onload = function() {
+                            headerAvatar.style.background = 'none';
+                            headerAvatar.style.backgroundImage = `url('${API_BASE}${user.avatar_path}')`;
+                            headerAvatar.style.backgroundSize = 'cover';
+                            headerAvatar.style.backgroundPosition = 'center';
+                            headerAvatar.style.backgroundRepeat = 'no-repeat';
+                            headerAvatar.textContent = '';
+                        };
+                        img.onerror = function() {
+                            // Если изображение не загрузилось, показываем инициалы
+                            headerAvatar.style.background = ''; // Восстанавливаем градиент из CSS
+                            // ВАЖНО: не ставим backgroundImage = 'none' — это убивает CSS-градиент (он тоже background-image)
+                            headerAvatar.style.backgroundImage = '';
+                            headerAvatar.style.backgroundSize = '';
+                            headerAvatar.style.backgroundPosition = '';
+                            headerAvatar.style.backgroundRepeat = '';
+                            headerAvatar.textContent = initials;
+                        };
+                        img.src = `${API_BASE}${user.avatar_path}`;
+                    } else {
+                        // Показываем инициалы если нет аватара
+                        headerAvatar.style.background = ''; // Восстанавливаем градиент из CSS
+                        // ВАЖНО: не ставим backgroundImage = 'none' — это убивает CSS-градиент (он тоже background-image)
+                        headerAvatar.style.backgroundImage = '';
+                        headerAvatar.style.backgroundSize = '';
+                        headerAvatar.style.backgroundPosition = '';
+                        headerAvatar.style.backgroundRepeat = '';
+                        headerAvatar.textContent = initials;
+                    }
+                }
+
+                // Обновляем имя в шапке
+                const userNameEl = document.querySelector('.user-name');
+                if (userNameEl) {
+                    userNameEl.textContent = user.full_name || user.username || t('user', 'Пользователь');
+                }
+
+                // Обновляем роль в шапке (опционально)
+                const userRoleEl = document.querySelector('.user-role');
+                // Обрабатываем role как строку или объект с value
+                const roleValue = typeof user.role === 'string' ? user.role : (user.role?.value || user.role);
+                if (userRoleEl) {
+                    const roleNames = {
+                        'ROOT': window.i18n?.translate('system_admin') || 'System Admin',
+                        'ADMIN': window.i18n?.translate('role_admin') || 'Administrator',
+                        'OPERATOR': window.i18n?.translate('role_operator') || 'Operator',
+                        'RESIDENT': window.i18n?.translate('role_user') || 'Resident',
+                        'SALES': window.i18n?.translate('role_sales') || 'Sales manager',
+                        'ACCOUNTANT': window.i18n?.translate('role_accountant') || 'Accountant'
+                    };
+                    userRoleEl.textContent = roleNames[roleValue] || t('user', 'Пользователь');
+                }
+
+                // Обновляем подпись панели в сайдбаре в зависимости от роли
+                const sidebarPanelLabelEl = document.getElementById('sidebarPanelLabel');
+                if (sidebarPanelLabelEl) {
+                    const panelKeyByRole = {
+                        'ROOT': 'panel_root',
+                        'ADMIN': 'panel_admin',
+                        'OPERATOR': 'panel_operator',
+                        'SALES': 'panel_sales',
+                        'ACCOUNTANT': 'panel_accountant',
+                        'RESIDENT': 'panel_user'
+                    };
+                    const panelKey = panelKeyByRole[roleValue] || 'panel_user';
+                    sidebarPanelLabelEl.setAttribute('data-i18n', panelKey);
+                    const translated = window.i18n?.translate(panelKey);
+                    if (translated) {
+                        sidebarPanelLabelEl.textContent = translated;
+                    }
+                }
+
+                // Синхронизируем data-user-role по авторитетной роли из API
+                // (нужно, если в localStorage оказался старый/неправильный слепок)
+                if (roleValue) {
+                    const upper = String(roleValue).toUpperCase();
+                    document.documentElement.setAttribute('data-user-role', upper);
+                    try { localStorage.setItem('userRole', upper); } catch (_e) { /* ignore */ }
+                    applySalesRouteGuard(upper);
+                    applyOperatorRouteGuard(upper);
+                }
+            }
+
+            // Запрет навигации куда-либо, кроме /sales, для роли SALES.
+            // Вызывается после загрузки профиля (и один раз при старте, если роль уже есть в localStorage).
+            function applySalesRouteGuard(role) {
+                const isSales = String(role || '').toUpperCase() === 'SALES';
+                if (!isSales) return;
+
+                // Если сейчас открыт какой-то другой роут — форсим /sales
+                try {
+                    const rawHash = (window.location.hash || '').slice(1);
+                    const path = rawHash.split('?')[0];
+                    if (path && path !== '/sales') {
+                        if (window.spaRouter && typeof window.spaRouter.navigate === 'function') {
+                            window.spaRouter.navigate('/sales');
+                        } else {
+                            window.location.hash = '#/sales';
+                        }
+                    }
+                } catch (_e) { /* ignore */ }
+
+                // Оборачиваем navigate один раз, чтобы любая попытка уйти с /sales возвращала обратно
+                if (window.spaRouter && typeof window.spaRouter.navigate === 'function' && !window.spaRouter._salesGuardInstalled) {
+                    const originalNavigate = window.spaRouter.navigate.bind(window.spaRouter);
+                    window.spaRouter.navigate = function (route) {
+                        const r = String(route || '');
+                        const pathOnly = r.split('?')[0];
+                        if (pathOnly !== '/sales') {
+                            return originalNavigate('/sales');
+                        }
+                        return originalNavigate(route);
+                    };
+                    window.spaRouter._salesGuardInstalled = true;
+                }
+            }
+
+            // Ограничение навигации для роли OPERATOR: разрешены только указанные роуты.
+            // Любая попытка уйти на другой роут — редирект на /tariffs.
+            function applyOperatorRouteGuard(role) {
+                const isOperator = String(role || '').toUpperCase() === 'OPERATOR';
+                if (!isOperator) return;
+
+                const OP_ALLOWED = new Set([
+                    '/tariffs',
+                    '/residents',
+                    '/readings',
+                    '/payments',
+                    '/payment-view',
+                    '/invoices',
+                    '/invoice-view',
+                    '/account'
+                ]);
+
+                try {
+                    const rawHash = (window.location.hash || '').slice(1);
+                    const path = rawHash.split('?')[0];
+                    if (path && !OP_ALLOWED.has(path)) {
+                        if (window.spaRouter && typeof window.spaRouter.navigate === 'function') {
+                            window.spaRouter.navigate('/tariffs');
+                        } else {
+                            window.location.hash = '#/tariffs';
+                        }
+                    }
+                } catch (_e) { /* ignore */ }
+
+                if (window.spaRouter && typeof window.spaRouter.navigate === 'function' && !window.spaRouter._operatorGuardInstalled) {
+                    const originalNavigate = window.spaRouter.navigate.bind(window.spaRouter);
+                    window.spaRouter.navigate = function (route) {
+                        const r = String(route || '');
+                        const pathOnly = r.split('?')[0];
+                        if (!OP_ALLOWED.has(pathOnly)) {
+                            return originalNavigate('/tariffs');
+                        }
+                        return originalNavigate(route);
+                    };
+                    window.spaRouter._operatorGuardInstalled = true;
+                }
+            }
+
+            function getAccountState() {
+                const fullName = document.getElementById('accountFullName')?.value || '';
+                const phone = document.getElementById('accountPhoneInput')?.value || '';
+                const email = document.getElementById('accountEmailInput')?.value || '';
+                const lang = document.getElementById('accountLanguage')?.value || '';
+                const currentPassword = document.getElementById('currentPassword')?.value || '';
+                const newPassword = document.getElementById('newPassword')?.value || '';
+                const confirmPassword = document.getElementById('confirmPassword')?.value || '';
+                const avatar = document.getElementById('accountAvatarInput')?.files?.length > 0 ? 'has-file' : '';
+                const removeAvatar = removeAccountAvatarRequested ? '1' : '0';
+
+                return {
+                    fullName,
+                    phone,
+                    email,
+                    lang,
+                    currentPassword,
+                    newPassword,
+                    confirmPassword,
+                    avatar,
+                    removeAvatar
+                };
+            }
+
+            function hasUnsavedAccountChanges() {
+                if (!initialAccountState) return false;
+                const currentState = getAccountState();
+                return Object.keys(initialAccountState).some(
+                    key => initialAccountState[key] !== currentState[key]
+                );
+            }
+
+            function closeAccountModal() {
+                if (!accountModal) return;
+                if (accountModal.classList.contains('hiding')) return;
+
+                accountModal.classList.add('hiding');
+
+                const onAnimationEnd = (e) => {
+                    if (e.target !== accountModal) return;
+                    accountModal.classList.remove('show', 'hiding');
+                    document.body.style.overflow = '';
+                    // Очищаем поля пароля
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                    // Сбрасываем файл аватара
+                    const avatarInput = document.getElementById('accountAvatarInput');
+                    if (avatarInput) avatarInput.value = '';
+                    const fileStatusEl = document.getElementById('accountFileStatus');
+                    if (fileStatusEl) {
+                        fileStatusEl.textContent = t('account_file_no_selected', 'Не выбран ни один файл');
+                        fileStatusEl.classList.remove('has-file');
+                    }
+                    removeAccountAvatarRequested = false;
+
+                    accountModal.removeEventListener('animationend', onAnimationEnd);
+                };
+
+                accountModal.addEventListener('animationend', onAnimationEnd);
+            }
+
+            function requestCloseAccountModal() {
+                if (!hasUnsavedAccountChanges()) {
+                    closeAccountModal();
+                    return;
+                }
+
+                const message = t('account_cancel_confirm', 'Вы уверены, что хотите отменить изменения? Все несохранённые данные будут потеряны.');
+
+                if (window.showConfirm) {
+                    showConfirm(message, () => {
+                        closeAccountModal();
+                    });
+                } else if (confirm(message)) {
+                    closeAccountModal();
+                }
+            }
+
+            async function openAccountModal() {
+                if (accountModal) {
+                    accountModal.classList.add('show');
+                    document.body.style.overflow = 'hidden';
+                    const savedLang = localStorage.getItem('language') || 'az';
+                    const langSelect = document.getElementById('accountLanguage');
+                    if (langSelect) langSelect.value = savedLang;
+
+                    // Загружаем профиль пользователя
+                    await loadUserProfile();
+                }
+            }
+
+            if (accountProfileBtn) {
+                accountProfileBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    openAccountModal();
+                });
+            }
+
+            if (accountModalClose) accountModalClose.addEventListener('click', requestCloseAccountModal);
+            if (accountModalCancel) accountModalCancel.addEventListener('click', requestCloseAccountModal);
+
+            if (accountModal) {
+                accountModal.addEventListener('click', function (e) {
+                    if (e.target === accountModal) requestCloseAccountModal();
+                });
+            }
+
+            // Tabs switching
+            const tabButtons = document.querySelectorAll('.account-tab-btn');
+            const tabPanels = document.querySelectorAll('.account-tab-panel');
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const target = btn.getAttribute('data-tab');
+                    tabButtons.forEach(b => b.classList.remove('active'));
+                    tabPanels.forEach(panel => panel.classList.remove('active'));
+                    btn.classList.add('active');
+                    const panel = document.getElementById(
+                        target === 'profile' ? 'accountTabProfile' : 'accountTabPassword'
+                    );
+                    if (panel) panel.classList.add('active');
+                });
+            });
+
+            // Avatar preview
+            // Обработчик для кнопки выбора файла
+            const fileSelectBtn = document.getElementById('accountFileSelectBtn');
+            const avatarInput = document.getElementById('accountAvatarInput');
+            const fileStatus = document.getElementById('accountFileStatus');
+            const removeAvatarBtn = document.getElementById('accountAvatarRemoveBtn');
+            const avatarPreview = document.getElementById('accountModalAvatar');
+
+            function syncRemoveAvatarButtonState() {
+                if (!removeAvatarBtn) return;
+                const hasUploadedFile = Boolean(avatarInput && avatarInput.files && avatarInput.files[0]);
+                const hasStoredAvatar = Boolean(currentUserData && currentUserData.avatar_path);
+                const shouldShow = hasUploadedFile || (hasStoredAvatar && !removeAccountAvatarRequested);
+                removeAvatarBtn.style.display = shouldShow ? '' : 'none';
+                removeAvatarBtn.disabled = !shouldShow;
+            }
+            
+            if (fileSelectBtn && avatarInput) {
+                fileSelectBtn.addEventListener('click', function() {
+                    avatarInput.click();
+                });
+            }
+            
+            if (avatarInput && avatarPreview) {
+                avatarInput.addEventListener('change', function () {
+                    const file = this.files && this.files[0];
+                    if (file) removeAccountAvatarRequested = false;
+                    
+                    // Обновляем статус файла
+                    if (fileStatus) {
+                        if (file) {
+                            fileStatus.textContent = file.name;
+                            fileStatus.classList.add('has-file');
+                        } else {
+                            fileStatus.textContent = t('account_file_no_selected', 'Не выбран ни один файл');
+                            fileStatus.classList.remove('has-file');
+                        }
+                    }
+                    
+                    if (!file) {
+                        // Если файл удален, показываем инициалы из текущего пользователя
+                        const userNameEl = document.querySelector('.user-name');
+                        const userName = userNameEl ? userNameEl.textContent : 'U';
+                        const initials = userName.substring(0, 2).toUpperCase();
+                        avatarPreview.textContent = initials;
+                        // ВАЖНО: не ставим backgroundImage = 'none' — это убивает CSS-градиент (он тоже background-image)
+                        avatarPreview.style.backgroundImage = '';
+                        avatarPreview.style.background = ''; // Восстанавливаем градиент из CSS
+                        avatarPreview.style.backgroundSize = '';
+                        avatarPreview.style.backgroundPosition = '';
+                        avatarPreview.style.backgroundRepeat = '';
+                        syncRemoveAvatarButtonState();
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        avatarPreview.style.background = 'none';
+                        avatarPreview.style.backgroundImage = `url('${e.target.result}')`;
+                        avatarPreview.style.backgroundSize = 'cover';
+                        avatarPreview.style.backgroundPosition = 'center';
+                        avatarPreview.style.backgroundRepeat = 'no-repeat';
+                        avatarPreview.textContent = '';
+                        syncRemoveAvatarButtonState();
+                    };
+                    reader.onerror = function() {
+                        // Если ошибка чтения файла, показываем инициалы
+                        const userNameEl = document.querySelector('.user-name');
+                        const userName = userNameEl ? userNameEl.textContent : 'U';
+                        const initials = userName.substring(0, 2).toUpperCase();
+                        avatarPreview.textContent = initials;
+                        // ВАЖНО: не ставим backgroundImage = 'none' — это убивает CSS-градиент (он тоже background-image)
+                        avatarPreview.style.backgroundImage = '';
+                        avatarPreview.style.background = ''; // Восстанавливаем градиент из CSS
+                        avatarPreview.style.backgroundSize = '';
+                        avatarPreview.style.backgroundPosition = '';
+                        avatarPreview.style.backgroundRepeat = '';
+                        syncRemoveAvatarButtonState();
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            if (removeAvatarBtn) {
+                removeAvatarBtn.addEventListener('click', function () {
+                    const hasUploadedFile = Boolean(avatarInput && avatarInput.files && avatarInput.files[0]);
+                    const hasStoredAvatar = Boolean(currentUserData && currentUserData.avatar_path);
+                    if (!hasUploadedFile && !hasStoredAvatar) return;
+
+                    removeAccountAvatarRequested = true;
+                    if (avatarInput) avatarInput.value = '';
+
+                    if (fileStatus) {
+                        fileStatus.textContent = t('account_avatar_remove_pending', 'Фото будет удалено после сохранения');
+                        fileStatus.classList.remove('has-file');
+                    }
+
+                    const initials = (currentUserData?.full_name || currentUserData?.username || 'U').substring(0, 2).toUpperCase();
+                    avatarPreview.textContent = initials;
+                    avatarPreview.style.backgroundImage = '';
+                    avatarPreview.style.background = '';
+                    avatarPreview.style.backgroundSize = '';
+                    avatarPreview.style.backgroundPosition = '';
+                    avatarPreview.style.backgroundRepeat = '';
+                    syncRemoveAvatarButtonState();
+                });
+            }
+            syncRemoveAvatarButtonState();
+
+            const changePasswordBtn = document.getElementById('changePasswordBtn');
+            if (changePasswordBtn) {
+                changePasswordBtn.addEventListener('click', async function () {
+                    const currentPassword = document.getElementById('currentPassword')?.value || '';
+                    const newPassword = document.getElementById('newPassword')?.value || '';
+                    const confirmPassword = document.getElementById('confirmPassword')?.value || '';
+
+                    if (!currentPassword || !newPassword || !confirmPassword) {
+                        if (window.showError) {
+                            showError(t('account_password_fill_all', 'Пожалуйста, заполните все поля пароля.'));
+                        } else {
+                            alert(t('account_password_fill_all', 'Пожалуйста, заполните все поля пароля.'));
+                        }
+                        return;
+                    }
+
+                    if (newPassword !== confirmPassword) {
+                        if (window.showError) {
+                            showError(t('account_password_mismatch', 'Пароли не совпадают!'));
+                        } else {
+                            alert(t('account_password_mismatch', 'Пароли не совпадают!'));
+                        }
+                        return;
+                    }
+
+                    if (newPassword.length < 6) {
+                        if (window.showError) {
+                            showError(t('account_password_min_length', 'Пароль должен быть не менее 6 символов!'));
+                        } else {
+                            alert(t('account_password_min_length', 'Пароль должен быть не менее 6 символов!'));
+                        }
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`${API_BASE}/api/users/me/change-password`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            credentials: 'include', // Отправляем cookies для сессии
+                            body: JSON.stringify({
+                                current_password: currentPassword,
+                                new_password: newPassword,
+                                confirm_password: confirmPassword
+                            })
+                        });
+
+                        if (!response.ok) {
+                            let errorMessage = t('account_password_change_error', 'Ошибка изменения пароля');
+                            try {
+                                const errorData = await response.json();
+                                // Проверяем разные форматы ошибок
+                                if (errorData.detail) {
+                                    errorMessage = typeof errorData.detail === 'string'
+                                        ? errorData.detail
+                                        : JSON.stringify(errorData.detail);
+                                } else if (errorData.message) {
+                                    errorMessage = errorData.message;
+                                } else if (typeof errorData === 'string') {
+                                    errorMessage = errorData;
+                                } else {
+                                    errorMessage = JSON.stringify(errorData);
+                                }
+                            } catch (e) {
+                                // Если не удалось распарсить JSON, используем статус
+                                errorMessage = `${t('error_prefix', 'Ошибка')} ${response.status}: ${response.statusText}`;
+                            }
+                            throw new Error(errorMessage);
+                        }
+
+                        const result = await response.json();
+
+                        if (window.showSuccess) {
+                            showSuccess(result.message || t('account_password_change_success', 'Пароль успешно изменён!'));
+                        } else {
+                            alert(result.message || t('account_password_change_success', 'Пароль успешно изменён!'));
+                        }
+
+                        document.getElementById('currentPassword').value = '';
+                        document.getElementById('newPassword').value = '';
+                        document.getElementById('confirmPassword').value = '';
+                    } catch (error) {
+                        console.error('Error changing password:', error);
+                        let errorMessage = t('account_password_change_error', 'Ошибка изменения пароля');
+                        if (error instanceof Error) {
+                            errorMessage = error.message;
+                        } else if (typeof error === 'string') {
+                            errorMessage = error;
+                        } else {
+                            errorMessage = JSON.stringify(error);
+                        }
+                        if (window.showError) {
+                            showError(errorMessage);
+                        } else {
+                            alert(errorMessage);
+                        }
+                    }
+                });
+            }
+
+            if (accountModalSave) {
+                accountModalSave.addEventListener('click', async function () {
+                    const fullName = document.getElementById('accountFullName')?.value || '';
+                    const phone = document.getElementById('accountPhoneInput')?.value || '';
+                    const email = document.getElementById('accountEmailInput')?.value || '';
+                    const avatarInput = document.getElementById('accountAvatarInput');
+                    const langSelect = document.getElementById('accountLanguage');
+
+                    // Сохраняем язык
+                    if (langSelect) {
+                        const lang = langSelect.value;
+                        const previousLang = localStorage.getItem('language') || (window.i18n && window.i18n.currentLanguage) || 'az';
+                        if (lang !== previousLang) {
+                            localStorage.setItem('language', lang);
+                            if (window.i18n) {
+                                if (typeof window.i18n.changeLanguage === 'function') {
+                                    window.i18n.changeLanguage(lang);
+                                } else if (typeof window.i18n.applyLanguage === 'function') {
+                                    window.i18n.applyLanguage(lang);
+                                }
+                            }
+                        }
+                    }
+
+                    // Тема всегда темная
+                    localStorage.setItem('theme', 'dark');
+                    document.documentElement.setAttribute('data-theme', 'dark');
+
+                    try {
+                        // Формируем FormData для отправки файла аватара
+                        const formData = new FormData();
+                        formData.append('full_name', fullName);
+                        formData.append('phone', phone);
+                        formData.append('email', email);
+                        formData.append('remove_avatar', removeAccountAvatarRequested ? '1' : '0');
+
+                        if (avatarInput && avatarInput.files && avatarInput.files[0]) {
+                            formData.append('avatar', avatarInput.files[0]);
+                        }
+
+                        const response = await fetch(`${API_BASE}/api/users/me`, {
+                            method: 'PUT',
+                            credentials: 'include', // Отправляем cookies для сессии
+                            body: formData
+                        });
+
+                        if (!response.ok) {
+                            let errorMessage = t('account_profile_save_error', 'Ошибка сохранения профиля');
+                            try {
+                                const errorData = await response.json();
+                                // Проверяем разные форматы ошибок
+                                if (errorData.detail) {
+                                    errorMessage = typeof errorData.detail === 'string'
+                                        ? errorData.detail
+                                        : JSON.stringify(errorData.detail);
+                                } else if (errorData.message) {
+                                    errorMessage = errorData.message;
+                                } else if (typeof errorData === 'string') {
+                                    errorMessage = errorData;
+                                } else {
+                                    errorMessage = JSON.stringify(errorData);
+                                }
+                            } catch (e) {
+                                // Если не удалось распарсить JSON, используем статус
+                                errorMessage = `${t('error_prefix', 'Ошибка')} ${response.status}: ${response.statusText}`;
+                            }
+                            throw new Error(errorMessage);
+                        }
+
+                        const updatedUser = await response.json();
+                        currentUserData = updatedUser;
+                        removeAccountAvatarRequested = false;
+
+                        // Обновляем аватар в превью
+                        const avatarPreview = document.getElementById('accountModalAvatar');
+                        if (avatarPreview) {
+                            const initials = (updatedUser.full_name || updatedUser.username || 'U').substring(0, 2).toUpperCase();
+                            
+                            if (updatedUser.avatar_path) {
+                                // Создаем изображение для проверки загрузки
+                                const img = new Image();
+                                img.onload = function() {
+                                    avatarPreview.style.backgroundImage = `url('${API_BASE}${updatedUser.avatar_path}')`;
+                                    avatarPreview.style.background = 'none'; // Убираем градиентный фон
+                                    avatarPreview.style.backgroundSize = 'cover';
+                                    avatarPreview.style.backgroundPosition = 'center';
+                                    avatarPreview.style.backgroundRepeat = 'no-repeat';
+                                    avatarPreview.textContent = '';
+                                };
+                                img.onerror = function() {
+                                    // Если изображение не загрузилось, показываем инициалы
+                                    avatarPreview.textContent = initials;
+                                    // ВАЖНО: не ставим backgroundImage = 'none' — это убивает CSS-градиент (он тоже background-image)
+                                    avatarPreview.style.backgroundImage = '';
+                                    avatarPreview.style.background = ''; // Восстанавливаем градиент из CSS
+                                    avatarPreview.style.backgroundSize = '';
+                                    avatarPreview.style.backgroundPosition = '';
+                                    avatarPreview.style.backgroundRepeat = '';
+                                };
+                                img.src = `${API_BASE}${updatedUser.avatar_path}`;
+                            } else {
+                                // Показываем инициалы если нет аватара
+                                avatarPreview.textContent = initials;
+                                // ВАЖНО: не ставим backgroundImage = 'none' — это убивает CSS-градиент (он тоже background-image)
+                                avatarPreview.style.backgroundImage = '';
+                                avatarPreview.style.background = ''; // Восстанавливаем градиент из CSS
+                                avatarPreview.style.backgroundSize = '';
+                                avatarPreview.style.backgroundPosition = '';
+                                avatarPreview.style.backgroundRepeat = '';
+                            }
+                        }
+
+                        // Обновляем данные в шапке
+                        updateHeaderUserInfo(updatedUser);
+
+                        const lang = localStorage.getItem('language') || 'az';
+                        const successText = window.i18n?.translate?.('account_profile_saved_success', lang) || 'Настройки сохранены!';
+                        if (window.showSuccess) {
+                            showSuccess(successText);
+                        } else {
+                            alert(successText);
+                        }
+
+                        // Обновляем начальное состояние
+                        initialAccountState = getAccountState();
+                        syncRemoveAvatarButtonState();
+                        closeAccountModal();
+                    } catch (error) {
+                        console.error('Error saving profile:', error);
+                        let errorMessage = 'Ошибка сохранения профиля';
+                        if (error instanceof Error) {
+                            errorMessage = error.message;
+                        } else if (typeof error === 'string') {
+                            errorMessage = error;
+                        } else {
+                            errorMessage = JSON.stringify(error);
+                        }
+                        if (window.showError) {
+                            showError(errorMessage);
+                        } else {
+                            alert(errorMessage);
+                        }
+                    }
+                });
+            }
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && accountModal && accountModal.classList.contains('show')) {
+                    requestCloseAccountModal();
+                }
+            });
+
+            // Загружаем профиль пользователя при загрузке страницы
+            // Вызываем после небольшой задержки, чтобы DOM был готов
+            setTimeout(() => {
+                loadUserProfile();
+            }, 200);
+        });
+    </script>
+    <script>
+        (function setupBootstrapLoader() {
+            const hideLoader = () => {
+                const loader = document.getElementById('appBootstrapLoader');
+                if (!loader) return;
+                loader.classList.add('hidden');
+                setTimeout(() => loader.remove(), 300);
+            };
+
+            window.addEventListener('load', hideLoader, { once: true });
+            setTimeout(hideLoader, 5000);
+        })();
+    </script>
+</body>
+
+</html>

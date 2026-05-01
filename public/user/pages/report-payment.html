@@ -1,0 +1,2971 @@
+<section class="user-bills-section user-payment-page">
+    <div class="payment-page-inner">
+    <aside class="payment-howto-block" aria-labelledby="payment-howto-heading">
+        <h3 class="payment-section-title payment-howto-title" id="payment-howto-heading" data-i18n="payment_howto_title">Описание: как оплатить по счёту</h3>
+        <ol class="payment-howto-list">
+            <li data-i18n="payment_howto_step1">В разделе «Мои счета» откройте счёт и нажмите «Оплатить», либо перейдите на эту страницу из списка неоплаченных счетов.</li>
+            <li data-i18n="payment_howto_step2">Выберите способ: баланс Resident Pass (аванс) или банковскую карту Visa/Mastercard через AzeriCard.</li>
+            <li data-i18n="payment_howto_step3">Проверьте сумму в блоке «Детали оплаты» и нажмите «Оплатить». После успешной оплаты статус обновится автоматически.</li>
+        </ol>
+    </aside>
+    <div class="payment-container">
+        <!-- Left Column: Saved Cards -->
+        <div class="payment-left-column">
+            <!-- Saved Cards -->
+            <div class="saved-cards-container">
+                <!-- Default Royal Park resident card (advance balance) -->
+                <div class="saved-card-wrapper resident-pass-wrapper">
+                    <div class="resident-pass-card"
+                         data-card-id="advance-pass"
+                         data-card-type="ADVANCE"
+                         data-card-holder="Vusal Guleli Teymurov">
+                        <div class="pass-header">
+                            <div class="pass-brand">
+                                <svg class="pass-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z" />
+                                </svg>
+                                <span class="pass-brand-name">ROYAL PARK</span>
+                            </div>
+                            <div class="pass-type" data-i18n="payment_resident_pass">RESIDENT PASS</div>
+                        </div>
+
+                        <div class="pass-chip-row">
+                            <div class="pass-chip">
+                                <div class="chip-line"></div>
+                                <div class="chip-line"></div>
+                                <div class="chip-line"></div>
+                                <div class="chip-line"></div>
+                            </div>
+                            <svg class="pass-contactless" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 8a10 10 0 0 1 0 8" />
+                                <path d="M8 6a14 14 0 0 1 0 12" />
+                                <path d="M11 4a18 18 0 0 1 0 16" />
+                            </svg>
+                        </div>
+
+                        <div class="pass-balance">
+                            <div class="pass-label" data-i18n="payment_advance_balance">Advance Balance</div>
+                            <div class="pass-amount" id="passAdvanceAmount"></div>
+                        </div>
+
+                        <div class="pass-footer">
+                            <div>
+                                <div class="pass-label" data-i18n="payment_resident_name">Resident Name</div>
+                                <div class="pass-name" id="passResidentName"></div>
+                            </div>
+                            <div class="pass-expiry">
+                                <div class="pass-label" data-i18n="payment_valid_thru">Valid Thru</div>
+                                <div class="pass-exp">12/28</div>
+                            </div>
+                        </div>
+
+                        <div class="pass-pattern"></div>
+                        <div class="pass-gloss"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Payment Details -->
+        <div class="payment-right-column">
+            <h3 class="payment-section-title" data-i18n="payment_details_title">Детали оплаты</h3>
+            <div id="paymentCountdown" style="display:none;"></div>
+            
+            <div class="order-summary">
+                <div class="order-header">
+                    <div class="order-logo">
+                        <i class="bi bi-building"></i>
+                    </div>
+                    <div class="order-info">
+                        <div class="order-title">RoyalPark Residence</div>
+                        <div class="order-subtitle" data-i18n="payment_order_subtitle">Оплата счёта</div>
+                    </div>
+                </div>
+
+                <div class="order-details">
+                    <div class="order-detail-item">
+                        <span class="detail-label" data-i18n="payment_type_label">Тип платежа</span>
+                        <span class="detail-value" id="paymentType">—</span>
+                    </div>
+
+                    <div class="order-detail-item">
+                        <span class="detail-label" data-i18n="payment_resident_label">Резидент</span>
+                        <span class="detail-value" id="paymentResident">—</span>
+                    </div>
+
+                    <div class="order-detail-item">
+                        <span class="detail-label" data-i18n="payment_period_label">Период</span>
+                        <span class="detail-value" id="paymentDate">—</span>
+                    </div>
+
+                    <!-- <div class="order-detail-item">
+                        <span class="detail-label">Комиссия</span>
+                        <span class="detail-value" id="paymentCommission">0,00 ₼</span>
+                    </div> -->
+
+                    <div class="order-detail-item">
+                        <span class="detail-label" data-i18n="payment_invoice_label">Счёт</span>
+                        <span class="detail-value" id="invoiceNumber">—</span>
+                    </div>
+                    <div class="order-detail-item" id="selectedLinesInfoWrap" style="display:none;">
+                        <span class="detail-label">Выбранные услуги</span>
+                        <span class="detail-value" id="selectedLinesInfo">—</span>
+                    </div>
+                </div>
+
+                <div class="order-totals">
+                    <div class="order-total-item final">
+                        <span class="total-label" data-i18n="payment_total_label">Итого</span>
+                        <span class="total-value" id="total"></span>
+                    </div>
+                </div>
+
+                <div class="payment-methods-inline">
+                    <h4 class="payment-section-subtitle" data-i18n="payment_select_method">Ödəniş üsulunu seçin</h4>
+                    <div class="payment-method-selector" role="radiogroup" aria-label="Payment Method">
+                        <label class="payment-method-option" for="paymentMethodCard">
+                            <input type="radio" id="paymentMethodCard" name="paymentMethod" value="CARD" checked>
+                            <span data-i18n="payment_method_card_portal">Bank Card</span>
+                        </label>
+                        <label class="payment-method-option" for="paymentMethodAdvance">
+                            <input type="radio" id="paymentMethodAdvance" name="paymentMethod" value="ADVANCE">
+                            <span data-i18n="payment_method_advance">Royal Park Advance</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Custom Amount Section -->
+                <div class="custom-amount-section">
+                    <div class="custom-amount-checkbox">
+                        <label class="custom-amount-label">
+                            <input type="checkbox" id="customAmountCheckbox" class="custom-amount-checkbox-input">
+                            <span class="custom-amount-checkbox-text" data-i18n="payment_custom_amount">Указать другую сумму для оплаты</span>
+                        </label>
+                    </div>
+                    <div class="custom-amount-field-wrapper" id="customAmountFieldWrapper" style="display: none;">
+                        <label class="custom-amount-field-label" data-i18n="payment_custom_amount_label">Сумма к оплате</label>
+                        <div class="custom-amount-input-wrapper">
+                            <input 
+                                type="text"
+                                inputmode="decimal"
+                                autocomplete="off"
+                                id="customAmountInput" 
+                                class="custom-amount-input" 
+                                step="0.01" 
+                                min="0.01" 
+                                placeholder="0.00"
+                            >
+                            <span class="custom-amount-currency">₼</span>
+                        </div>
+                        <div class="custom-amount-hint" id="customAmountHint"></div>
+                    </div>
+                </div>
+
+                <button type="button" class="pay-button payment-secondary-btn" id="topupAdvanceBtn" data-i18n="payment_topup_advance_btn" style="margin-top: 12px;">
+                    Пополнить аванс
+                </button>
+            </div>
+
+            <!-- Default pay action when user doesn't add a new card -->
+            <div class="default-pay-actions">
+                <button type="button" class="pay-button default-pay-button" data-i18n="payment_pay_button">Оплатить</button>
+                <div id="gpay_container" style="display:none; margin-top: 12px;"></div>
+            </div>
+        </div>
+    </div>
+    </div>
+</section>
+
+<script>
+// API Configuration (используем var, чтобы избежать ошибок при повторной загрузке через SPA)
+var API_BASE = window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BASE || 'http://localhost:8000');
+var BIN_LOOKUP_URL = API_BASE + '/api/payment/bin-lookup';
+// Флаг демо-режима оплаты: true — имитация платежа без реального запроса на backend
+var ENABLE_FAKE_PAYMENT = false;
+
+// Current card data
+var currentCardData = {
+    bin: null,
+    bank: null,
+    scheme: null,
+    country: null
+};
+
+// Currently selected saved card (from the list on the left)
+var selectedSavedCard = null;
+window.selectedSavedCard = null;
+var ADVANCE_TOPUP_SCOPE = 'advance_topup';
+var GPAY_SCRIPT_URL = 'https://pay.google.com/gp/p/js/pay.js';
+var GPAY_CLIENT_INSTANCE = null;
+var GPAY_IS_READY = false;
+var GPAY_BUTTON_RENDERED = false;
+var GPAY_SCRIPT_LOADING_PROMISE = null;
+var GPAY_CONFIG = window.GPAY_CONFIG || {
+    environment: 'TEST',
+    merchantId: '',
+    merchantName: 'Royal Park',
+    merchantOrigin: window.location.origin,
+    gateway: 'azericardgpay',
+    gatewayMerchantId: '',
+    allowedCardNetworks: ['VISA', 'MASTERCARD', 'AMEX', 'JCB', 'DISCOVER', 'DCI'],
+    allowedCardAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+    currencyCode: 'AZN'
+};
+var GPAY_CONFIG_LOADED = false;
+
+function isAdvanceTopupScope(scope) {
+    return scope === ADVANCE_TOPUP_SCOPE;
+}
+
+// ---------------------------------------------------------------------------
+// Saved cards — load from API and render
+// ---------------------------------------------------------------------------
+
+var _savedCardsLoaded = false;
+var _bgClasses = ['animated-bg-1', 'animated-bg-2', 'animated-bg-3', 'animated-bg-4', 'animated-bg-5'];
+
+function _brandHtml(brand) {
+    const b = (brand || '').toUpperCase();
+    if (b === 'MC' || b === 'MASTERCARD') {
+        return '<div class="mc-circles"><div class="circle red"></div><div class="circle orange"></div></div><span class="brand-name">MasterCard</span>';
+    }
+    if (b === 'VISA') return '<div class="visa-badge">VISA</div>';
+    return '<span class="brand-name">' + (brand || 'Card') + '</span>';
+}
+
+function _renderSavedCardEl(card, idx) {
+    const last4 = (card.masked_pan || '').replace(/[^0-9]/g, '').slice(-4) || '????';
+    const bgClass = _bgClasses[idx % _bgClasses.length];
+    const expiry = card.expiry_month && card.expiry_year
+        ? String(card.expiry_month).padStart(2, '0') + '/' + String(card.expiry_year).slice(-2)
+        : '';
+
+    const div = document.createElement('div');
+    div.className = 'bank-card ' + bgClass;
+    div.setAttribute('data-card-id', 'saved-api-' + card.id);
+    div.setAttribute('data-card-last4', last4);
+    div.setAttribute('data-card-holder', '');
+    div.setAttribute('data-saved-card-db-id', card.id);
+    div.innerHTML = `
+        <div class="glass-overlay"></div>
+        <div class="card-inner">
+            <div class="card-top">
+                <div class="chip chip-with-svg">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                        <rect x="10" y="20" width="80" height="60" rx="10" fill="#ffd700" />
+                        <path d="M10 40 H90 M10 60 H90 M40 20 V80 M60 20 V80" stroke="rgba(0,0,0,0.2)" stroke-width="1" fill="none"/>
+                    </svg>
+                </div>
+                <button type="button" class="btn-delete-saved-card" data-card-db-id="${card.id}" title="Delete card" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:16px;padding:4px;">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+            <div class="brand-row">
+                <div class="brand-logo">${_brandHtml(card.card_brand)}</div>
+            </div>
+            <div class="card-number">**** **** **** ${last4}</div>
+            <div class="card-bottom">
+                <div class="info-group">
+                    <label data-i18n="payment_card_holder_name">SAVED CARD</label>
+                    <div class="value">${card.is_default ? '★ Default' : ''}</div>
+                </div>
+                <div class="info-group align-right">
+                    <label data-i18n="payment_expiry_date">EXPIRY DATE</label>
+                    <div class="value">${expiry}</div>
+                </div>
+            </div>
+        </div>
+    `;
+    return div;
+}
+
+async function loadSavedCards() {
+    const container = document.getElementById('savedBankCards');
+    if (!container) return;
+
+    try {
+        const resp = await fetch(`${API_BASE}/api/azericard/saved-cards`, { credentials: 'include' });
+        if (!resp.ok) {
+            container.innerHTML = '';
+            return;
+        }
+        const cards = await resp.json();
+        container.innerHTML = '';
+
+        if (!Array.isArray(cards) || cards.length === 0) return;
+
+        cards.forEach((card, idx) => {
+            const el = _renderSavedCardEl(card, idx);
+            container.appendChild(el);
+        });
+
+        container.querySelectorAll('.btn-delete-saved-card').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const dbId = btn.dataset.cardDbId;
+                if (!dbId) return;
+                if (!confirm('Delete this saved card?')) return;
+                try {
+                    await fetch(`${API_BASE}/api/azericard/saved-cards/${dbId}`, { method: 'DELETE', credentials: 'include' });
+                    await loadSavedCards();
+                    setupSavedCardSelection();
+                } catch (err) {
+                    console.error('Failed to delete saved card:', err);
+                }
+            });
+        });
+
+        _savedCardsLoaded = true;
+    } catch (err) {
+        console.warn('Could not load saved cards:', err);
+        container.innerHTML = '';
+    }
+}
+
+// TTL for payment session data (10 minutes)
+var PAYMENT_DATA_TTL_MS = 1 * 60 * 1000;
+if (window.paymentCountdownInterval) {
+    clearInterval(window.paymentCountdownInterval);
+}
+var paymentCountdownInterval = window.paymentCountdownInterval || null;
+
+function redirectToDashboard() {
+    // мягкий редирект на главный экран пользователя
+    if (window.paymentRedirectTimeout) {
+        clearTimeout(window.paymentRedirectTimeout);
+    }
+    window.paymentRedirectTimeout = setTimeout(() => {
+        if (window.userSpaRouter && typeof window.userSpaRouter.navigate === 'function') {
+            window.userSpaRouter.navigate('dashboard', true);
+        } else {
+            window.location.href = '/user/dashboard.html';
+        }
+    }, 1200);
+}
+
+function clearPaymentSessionData() {
+    sessionStorage.removeItem('paymentScope');
+    sessionStorage.removeItem('paymentAmount');
+    sessionStorage.removeItem('paymentScopeLabel');
+    sessionStorage.removeItem('paymentResidentCode');
+    sessionStorage.removeItem('paymentResidentId');
+    sessionStorage.removeItem('paymentSummary');
+    sessionStorage.removeItem('paymentInvoiceId');
+    sessionStorage.removeItem('paymentSelectedLineIds');
+    sessionStorage.removeItem('paymentSelectedLinesSummary');
+    sessionStorage.removeItem('paymentTimestamp');
+    sessionStorage.removeItem('paymentWalletProvider');
+    sessionStorage.removeItem('paymentWalletToken');
+    sessionStorage.removeItem('paymentWalletEci');
+    sessionStorage.removeItem('paymentWalletTavv');
+}
+
+function stopPaymentCountdown() {
+    if (paymentCountdownInterval) {
+        clearInterval(paymentCountdownInterval);
+        paymentCountdownInterval = null;
+    }
+    if (window.paymentCountdownInterval) {
+        clearInterval(window.paymentCountdownInterval);
+        window.paymentCountdownInterval = null;
+    }
+    const timerEl = document.getElementById('paymentCountdown');
+    if (timerEl) {
+        timerEl.style.display = 'none';
+        timerEl.textContent = '';
+        timerEl.style.borderColor = '';
+        timerEl.style.background = '';
+        timerEl.style.color = '';
+    }
+}
+
+function clearWalletSessionData() {
+    sessionStorage.removeItem('paymentWalletProvider');
+    sessionStorage.removeItem('paymentWalletToken');
+    sessionStorage.removeItem('paymentWalletEci');
+    sessionStorage.removeItem('paymentWalletTavv');
+}
+
+function parsePaymentAmountFromUi() {
+    const customAmountCheckbox = document.getElementById('customAmountCheckbox');
+    const customAmountInput = document.getElementById('customAmountInput');
+    const totalEl = document.getElementById('total');
+
+    if (customAmountCheckbox && customAmountCheckbox.checked && customAmountInput) {
+        const custom = parseFloat(String(customAmountInput.value || '').replace(',', '.'));
+        if (Number.isFinite(custom) && custom > 0) return custom;
+    }
+
+    if (totalEl) {
+        const totalText = totalEl.textContent || '';
+        const cleanAmount = totalText.replace(/[^\d,\.]/g, '').replace(',', '.');
+        const parsed = parseFloat(cleanAmount);
+        if (Number.isFinite(parsed) && parsed > 0) return parsed;
+    }
+
+    const storedAmount = parseFloat(sessionStorage.getItem('paymentAmount') || '0');
+    if (Number.isFinite(storedAmount) && storedAmount > 0) return storedAmount;
+    return 0;
+}
+
+function getGooglePayBaseRequest() {
+    return { apiVersion: 2, apiVersionMinor: 0 };
+}
+
+async function loadGooglePayRuntimeConfig() {
+    if (GPAY_CONFIG_LOADED) return GPAY_CONFIG;
+    try {
+        const resp = await fetch(`${API_BASE}/api/azericard/wallet-config`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        if (!resp.ok) {
+            GPAY_CONFIG_LOADED = true;
+            return GPAY_CONFIG;
+        }
+        const data = await resp.json();
+        const cfg = data?.google_pay || {};
+        GPAY_CONFIG = Object.assign({}, GPAY_CONFIG, {
+            environment: cfg.environment || GPAY_CONFIG.environment,
+            gateway: cfg.gateway || GPAY_CONFIG.gateway,
+            gatewayMerchantId: cfg.gatewayMerchantId || GPAY_CONFIG.gatewayMerchantId,
+            merchantId: cfg.merchantId || GPAY_CONFIG.merchantId,
+            merchantName: cfg.merchantName || GPAY_CONFIG.merchantName,
+            merchantOrigin: cfg.merchantOrigin || GPAY_CONFIG.merchantOrigin,
+            currencyCode: cfg.currencyCode || GPAY_CONFIG.currencyCode
+        });
+    } catch (e) {
+        console.warn('Failed to load wallet config:', e);
+    } finally {
+        GPAY_CONFIG_LOADED = true;
+    }
+    return GPAY_CONFIG;
+}
+
+function getGooglePayBaseCardPaymentMethod() {
+    return {
+        type: 'CARD',
+        parameters: {
+            allowedAuthMethods: GPAY_CONFIG.allowedCardAuthMethods || ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+            allowedCardNetworks: GPAY_CONFIG.allowedCardNetworks || ['VISA', 'MASTERCARD']
+        }
+    };
+}
+
+function getGooglePayTokenizationSpecification() {
+    return {
+        type: 'PAYMENT_GATEWAY',
+        parameters: {
+            gateway: GPAY_CONFIG.gateway || 'azericardgpay',
+            gatewayMerchantId: GPAY_CONFIG.gatewayMerchantId || ''
+        }
+    };
+}
+
+function getGooglePayCardPaymentMethod() {
+    return Object.assign({}, getGooglePayBaseCardPaymentMethod(), {
+        tokenizationSpecification: getGooglePayTokenizationSpecification()
+    });
+}
+
+function getGooglePayPaymentsClient() {
+    if (GPAY_CLIENT_INSTANCE === null && window.google?.payments?.api?.PaymentsClient) {
+        GPAY_CLIENT_INSTANCE = new google.payments.api.PaymentsClient({
+            environment: GPAY_CONFIG.environment || 'TEST'
+        });
+    }
+    return GPAY_CLIENT_INSTANCE;
+}
+
+function loadGooglePayScript() {
+    if (window.google?.payments?.api) return Promise.resolve();
+    if (GPAY_SCRIPT_LOADING_PROMISE) return GPAY_SCRIPT_LOADING_PROMISE;
+
+    GPAY_SCRIPT_LOADING_PROMISE = new Promise((resolve, reject) => {
+        const existing = document.querySelector('script[data-gpay-script="1"]');
+        if (existing) {
+            existing.addEventListener('load', () => resolve(), { once: true });
+            existing.addEventListener('error', () => reject(new Error('Google Pay script failed to load')), { once: true });
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = GPAY_SCRIPT_URL;
+        script.async = true;
+        script.dataset.gpayScript = '1';
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Google Pay script failed to load'));
+        document.head.appendChild(script);
+    });
+
+    return GPAY_SCRIPT_LOADING_PROMISE;
+}
+
+function getGooglePayIsReadyToPayRequest() {
+    return Object.assign({}, getGooglePayBaseRequest(), {
+        allowedPaymentMethods: [getGooglePayBaseCardPaymentMethod()]
+    });
+}
+
+function getGooglePayTransactionInfo() {
+    const amount = parsePaymentAmountFromUi();
+    return {
+        totalPriceStatus: 'FINAL',
+        totalPrice: amount > 0 ? amount.toFixed(2) : '0.01',
+        currencyCode: GPAY_CONFIG.currencyCode || 'AZN'
+    };
+}
+
+function getGooglePayPaymentDataRequest() {
+    const req = Object.assign({}, getGooglePayBaseRequest(), {
+        allowedPaymentMethods: [getGooglePayCardPaymentMethod()],
+        transactionInfo: getGooglePayTransactionInfo(),
+        merchantInfo: {
+            merchantName: GPAY_CONFIG.merchantName || 'Royal Park',
+            merchantOrigin: GPAY_CONFIG.merchantOrigin || window.location.origin
+        }
+    });
+    if (GPAY_CONFIG.merchantId) {
+        req.merchantInfo.merchantId = GPAY_CONFIG.merchantId;
+    }
+    return req;
+}
+
+async function handleGooglePayButtonClicked() {
+    try {
+        const paymentsClient = getGooglePayPaymentsClient();
+        if (!paymentsClient) throw new Error('Google Pay client is not initialized');
+
+        const paymentData = await paymentsClient.loadPaymentData(getGooglePayPaymentDataRequest());
+        const paymentToken = paymentData?.paymentMethodData?.tokenizationData?.token || '';
+        if (!paymentToken) {
+            throw new Error('Google Pay token is empty');
+        }
+
+        sessionStorage.setItem('paymentWalletProvider', 'google_pay');
+        sessionStorage.setItem('paymentWalletToken', paymentToken);
+        sessionStorage.removeItem('paymentWalletEci');
+        sessionStorage.removeItem('paymentWalletTavv');
+
+        const payButton = document.querySelector('.default-pay-button');
+        await submitPayment({ preventDefault() {}, target: payButton || document.body, isWalletFlow: true });
+    } catch (err) {
+        if (err?.statusCode === 'CANCELED') return;
+        console.error('Google Pay flow failed:', err);
+        clearWalletSessionData();
+        showPaymentError('Google Pay token almaq mümkün olmadı');
+    }
+}
+
+function setGooglePayContainerVisibility(visible) {
+    const container = document.getElementById('gpay_container');
+    if (!container) return;
+    container.style.display = visible ? '' : 'none';
+}
+
+async function setupGooglePayButton() {
+    const container = document.getElementById('gpay_container');
+    const cardMethodInput = document.getElementById('paymentMethodCard');
+    if (!container || !cardMethodInput) return;
+
+    const shouldShow = !!cardMethodInput.checked;
+    if (!shouldShow) {
+        setGooglePayContainerVisibility(false);
+        clearWalletSessionData();
+        return;
+    }
+
+    try {
+        await loadGooglePayRuntimeConfig();
+        if (!String(GPAY_CONFIG.gatewayMerchantId || '').trim()) {
+            console.warn('Google Pay disabled: missing gatewayMerchantId from backend wallet config');
+            setGooglePayContainerVisibility(false);
+            return;
+        }
+        await loadGooglePayScript();
+        const paymentsClient = getGooglePayPaymentsClient();
+        if (!paymentsClient) return;
+
+        const ready = await paymentsClient.isReadyToPay(getGooglePayIsReadyToPayRequest());
+        GPAY_IS_READY = !!ready?.result;
+        if (!GPAY_IS_READY) {
+            setGooglePayContainerVisibility(false);
+            return;
+        }
+
+        if (!GPAY_BUTTON_RENDERED) {
+            const button = paymentsClient.createButton({
+                onClick: handleGooglePayButtonClicked,
+                allowedPaymentMethods: [getGooglePayBaseCardPaymentMethod()]
+            });
+            container.innerHTML = '';
+            container.appendChild(button);
+            GPAY_BUTTON_RENDERED = true;
+        }
+        setGooglePayContainerVisibility(true);
+    } catch (e) {
+        GPAY_IS_READY = false;
+        setGooglePayContainerVisibility(false);
+        console.warn('Google Pay is unavailable:', e);
+    }
+}
+
+function startPaymentCountdown(paymentTimestamp) {
+    const timerEl = document.getElementById('paymentCountdown');
+    if (!timerEl || !paymentTimestamp) {
+        return;
+    }
+
+    stopPaymentCountdown();
+
+    const deadline = parseInt(paymentTimestamp, 10) + PAYMENT_DATA_TTL_MS;
+
+    const tick = () => {
+        const remaining = deadline - Date.now();
+        if (remaining <= 0) {
+            stopPaymentCountdown();
+            timerEl.style.display = 'block';
+            timerEl.style.borderColor = '#dc2626';
+            timerEl.style.background = 'rgba(220,38,38,0.08)';
+            const lang = localStorage.getItem('language') || 'ru';
+            timerEl.textContent = window.i18n?.translate?.('payment_time_expired', lang) || 'Время на оплату истекло. Данные очищены, начните заново.';
+            resetPaymentSummaryUIAfterExpiry();
+            redirectToDashboard();
+            return;
+        }
+
+        const minutes = Math.floor(remaining / 60000);
+        const seconds = Math.floor((remaining % 60000) / 1000);
+        const lang = localStorage.getItem('language') || 'ru';
+        const timeLabel = window.i18n?.translate?.('payment_time_remaining', lang) || 'Время на оплату';
+        timerEl.textContent = `${timeLabel}: ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        timerEl.style.display = 'block';
+    };
+
+    tick();
+    paymentCountdownInterval = setInterval(tick, 1000);
+    window.paymentCountdownInterval = paymentCountdownInterval;
+}
+
+function resetPaymentSummaryUIAfterExpiry() {
+    clearPaymentSessionData();
+    if (typeof initPaymentSummary === 'function') {
+        initPaymentSummary();
+    }
+}
+
+// Card styles for different banks (один экземпляр на всё приложение)
+if (!window.bankStyles) {
+    window.bankStyles = {
+        default: {
+            gradient: 'linear-gradient(135deg, #c5cd9f 0%, #b1ba88 100%)',
+            logo: 'MC'
+        },
+        'sberbank': {
+            gradient: 'linear-gradient(135deg, #21a038 0%, #16802a 100%)',
+            logo: 'СБЕР'
+        },
+        'vtb': {
+            gradient: 'linear-gradient(135deg, #003d82 0%, #001f4d 100%)',
+            logo: 'ВТБ'
+        },
+        'gazprombank': {
+            gradient: 'linear-gradient(135deg, #003366 0%, #001a33 100%)',
+            logo: 'ГПБ'
+        },
+        'alfabank': {
+            gradient: 'linear-gradient(135deg, #ef3124 0%, #cc2619 100%)',
+            logo: 'АЛЬФА'
+        },
+        'tinkoff': {
+            gradient: 'linear-gradient(135deg, #ffdd2d 0%, #ffcd02 100%)',
+            logo: 'ТИНЬ',
+            textColor: '#000'
+        },
+        'raiffeisen': {
+            gradient: 'linear-gradient(135deg, #ffcc00 0%, #ff9900 100%)',
+            logo: 'РБ'
+        }
+    };
+}
+var bankStyles = window.bankStyles;
+
+// Fetch BIN data from backend proxy (приоритет: API BINTable)
+async function fetchBINData(bin) {
+    if (!bin || bin.length < 6) return null;
+    
+    const firstSix = bin.substring(0, 6);
+    
+    try {
+        const response = await fetch(`${BIN_LOOKUP_URL}?bin=${firstSix}`);
+        
+        if (!response.ok) {
+            console.warn('BIN lookup failed:', response.status);
+            // Fallback: определяем схему по номеру, если API недоступен
+            return determineSchemeByNumber(firstSix);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Приоритет отдаём данным из BINTable API
+            return {
+                bank: data.bank || null,
+                scheme: data.scheme || null,  // Схема из BINTable API
+                country: data.country || null,
+                type: data.type || null
+            };
+        }
+        
+        // Если API не вернул успешный результат, используем fallback
+        return determineSchemeByNumber(firstSix);
+    } catch (error) {
+        console.error('BIN lookup error:', error);
+        // Fallback: определяем схему по номеру при ошибке
+        return determineSchemeByNumber(firstSix);
+    }
+}
+
+// Определяем схему карты по номеру
+function determineSchemeByNumber(number) {
+    if (!number || number.length < 2) {
+        return { scheme: 'Unknown', logo: 'MC' };
+    }
+    
+    const firstDigit = number[0];
+    const firstTwo = number.substring(0, 2);
+    const firstFour = number.substring(0, 4);
+    
+    // Visa: начинается с 4
+    if (firstDigit === '4') {
+        return { scheme: 'Visa', logo: 'VISA' };
+    }
+    
+    // MasterCard: 51-55 или 2221-2720
+    if (firstTwo >= '51' && firstTwo <= '55') {
+        return { scheme: 'Mastercard', logo: 'MC' };
+    }
+    
+    // MasterCard новая серия: 2221-2720
+    const firstFourNum = parseInt(firstFour);
+    if (firstFourNum >= 2221 && firstFourNum <= 2720) {
+        return { scheme: 'Mastercard', logo: 'MC' };
+    }
+    
+    // Maestro: 50, 56-58, 67
+    if (firstTwo === '50' || 
+        (firstTwo >= '56' && firstTwo <= '58') || 
+        firstTwo === '67') {
+        return { scheme: 'Maestro', logo: 'MC' };
+    }
+    
+    // UnionPay: начинается с 62
+    if (firstTwo === '62') {
+        return { scheme: 'UnionPay', logo: 'UP' };
+    }
+    
+    // Mir: начинается с 2200-2204
+    const mirRange = parseInt(firstFour);
+    if (mirRange >= 2200 && mirRange <= 2204) {
+        return { scheme: 'Мир', logo: 'МИР' };
+    }
+    
+    // Дополнительная проверка для Mir: 2xxx (но не 2200-2204 уже обработано)
+    if (firstDigit === '2' && firstTwo !== '22' && firstTwo !== '23') {
+        // Другие варианты Mir
+        if (firstTwo >= '24' && firstTwo <= '27') {
+            // Проверяем, не попали ли в MasterCard диапазон
+            if (!(firstFourNum >= 2221 && firstFourNum <= 2720)) {
+                return { scheme: 'Мир', logo: 'МИР' };
+            }
+        }
+    }
+    
+    return { scheme: 'Unknown', logo: 'MC' };
+}
+
+// Get bank style
+function getBankStyle(bankName) {
+    if (!bankName) return bankStyles.default;
+    
+    const bankLower = bankName.toLowerCase();
+    
+    // Поиск по ключевым словам в названии банка
+    if (bankLower.includes('sber') || bankLower.includes('сбер')) {
+        return bankStyles.sberbank;
+    } else if (bankLower.includes('vtb') || bankLower.includes('втб')) {
+        return bankStyles.vtb;
+    } else if (bankLower.includes('gazprom') || bankLower.includes('газпром')) {
+        return bankStyles.gazprombank;
+    } else if (bankLower.includes('alfa') || bankLower.includes('альфа')) {
+        return bankStyles.alfabank;
+    } else if (bankLower.includes('tinkoff') || bankLower.includes('тинькофф')) {
+        return bankStyles.tinkoff;
+    } else if (bankLower.includes('raiffeisen') || bankLower.includes('райффайзен')) {
+        return bankStyles.raiffeisen;
+    } else if (bankLower.includes('abb') || bankLower.includes('azerbaijan') || bankLower.includes('beynəlxalq')) {
+        return bankStyles.abb;
+    }
+    
+    return bankStyles.default;
+}
+
+// Update card preview
+function updateCardPreview(cardNumber, cardName, cardExp, cardData) {
+    const preview = document.getElementById('cardPreview');
+    const previewNumber = document.getElementById('cardPreviewNumber');
+    const previewName = document.getElementById('cardPreviewName');
+    const previewExpiry = document.getElementById('cardPreviewExpiry');
+    const previewLogoText = document.getElementById('cardPreviewLogoText');
+    const mastercardLogo = document.getElementById('mastercardLogo');
+    const cardPreviewNetwork = document.getElementById('cardPreviewNetwork');
+    const cardInputIcon = document.getElementById('cardInputIcon');
+    const cardBankInfo = document.getElementById('cardBankInfo');
+
+    if (!preview || !previewNumber || !previewName || !previewExpiry) {
+        return;
+    }
+    
+    // Update card number
+    if (cardNumber) {
+        // Убираем пробелы и форматируем строго по 4 цифры
+        const digitsOnly = cardNumber.replace(/\s/g, '');
+        const formatted = digitsOnly.replace(/(.{4})/g, '$1 ').trim();
+        previewNumber.textContent = formatted || '**** **** **** ****';
+    } else {
+        previewNumber.textContent = '**** **** **** ****';
+    }
+    
+    // Update name
+    previewName.textContent = (cardName || 'ИМЯ ФАМИЛИЯ').toUpperCase();
+    
+    // Update expiry
+    previewExpiry.textContent = cardExp || 'MM/YY';
+    
+    // Определяем тип карты и логотип
+    let cardType = 'Master Card';
+    let showMastercardLogo = true;
+    
+    if (cardData?.scheme) {
+        const scheme = cardData.scheme.toLowerCase();
+        if (scheme === 'visa') {
+            cardType = 'Visa';
+            showMastercardLogo = false;
+        } else if (scheme === 'мир' || scheme === 'mir') {
+            cardType = 'МИР';
+            showMastercardLogo = false;
+        } else if (scheme === 'mastercard') {
+            cardType = 'Master Card';
+            showMastercardLogo = true;
+        } else if (scheme === 'maestro') {
+            cardType = 'Maestro';
+            showMastercardLogo = false;
+        } else if (scheme === 'unionpay') {
+            cardType = 'UnionPay';
+            showMastercardLogo = false;
+        }
+    }
+    
+    // Показываем/скрываем логотип Mastercard и создаем другие логотипы
+    const logoContainer = preview.querySelector('.logo');
+    if (logoContainer) {
+        // Удаляем все существующие логотипы (кроме текста)
+        const existingLogos = logoContainer.querySelectorAll('.mastercard-logo, .visa-logo, .mir-logo');
+        existingLogos.forEach(logo => logo.remove());
+        
+        // Создаем нужный логотип
+        if (showMastercardLogo) {
+            const mcLogo = document.createElement('div');
+            mcLogo.className = 'mastercard-logo';
+            mcLogo.innerHTML = '<span class="mastercard-circle circle-red"></span><span class="mastercard-circle circle-orange"></span>';
+            logoContainer.insertBefore(mcLogo, previewLogoText);
+        } else if (cardType === 'Visa') {
+            const visaLogo = document.createElement('div');
+            visaLogo.className = 'visa-logo';
+            visaLogo.textContent = 'VISA';
+            logoContainer.insertBefore(visaLogo, previewLogoText);
+        } else if (cardType === 'МИР') {
+            const mirLogo = document.createElement('div');
+            mirLogo.className = 'mir-logo';
+            mirLogo.textContent = 'МИР';
+            logoContainer.insertBefore(mirLogo, previewLogoText);
+        }
+    }
+    
+    if (previewLogoText) {
+        previewLogoText.textContent = cardType;
+    }
+    if (cardInputIcon) {
+        cardInputIcon.textContent = cardType;
+    }
+    
+    // Обновляем логотип сети в правом верхнем углу
+    if (cardPreviewNetwork) {
+        if (cardType === 'Visa') {
+            cardPreviewNetwork.innerHTML = '<div class="visa-logo-small">VISA</div>';
+        } else if (cardType === 'Master Card') {
+            cardPreviewNetwork.innerHTML = '<div class="mastercard-logo-small"><span class="mastercard-circle circle-red"></span><span class="mastercard-circle circle-orange"></span></div>';
+        } else if (cardType === 'МИР') {
+            cardPreviewNetwork.innerHTML = '<div class="mir-logo-small">МИР</div>';
+        } else {
+            cardPreviewNetwork.innerHTML = '<div class="visa-logo-small">VISA</div>';
+        }
+    }
+    
+    // Keep background defined in CSS (modern animated gradient) to match saved cards design.
+    // We only control foreground (text/icons) via JS.
+    preview.style.color = 'white';
+    
+    // Show bank info
+    if (cardBankInfo && cardData?.bank) {
+        const lang = localStorage.getItem('language') || 'ru';
+        const bankLabel = window.i18n?.translate?.('payment_bank_label', lang) || 'Банк';
+        cardBankInfo.innerHTML = `<small>${bankLabel}: ${cardData.bank}${cardData.country ? ` (${cardData.country})` : ''}</small>`;
+    } else if (cardBankInfo) {
+        cardBankInfo.innerHTML = '';
+    }
+}
+
+// Card number formatting and BIN lookup
+document.getElementById('cardNumberInput')?.addEventListener('input', async function(e) {
+    let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    // Форматируем строго по 4 цифры в группе (максимум 16 цифр для стандартной карты)
+    let formattedValue = value.replace(/(\d{4})(?=\d)/g, '$1 ');
+    // Ограничиваем до 19 символов (16 цифр + 3 пробела)
+    if (formattedValue.length > 19) {
+        formattedValue = formattedValue.substring(0, 19);
+    }
+    e.target.value = formattedValue;
+    
+    // Update preview
+    const cardName = document.getElementById('cardNameInput').value;
+    const cardExp = document.getElementById('cardExpInput').value;
+    updateCardPreview(formattedValue, cardName, cardExp, currentCardData);
+    
+    // Для первых 2-4 цифр используем быстрый fallback для предварительного определения
+    let fallbackScheme = null;
+    if (value.length >= 2 && value.length < 6) {
+        const tempScheme = determineSchemeByNumber(value);
+        if (tempScheme) {
+            fallbackScheme = tempScheme.scheme;
+            currentCardData.scheme = fallbackScheme;
+            updateCardPreview(formattedValue, cardName, cardExp, currentCardData);
+        }
+        return; // Выходим, так как для BIN lookup нужно минимум 6 цифр
+    }
+    
+    // Lookup BIN через API BINTable (приоритетный источник) если есть минимум 6 цифр
+    if (value.length >= 6) {
+        const bin = value.substring(0, 6);
+        if (bin !== currentCardData.bin) {
+            currentCardData.bin = bin;
+            
+            // Запрашиваем данные через BINTable API (приоритет)
+            const binData = await fetchBINData(value);
+            
+            if (binData) {
+                // Используем данные из API BINTable (схема, банк, страна)
+                currentCardData = { 
+                    ...currentCardData, 
+                    bank: binData.bank || null,
+                    scheme: binData.scheme || null,  // Схема из API имеет приоритет
+                    country: binData.country || null,
+                    type: binData.type || null
+                };
+            } else {
+                // Если API не вернул данных, используем fallback определение
+                const fallbackData = determineSchemeByNumber(value);
+                currentCardData = {
+                    ...currentCardData,
+                    bank: null,
+                    scheme: fallbackData?.scheme || null,
+                    country: null,
+                    type: null
+                };
+            }
+            
+            updateCardPreview(formattedValue, cardName, cardExp, currentCardData);
+        }
+    } else if (value.length === 0) {
+        // Если поле очищено, сбрасываем данные
+        currentCardData = { bin: null, bank: null, scheme: null, country: null };
+        updateCardPreview(formattedValue, cardName, cardExp, null);
+    }
+});
+
+// Card name input
+document.getElementById('cardNameInput')?.addEventListener('input', function(e) {
+    const cardNumber = document.getElementById('cardNumberInput').value;
+    const cardExp = document.getElementById('cardExpInput').value;
+    updateCardPreview(cardNumber, e.target.value, cardExp, currentCardData);
+});
+
+// Exp date formatting (MM/YY)
+document.getElementById('cardExpInput')?.addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2, 4);
+    }
+    e.target.value = value;
+    
+    const cardNumber = document.getElementById('cardNumberInput').value;
+    const cardName = document.getElementById('cardNameInput').value;
+    updateCardPreview(cardNumber, cardName, value, currentCardData);
+});
+
+// CVV formatting
+document.getElementById('cardCvvInput')?.addEventListener('input', function(e) {
+    e.target.value = e.target.value.replace(/\D/g, '');
+});
+
+// Flip card functions
+function flipSavedCard(element) {
+    if (element) {
+        element.classList.toggle('flipped');
+    }
+}
+
+function flipPreviewCard() {
+    const container = document.getElementById('cardPreviewContainer');
+    if (container) {
+        container.classList.toggle('flipped');
+    }
+}
+
+// Update CVV on card back
+document.getElementById('cardCvvInput')?.addEventListener('input', function(e) {
+    const cvv = e.target.value.replace(/\D/g, '');
+    const cvvDisplay = document.getElementById('cardPreviewCVV');
+    if (cvvDisplay) {
+        cvvDisplay.textContent = cvv || '***';
+    }
+});
+
+// -------------------------------
+// Инициализация данных оплаты
+// -------------------------------
+
+// Fallback: получить сводку дашборда с backend
+async function loadDashboardSummaryForPayment(scope) {
+    try {
+        const resp = await fetch(`${API_BASE}/api/resident/dashboard`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        if (!resp.ok) {
+            console.warn('Failed to load dashboard summary for payment:', resp.status);
+            return null;
+        }
+        const data = await resp.json();
+        const summary = data.summary || {};
+        const amount = scope === 'all'
+            ? (summary.total_debt || 0)
+            : (summary.total_month || 0);
+        return { amount, summary };
+    } catch (err) {
+        console.error('Error loading dashboard summary for payment:', err);
+        return null;
+    }
+}
+
+// Загрузка связанных счетов резидента для показа в деталях оплаты
+// preferredAmount - сумма из sessionStorage, которая имеет приоритет над суммой из счетов
+// residentId - ID резидента для фильтрации счетов
+// selectedInvoiceId - конкретный счет для оплаты (если выбран)
+async function loadPaymentInvoices(scope, residentCode, preferredAmount = null, residentId = null, selectedInvoiceId = null) {
+    try {
+        const response = await fetch(`${API_BASE}/api/resident/invoices`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (!response.ok) {
+            console.warn('Failed to load resident invoices for payment details:', response.status);
+            return;
+        }
+
+        const data = await response.json();
+        const invoices = data.invoices || [];
+        if (!invoices.length) {
+            return;
+        }
+
+        const now = new Date();
+        const curYear = now.getFullYear();
+        const curMonth = now.getMonth() + 1;
+
+        // Фильтруем счета по резидент-коду и/или residentId, если они указаны
+        let filteredInvoices = invoices;
+        let selectedInvoice = null;
+        let lockToSelectedInvoice = false;
+        if (selectedInvoiceId) {
+            selectedInvoice = invoices.find(inv => inv.id === selectedInvoiceId) || null;
+            if (selectedInvoice) {
+                filteredInvoices = [selectedInvoice];
+                lockToSelectedInvoice = true;
+                if (!residentId) residentId = selectedInvoice.resident_id;
+                if (!residentCode) residentCode = selectedInvoice.resident_code;
+                if (!preferredAmount || Number(preferredAmount) === 0) {
+                    preferredAmount = (selectedInvoice.remaining_amount ?? selectedInvoice.amount_total ?? 0);
+                }
+            }
+        }
+        
+        // Для scope 'all' мы хотим видеть ВСЕ счета пользователя, поэтому пропускаем фильтрацию по резиденту
+        if (scope !== 'all' && !lockToSelectedInvoice) {
+            if (residentId) {
+                // Приоритет: фильтрация по residentId (более точная)
+                filteredInvoices = invoices.filter(inv => inv.resident_id === residentId);
+            } else if (residentCode && residentCode !== 'Все объекты') {
+                // Fallback: фильтрация по резидент-коду
+                filteredInvoices = invoices.filter(inv => {
+                    const invResidentCode = inv.resident_code || '';
+                    // Сравниваем резидент-коды (нормализуем пробелы)
+                    return invResidentCode.replace(/\s+/g, ' ').trim() === residentCode.replace(/\s+/g, ' ').trim();
+                });
+            }
+        }
+
+        // Затем фильтруем по периоду, если scope === 'month'
+        let targetInvoices = filteredInvoices;
+        if (scope === 'month' && !selectedInvoiceId) {
+            const monthInvoices = filteredInvoices.filter(inv => inv.period_year === curYear && inv.period_month === curMonth);
+            if (monthInvoices.length) {
+                targetInvoices = monthInvoices;
+            } else if (filteredInvoices.length > 0) {
+                // Если нет счетов за текущий месяц, но есть отфильтрованные счета, используем их
+                targetInvoices = filteredInvoices;
+            }
+        }
+
+        // Подготовим список id выбранных счетов для страницы "Мои счета"
+        // НЕ сохраняем их в sessionStorage сразу - только при клике на invoice-link
+        const targetInvoiceIds = (targetInvoices || [])
+            .map(inv => inv && inv.id)
+            .filter(id => id !== null && id !== undefined);
+
+        const invoiceNumberEl = document.getElementById('invoiceNumber');
+        const paymentResidentEl = document.getElementById('paymentResident');
+        const paymentDateEl = document.getElementById('paymentDate');
+        const totalEl = document.getElementById('total');
+        const amountLabelEl = document.getElementById('paymentAmountLabel');
+
+        const first = targetInvoices[0];
+
+        // Номер счёта
+        if (invoiceNumberEl) {
+            // Сбрасываем класс ссылки перед установкой
+            invoiceNumberEl.classList.remove('invoice-link');
+
+            if (targetInvoices.length === 1 && first) {
+                // Один счёт — делаем номер кликабельным и ведём на страницу просмотра счёта
+                invoiceNumberEl.textContent = first.number || `№${first.id}`;
+                invoiceNumberEl.style.cursor = 'pointer';
+                invoiceNumberEl.classList.add('invoice-link');
+                invoiceNumberEl.onclick = function () {
+                    const invId = first.id;
+                    if (!invId) return;
+                    try {
+                        // Для user/pages/invoice-view.html
+                        sessionStorage.setItem('currentInvoiceId', String(invId));
+                    } catch (e) {
+                        console.warn('Failed to store currentInvoiceId before navigation', e);
+                    }
+
+                    // Переход на маршрут invoice (user SPA)
+                    if (window.userSpaRouter && typeof window.userSpaRouter.navigate === 'function') {
+                        window.userSpaRouter.navigate('invoice', true);
+                    } else {
+                        // Fallback: обычный URL с hash и параметром id
+                        window.location.href = `/user/dashboard.html#invoice?id=${encodeURIComponent(invId)}`;
+                    }
+                };
+            } else {
+                // Несколько счетов — ведём на список счетов с фильтрацией
+                const lang = localStorage.getItem('language') || 'ru';
+                const multipleText = window.i18n?.translate?.('payment_multiple_invoices', lang) || 'Несколько счетов';
+                invoiceNumberEl.textContent = `${multipleText} (${targetInvoices.length})`;
+                invoiceNumberEl.style.cursor = 'pointer';
+                invoiceNumberEl.classList.add('invoice-link');
+                invoiceNumberEl.onclick = function () {
+                    if (targetInvoiceIds.length) {
+                        try {
+                            // Сохраняем ID счетов и статусы только при клике на invoice-link
+                            sessionStorage.setItem('billsFilterInvoiceIds', JSON.stringify(targetInvoiceIds));
+                            // При переходе со страницы оплаты через invoice-link показываем только счета в статусе ISSUED и PARTIAL
+                            const statusesForBills = ['ISSUED', 'PARTIAL'];
+                            sessionStorage.setItem('billsFilterStatuses', JSON.stringify(statusesForBills));
+                            sessionStorage.setItem('billsSystemFilterMeta', JSON.stringify({
+                                source: 'report_payment',
+                                ts: Date.now()
+                            }));
+                        } catch (e) {
+                            console.warn('Failed to store billsFilterInvoiceIds or billsFilterStatuses before navigation', e);
+                        }
+                    }
+                    if (window.userSpaRouter && typeof window.userSpaRouter.navigate === 'function') {
+                        window.userSpaRouter.navigate('bills', true);
+                    } else {
+                        window.location.href = '/user/dashboard.html#bills';
+                    }
+                };
+            }
+        }
+
+        // Резидент
+        // Приоритет отдаём резидент-коду из sessionStorage (который был передан при нажатии кнопки)
+        // Не перезаписываем, если резидент-код уже установлен из sessionStorage
+        if (paymentResidentEl) {
+            const currentResidentCode = paymentResidentEl.textContent || '';
+            // Если резидент-код уже установлен и совпадает с переданным, не меняем
+            if (residentCode && currentResidentCode.trim() === residentCode.trim()) {
+                // Уже правильно установлен, не меняем
+            } else if (residentCode) {
+                // Устанавливаем резидент-код из параметра (из sessionStorage)
+                paymentResidentEl.textContent = residentCode;
+            } else if (first?.resident_code) {
+                // Fallback: берем из первого счёта, если резидент-код не был передан
+                paymentResidentEl.textContent = first.resident_code;
+            }
+        }
+
+        // Период
+        // Если scope === 'month', период должен быть текущий месяц
+        // Если scope === 'all', показываем диапазон из счетов
+        if (paymentDateEl) {
+            // Если scope === 'month' и нет счетов после фильтрации, показываем текущий месяц
+            if (scope === 'month' && targetInvoices.length === 0) {
+                const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+                const mName = monthNames[curMonth - 1] || curMonth;
+                paymentDateEl.textContent = `${mName} ${curYear}`;
+            } else if (scope === 'invoice' && (selectedInvoice || targetInvoices.length > 0)) {
+                const inv = selectedInvoice || targetInvoices[0];
+                if (inv?.period_dates?.from && inv?.period_dates?.to) {
+                    paymentDateEl.textContent = inv.period_dates.from === inv.period_dates.to
+                        ? inv.period_dates.to
+                        : `${inv.period_dates.from} - ${inv.period_dates.to}`;
+                } else if (inv?.period_year && inv?.period_month) {
+                    const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+                    const mName = monthNames[inv.period_month - 1] || inv.period_month;
+                    paymentDateEl.textContent = `${mName} ${inv.period_year}`;
+                }
+            } else if (targetInvoices.length > 0) {
+                if (scope === 'all' && targetInvoices.length > 1) {
+                // Для полного погашения долга показываем диапазон от первой до последней даты
+                const parseDate = (str) => {
+                    if (!str || typeof str !== 'string') return null;
+                    const parts = str.split('.');
+                    if (parts.length !== 3) return null;
+                    const [dd, mm, yyyy] = parts.map(p => parseInt(p, 10));
+                    if (!dd || !mm || !yyyy) return null;
+                    return new Date(yyyy, mm - 1, dd);
+                };
+
+                let minDate = null;
+                let maxDate = null;
+                let minText = null;
+                let maxText = null;
+
+                targetInvoices.forEach(inv => {
+                    const fromStr = inv?.period_dates?.from || null;
+                    const toStr = inv?.period_dates?.to || null;
+
+                    const fromDate = parseDate(fromStr || toStr);
+                    const toDate = parseDate(toStr || fromStr);
+
+                    if (fromDate) {
+                        if (!minDate || fromDate < minDate) {
+                            minDate = fromDate;
+                            minText = fromStr || toStr;
+                        }
+                    }
+                    if (toDate) {
+                        if (!maxDate || toDate > maxDate) {
+                            maxDate = toDate;
+                            maxText = toStr || fromStr;
+                        }
+                    }
+                });
+
+                if (minText && maxText) {
+                    paymentDateEl.textContent = `${minText} — ${maxText}`;
+                } else {
+                    const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+                    let minYear = null, minMonth = null, maxYear = null, maxMonth = null;
+                    targetInvoices.forEach(inv => {
+                        if (inv.period_year && inv.period_month) {
+                            const y = inv.period_year;
+                            const m = inv.period_month;
+                            if (minYear === null || y < minYear || (y === minYear && m < minMonth)) {
+                                minYear = y;
+                                minMonth = m;
+                            }
+                            if (maxYear === null || y > maxYear || (y === maxYear && m > maxMonth)) {
+                                maxYear = y;
+                                maxMonth = m;
+                            }
+                        }
+                    });
+                    if (minYear !== null && maxYear !== null) {
+                        const minTextMonth = monthNames[minMonth - 1] || minMonth;
+                        const maxTextMonth = monthNames[maxMonth - 1] || maxMonth;
+                        if (minYear === maxYear && minMonth === maxMonth) {
+                            paymentDateEl.textContent = `${minTextMonth} ${minYear}`;
+                        } else {
+                            paymentDateEl.textContent = `${minTextMonth} ${minYear} — ${maxTextMonth} ${maxYear}`;
+                        }
+                    }
+                }
+                } else if (first) {
+                    if (first.period_dates && first.period_dates.from && first.period_dates.to) {
+                        paymentDateEl.textContent = first.period_dates.from === first.period_dates.to
+                            ? first.period_dates.to
+                            : `${first.period_dates.from} — ${first.period_dates.to}`;
+                    } else if (first.period_year && first.period_month) {
+                        const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+                        const mName = monthNames[first.period_month - 1] || first.period_month;
+                        paymentDateEl.textContent = `${mName} ${first.period_year}`;
+                    }
+                } else if (scope === 'month') {
+                    // Если нет счетов, но scope === 'month', показываем текущий месяц
+                    const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+                    const mName = monthNames[curMonth - 1] || curMonth;
+                    paymentDateEl.textContent = `${mName} ${curYear}`;
+                }
+            }
+        }
+
+        // Сумма по инвойсам как дополнительная гарантия
+        // НЕ перезаписываем сумму, если она уже была установлена из sessionStorage
+        if (totalEl && amountLabelEl && targetInvoices.length > 0) {
+            // Если передана preferredAmount (сумма из sessionStorage), используем её как приоритет
+            if (preferredAmount !== null && preferredAmount > 0) {
+                // Сумма из sessionStorage имеет приоритет, не перезаписываем её
+                // Только убеждаемся, что amountLabelEl синхронизирован с totalEl
+                const currentTotal = totalEl.textContent || '';
+                if (amountLabelEl.textContent !== currentTotal && currentTotal) {
+                    amountLabelEl.textContent = currentTotal;
+                }
+                return; // Не перезаписываем сумму из счетов
+            }
+            
+            // Если preferredAmount не передан или равен 0, проверяем sessionStorage напрямую
+            const storedAmountRaw = sessionStorage.getItem('paymentAmount');
+            const storedAmount = storedAmountRaw ? parseFloat(storedAmountRaw) : 0;
+            
+            // Проверяем текущую установленную сумму
+            const existingAmountText = totalEl.textContent || '';
+            const existingAmountValue = existingAmountText.replace(/[^\d,\.]/g, '').replace(',', '.');
+            const existingAmount = parseFloat(existingAmountValue) || 0;
+            
+            // Если сумма из sessionStorage уже установлена и она больше 0, не перезаписываем её
+            if (storedAmount > 0 && Math.abs(existingAmount - storedAmount) < 0.01) {
+                // Сумма уже правильно установлена из sessionStorage, не перезаписываем
+                if (amountLabelEl.textContent !== existingAmountText) {
+                    amountLabelEl.textContent = existingAmountText;
+                }
+                return; // Не перезаписываем сумму из счетов
+            }
+            
+            // Если сумма не была установлена или равна 0, вычисляем её из счетов как fallback
+            let sumAmount = 0;
+            // Для пользователя важно видеть сумму К ОПЛАТЕ (остаток), а не общий номинал счетов
+            // Поэтому и для 'all', и для 'month' используем remaining_amount, если он есть
+            sumAmount = targetInvoices.reduce(
+                (acc, inv) => acc + (inv.remaining_amount ?? inv.amount_total ?? 0),
+                0
+            );
+
+            const formatted = new Intl.NumberFormat('ru-RU', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(sumAmount) + ' ₼';
+
+            // Обновляем только если текущая сумма равна 0 или не установлена
+            if (existingAmount <= 0 || !existingAmountText || existingAmountText === '—') {
+                totalEl.textContent = formatted;
+                amountLabelEl.textContent = formatted;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading payment-related invoices:', error);
+    }
+}
+
+// Форматирование текущей даты/времени для возможного использования
+function formatPaymentDateNow() {
+    const now = new Date();
+    return now.toLocaleString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// Главная инициализация страницы оплаты
+async function initPaymentPage() {
+    // Изначально очищаем превью карты
+    updateCardPreview('', '', '', null);
+
+    // helper to set resident name and advance on the Royal Park pass
+    async function setResidentPassInfo(codeFromSession) {
+        const nameEl = document.getElementById('passResidentName');
+        const advanceEl = document.getElementById('passAdvanceAmount');
+        if (!nameEl && !advanceEl) return;
+
+        let displayName = codeFromSession || '';
+        let advanceValue = null;
+        let userFullName = '';
+        let linkedResidentCodes = [];
+
+        // fallback helper to load user profile name
+        async function fetchUserName() {
+            try {
+                const resp = await fetch(`${API_BASE}/api/users/me`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (resp.ok) {
+                    const user = await resp.json();
+                    return user?.full_name || user?.username || '';
+                }
+            } catch (e) {
+                console.warn('Failed to load user profile for pass name', e);
+            }
+            return '';
+        }
+
+        try {
+            // Добавляем timestamp для предотвращения кэширования при обновлении после оплаты
+            const timestamp = new Date().getTime();
+            const resp = await fetch(`${API_BASE}/api/resident/dashboard?t=${timestamp}`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                cache: 'no-cache'
+            });
+            if (resp.ok) {
+                const data = await resp.json();
+                const residents = data?.residents || [];
+                const summary = data?.summary || {};
+                linkedResidentCodes = residents
+                    .map(r => (r?.code || r?.resident_code || '').toString().trim())
+                    .filter(Boolean);
+                linkedResidentCodes = Array.from(new Set(linkedResidentCodes));
+
+                if (residents.length) {
+                    const norm = (s) => (s || '').toString().replace(/\s+/g, ' ').trim();
+                    const codeNorm = norm(codeFromSession);
+                    const matched = residents.find(r => {
+                        const rc = norm(r?.code || r?.resident_code || '');
+                        return rc && codeNorm && (rc === codeNorm || rc.replace(/\s*\/\s*/g, '/') === codeNorm.replace(/\s*\/\s*/g, '/'));
+                    }) || residents[0];
+                    // show resident's full name (owner_full_name), not the code U/7878
+                    displayName = matched?.full_name || matched?.owner_full_name || matched?.resident_name || matched?.code || matched?.resident_code || displayName;
+
+                    // try multiple possible advance keys (приоритет: advance_total из API)
+                    advanceValue = matched?.advance_total ?? matched?.advance ?? matched?.advance_balance ?? matched?.balance?.advance ?? matched?.balance?.advance_balance ?? null;
+                }
+
+                // fallback to summary if resident value not found
+                if (advanceValue === null || advanceValue === undefined) {
+                    advanceValue = summary?.total_advance ?? summary?.advance ?? null;
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to load resident info for pass', e);
+        }
+
+        if (!displayName) {
+            userFullName = await fetchUserName();
+            displayName = userFullName || displayName;
+        }
+
+        if (nameEl) {
+            const lang = localStorage.getItem('language') || 'ru';
+            const residentLabel = window.i18n?.translate?.('payment_resident_label', lang) || 'Резидент';
+            nameEl.textContent = displayName || residentLabel;
+        }
+
+        if (advanceEl) {
+            const adv = typeof advanceValue === 'number' ? advanceValue : 0;
+            advanceEl.textContent = new Intl.NumberFormat('ru-RU', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(adv) + ' ₼';
+        }
+
+        // Для пополнения аванса показываем все дома владельца,
+        // так как аванс общий и может тратиться на любой из них.
+        const isTopupMode = isAdvanceTopupScope(sessionStorage.getItem('paymentScope'));
+        if (isTopupMode) {
+            const paymentResidentEl = document.getElementById('paymentResident');
+            if (paymentResidentEl) {
+                const allLinked = linkedResidentCodes.join(', ');
+                if (allLinked) {
+                    paymentResidentEl.textContent = allLinked;
+                } else if (codeFromSession) {
+                    paymentResidentEl.textContent = codeFromSession;
+                }
+            }
+        }
+        
+        // Отключаем карту Royal Park:
+        // - всегда в режиме "Пополнение аванса" (пополнять нужно только с банковской карты),
+        // - либо когда баланс аванса = 0.
+        const advanceCard = document.querySelector('.resident-pass-card[data-card-type="ADVANCE"]');
+        if (advanceCard) {
+            const adv = typeof advanceValue === 'number' ? advanceValue : 0;
+            const inTopupMode = isAdvanceTopupScope(sessionStorage.getItem('paymentScope'));
+            // Сохраняем баланс аванса в атрибуте для проверки при оплате
+            advanceCard.dataset.advanceBalance = adv;
+            
+            if (inTopupMode || adv <= 0) {
+                // Отключаем карту: добавляем класс disabled и делаем недоступной для выбора
+                advanceCard.classList.add('disabled');
+                advanceCard.style.opacity = '0.5';
+                advanceCard.style.cursor = 'not-allowed';
+                advanceCard.setAttribute('aria-disabled', 'true');
+                advanceCard.title = inTopupMode
+                    ? 'Карта аванса недоступна при пополнении аванса'
+                    : 'Аванс недоступен (баланс: 0,00 ₼)';
+                
+                // Если эта карта была выбрана, снимаем выбор
+                if (advanceCard.classList.contains('selected')) {
+                    advanceCard.classList.remove('selected');
+                    // Переключаемся на банковский метод оплаты
+                    const cardMethodInput = document.getElementById('paymentMethodCard');
+                    if (cardMethodInput) {
+                        cardMethodInput.checked = true;
+                        cardMethodInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+            } else {
+                // Включаем карту обратно, если аванс > 0
+                advanceCard.classList.remove('disabled');
+                advanceCard.style.opacity = '';
+                advanceCard.style.cursor = '';
+                advanceCard.removeAttribute('aria-disabled');
+                advanceCard.title = '';
+            }
+        }
+    }
+
+    try {
+        // Проверяем временную метку данных оплаты (данные действительны 10 минут)
+        const paymentTimestamp = sessionStorage.getItem('paymentTimestamp');
+        const now = Date.now();
+        
+        // Если данные устарели (старше TTL) или их нет, очищаем все данные оплаты
+        if (!paymentTimestamp || (now - parseInt(paymentTimestamp, 10)) > PAYMENT_DATA_TTL_MS) {
+            clearPaymentSessionData();
+            stopPaymentCountdown();
+        }
+        
+        const selectedInvoiceIdRaw = sessionStorage.getItem('paymentInvoiceId');
+        const selectedInvoiceId = selectedInvoiceIdRaw ? parseInt(selectedInvoiceIdRaw, 10) : null;
+        const selectedLineIdsRaw = sessionStorage.getItem('paymentSelectedLineIds');
+        let selectedLineIds = [];
+        try { selectedLineIds = selectedLineIdsRaw ? (JSON.parse(selectedLineIdsRaw) || []) : []; } catch (e) { selectedLineIds = []; }
+        const selectedLinesSummaryRaw = sessionStorage.getItem('paymentSelectedLinesSummary');
+        let selectedLinesSummary = [];
+        try { selectedLinesSummary = selectedLinesSummaryRaw ? (JSON.parse(selectedLinesSummaryRaw) || []) : []; } catch (e) { selectedLinesSummary = []; }
+        const scope = sessionStorage.getItem('paymentScope') || (selectedInvoiceId ? 'invoice' : 'month');
+        const isAdvanceTopupMode = isAdvanceTopupScope(scope);
+        let amountRaw = sessionStorage.getItem('paymentAmount');
+        let amount = amountRaw ? parseFloat(amountRaw) : 0;
+        const scopeLabelStored = sessionStorage.getItem('paymentScopeLabel');
+        const residentCodeStored = sessionStorage.getItem('paymentResidentCode');
+        const paymentSummaryRaw = sessionStorage.getItem('paymentSummary');
+        let paymentSummary = null;
+        if (paymentSummaryRaw) {
+            try {
+                paymentSummary = JSON.parse(paymentSummaryRaw);
+            } catch (e) {
+                console.warn('Failed to parse paymentSummary from sessionStorage', e);
+            }
+        }
+
+        const totalEl = document.getElementById('total');
+        const subtitleEl = document.querySelector('.order-subtitle');
+        const amountLabelEl = document.getElementById('paymentAmountLabel');
+        const paymentTypeEl = document.getElementById('paymentType');
+        const paymentResidentEl = document.getElementById('paymentResident');
+        const paymentDateEl = document.getElementById('paymentDate');
+        const paymentCommissionEl = document.getElementById('paymentCommission');
+        const selectedLinesInfoWrap = document.getElementById('selectedLinesInfoWrap');
+        const selectedLinesInfo = document.getElementById('selectedLinesInfo');
+
+        // Проверяем, есть ли актуальные данные в sessionStorage (пользователь перешел через кнопку)
+        // Данные считаются актуальными только если есть временная метка и она не устарела
+        const hasPaymentData = paymentTimestamp && (now - parseInt(paymentTimestamp, 10)) <= PAYMENT_DATA_TTL_MS && 
+                               (amountRaw || residentCodeStored || paymentSummaryRaw || sessionStorage.getItem('paymentResidentId') || selectedInvoiceId);
+        
+        if (hasPaymentData) {
+            startPaymentCountdown(paymentTimestamp);
+        } else {
+            stopPaymentCountdown();
+        }
+        
+        // В режиме пополнения аванса сумма всегда вводится вручную, поэтому "Итого" = 0.
+        if (isAdvanceTopupMode) {
+            amount = 0;
+        // Если сумма из sessionStorage отсутствует или равна 0, пробуем взять её из summary/бэкенда
+        // Но только если есть данные в sessionStorage (пользователь перешел через кнопку)
+        } else if (hasPaymentData) {
+            if (!amount || Number.isNaN(amount)) {
+                if (paymentSummary) {
+                    amount = scope === 'all'
+                        ? (paymentSummary.total_debt || 0)
+                        : (paymentSummary.total_month || 0);
+                }
+                if (!amount || Number.isNaN(amount)) {
+                    const fallback = await loadDashboardSummaryForPayment(scope);
+                    if (fallback && typeof fallback.amount === 'number') {
+                        amount = fallback.amount;
+                    }
+                }
+            }
+        } else {
+            // Если нет данных в sessionStorage, сумма должна быть 0
+            amount = 0;
+        }
+
+        const formattedAmount = new Intl.NumberFormat('ru-RU', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(amount || 0) + ' ₼';
+
+        if (totalEl) {
+            totalEl.textContent = formattedAmount;
+        }
+        if (amountLabelEl) {
+            amountLabelEl.textContent = formattedAmount;
+        }
+
+        // Проверяем, есть ли данные в sessionStorage (пользователь перешел через кнопку)
+        // Загрузить данные по счетам с backend только если есть данные в sessionStorage
+        // (т.е. пользователь перешел на страницу оплаты через кнопку, а не напрямую)
+        if (hasPaymentData) {
+            // Устанавливаем поля только если есть данные
+            const lang = localStorage.getItem('language') || 'ru';
+            if (subtitleEl) {
+                if (isAdvanceTopupMode) {
+                    subtitleEl.textContent = window.i18n?.translate?.('payment_topup_advance_label', lang) || 'Пополнение аванса';
+                } else if (scope === 'all') {
+                    subtitleEl.textContent = window.i18n?.translate?.('payment_all_debt', lang) || 'Оплата всего долга';
+                } else if (scope === 'invoice') {
+                    subtitleEl.textContent = window.i18n?.translate?.('payment_invoice_payment', lang) || 'Оплата счёта';
+                } else {
+                    subtitleEl.textContent = window.i18n?.translate?.('payment_current_month', lang) || 'Оплата за текущий месяц';
+                }
+            }
+
+            if (paymentTypeEl) {
+                const defaultScopeText = isAdvanceTopupMode
+                    ? (window.i18n?.translate?.('payment_topup_advance_label', lang) || 'Пополнение аванса')
+                    : (scope === 'all'
+                        ? (window.i18n?.translate?.('payment_full_debt', lang) || 'Полное погашение долга по счетам')
+                        : (scope === 'invoice'
+                            ? (window.i18n?.translate?.('payment_invoice_payment', lang) || 'Оплата счёта')
+                            : (window.i18n?.translate?.('payment_month_bills', lang) || 'Оплата счетов за текущий месяц')));
+                paymentTypeEl.textContent = scopeLabelStored || defaultScopeText;
+            }
+
+            if (selectedLinesInfoWrap && selectedLinesInfo && selectedInvoiceId && selectedLineIds.length) {
+                selectedLinesInfoWrap.style.display = '';
+                if (selectedLinesSummary.length) {
+                    const preview = selectedLinesSummary
+                        .slice(0, 3)
+                        .map(x => `${x.description || 'Услуга'} (${new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(x.remaining_amount || 0))})`)
+                        .join(', ');
+                    const suffix = selectedLinesSummary.length > 3 ? ` и еще ${selectedLinesSummary.length - 3}` : '';
+                    selectedLinesInfo.textContent = `${selectedLinesSummary.length} шт. — ${preview}${suffix}`;
+                } else {
+                    selectedLinesInfo.textContent = `${selectedLineIds.length} выбранных позиций`;
+                }
+            } else if (selectedLinesInfoWrap) {
+                selectedLinesInfoWrap.style.display = 'none';
+            }
+
+            if (paymentResidentEl) {
+                paymentResidentEl.textContent = isAdvanceTopupMode ? '—' : (residentCodeStored || '—');
+            }
+
+            // В режиме пополнения аванса счёт/период должны быть пустыми.
+            if (isAdvanceTopupMode) {
+                if (paymentDateEl) {
+                    paymentDateEl.textContent = '—';
+                }
+                const invoiceNumberEl = document.getElementById('invoiceNumber');
+                if (invoiceNumberEl) {
+                    invoiceNumberEl.textContent = '—';
+                    invoiceNumberEl.classList.remove('invoice-link');
+                    invoiceNumberEl.style.cursor = 'default';
+                    invoiceNumberEl.onclick = null;
+                }
+            }
+            
+            // update resident name and advance on the default pass
+            setResidentPassInfo(residentCodeStored);
+            // Передаём сумму из sessionStorage, чтобы loadPaymentInvoices не перезаписывала её
+            const residentIdStored = sessionStorage.getItem('paymentResidentId');
+            const residentIdParsed = residentIdStored ? parseInt(residentIdStored, 10) : null;
+            if (!isAdvanceTopupMode) {
+                loadPaymentInvoices(scope, residentCodeStored || null, amount, residentIdParsed, selectedInvoiceId);
+            }
+        } else {
+            // Если нет данных в sessionStorage, оставляем все поля пустыми
+            if (subtitleEl) {
+                const lang = localStorage.getItem('language') || 'ru';
+                subtitleEl.textContent = window.i18n?.translate?.('payment_invoice_payment', lang) || 'Оплата счёта';
+            }
+            
+            if (paymentTypeEl) {
+                paymentTypeEl.textContent = '—';
+            }
+            
+            if (paymentResidentEl) {
+                paymentResidentEl.textContent = '—';
+            }
+            
+            if (paymentDateEl) {
+                paymentDateEl.textContent = '—';
+            }
+            
+            const invoiceNumberEl = document.getElementById('invoiceNumber');
+            if (invoiceNumberEl) {
+                invoiceNumberEl.textContent = '—';
+                invoiceNumberEl.classList.remove('invoice-link');
+                invoiceNumberEl.style.cursor = 'default';
+                invoiceNumberEl.onclick = null;
+            }
+            
+            // Сумма уже установлена в 0 выше, но убедимся
+            if (totalEl) {
+                totalEl.textContent = '0,00 ₼';
+            }
+            if (amountLabelEl) {
+                amountLabelEl.textContent = '0,00 ₼';
+            }
+        }
+        
+        // Всегда загружаем данные резидента для pass (имя и аванс), независимо от наличия данных в sessionStorage
+        // Если residentCodeStored пустой, функция сама загрузит данные первого резидента
+        setResidentPassInfo(residentCodeStored || null);
+
+        if (paymentCommissionEl) {
+            paymentCommissionEl.textContent = '0,00 ₼';
+        }
+        // paymentDateEl заполняется в loadPaymentInvoices, но при полном отсутствии данных
+        if (paymentDateEl && !paymentDateEl.textContent) {
+            paymentDateEl.textContent = formatPaymentDateNow();
+        }
+
+        // Initialize custom amount functionality
+        initCustomAmountField(amount, isAdvanceTopupMode);
+    } catch (err) {
+        console.error('Error initializing payment summary:', err);
+    }
+}
+
+// Initialize custom amount field functionality
+function initCustomAmountField(defaultAmount, forceCustomModeForTopup = false) {
+    const checkbox = document.getElementById('customAmountCheckbox');
+    const fieldWrapper = document.getElementById('customAmountFieldWrapper');
+    const amountInput = document.getElementById('customAmountInput');
+    const hintEl = document.getElementById('customAmountHint');
+    const totalEl = document.getElementById('total');
+
+    if (!checkbox || !fieldWrapper || !amountInput) return;
+
+    function sanitizeAmountInputValue(raw) {
+        const value = String(raw || '').replace(',', '.');
+        let cleaned = value.replace(/[^0-9.]/g, '');
+        const firstDot = cleaned.indexOf('.');
+        if (firstDot !== -1) {
+            cleaned = cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, '');
+            const parts = cleaned.split('.');
+            if (parts.length > 1) {
+                parts[1] = parts[1].slice(0, 2);
+            }
+            cleaned = parts.join('.');
+        }
+        return cleaned;
+    }
+
+    // Get total amount from invoice
+    let invoiceTotal = defaultAmount || 0;
+    if (totalEl) {
+        const totalText = totalEl.textContent || '';
+        const cleanAmount = totalText.replace(/[^\d,\.]/g, '').replace(',', '.');
+        invoiceTotal = parseFloat(cleanAmount) || 0;
+    }
+
+    // Set max on input to prevent overpayment when paying an invoice
+    if (invoiceTotal > 0 && !forceCustomModeForTopup) {
+        amountInput.setAttribute('max', invoiceTotal.toFixed(2));
+    }
+
+    // Checkbox change handler
+    checkbox.addEventListener('change', function() {
+        if (this.checked) {
+            fieldWrapper.style.display = 'block';
+            amountInput.focus();
+            // Set default value to invoice total
+            if (invoiceTotal > 0) {
+                amountInput.value = invoiceTotal.toFixed(2);
+            }
+            updateAmountHint(invoiceTotal, invoiceTotal);
+        } else {
+            fieldWrapper.style.display = 'none';
+            amountInput.value = '';
+            if (hintEl) hintEl.textContent = '';
+        }
+    });
+
+    if (forceCustomModeForTopup) {
+        checkbox.checked = true;
+        checkbox.disabled = true;
+        fieldWrapper.style.display = 'block';
+        amountInput.value = '';
+        amountInput.focus();
+    } else {
+        checkbox.disabled = false;
+    }
+
+    // Input change handler
+    amountInput.addEventListener('keydown', function(e) {
+        if (['e', 'E', '+', '-'].includes(e.key)) {
+            e.preventDefault();
+        }
+    });
+
+    amountInput.addEventListener('input', function() {
+        this.value = sanitizeAmountInputValue(this.value);
+        const customAmount = parseFloat(this.value) || 0;
+        updateAmountHint(invoiceTotal, customAmount);
+    });
+
+    // Update hint based on amounts
+    function updateAmountHint(invoiceTotal, customAmount) {
+        if (!hintEl) return;
+        const lang = localStorage.getItem('language') || 'ru';
+        
+        if (forceCustomModeForTopup) {
+            if (customAmount <= 0) {
+                hintEl.textContent = '';
+                hintEl.className = 'custom-amount-hint';
+                return;
+            }
+            hintEl.textContent = 'Сумма будет зачислена в аванс';
+            hintEl.className = 'custom-amount-hint hint-advance';
+            return;
+        }
+
+        if (customAmount <= 0) {
+            hintEl.textContent = '';
+            hintEl.className = 'custom-amount-hint';
+            return;
+        }
+
+        const activeCard = window.selectedSavedCard || selectedSavedCard;
+        const isAdvancePayment = activeCard && activeCard.type === 'ADVANCE';
+
+        if (customAmount > invoiceTotal && invoiceTotal > 0) {
+            hintEl.textContent = window.i18n?.translate?.('payment_error_amount_exceeds_invoice', lang) || 'Сумма не может превышать сумму счёта';
+            hintEl.className = 'custom-amount-hint hint-error';
+            return;
+        } else if (customAmount < invoiceTotal) {
+            const remaining = invoiceTotal - customAmount;
+            hintEl.textContent = `Останется к оплате: ${remaining.toFixed(2)} ₼ (счёт будет частично оплачен)`;
+            hintEl.className = 'custom-amount-hint hint-partial';
+        } else {
+            hintEl.textContent = 'Счёт будет полностью оплачен';
+            hintEl.className = 'custom-amount-hint hint-full';
+        }
+    }
+}
+
+// -------------------------------
+// Submit Payment Function
+// -------------------------------
+
+async function submitPayment(event) {
+    if (event) {
+        event.preventDefault();
+    }
+    const isWalletFlow = !!(event && event.isWalletFlow === true);
+    if (!isWalletFlow) {
+        clearWalletSessionData();
+    }
+    const lang = localStorage.getItem('language') || 'ru';
+    
+    // Determine which pay button was actually clicked (default in sidebar or form button)
+    let payButton = null;
+    if (event && event.target && event.target.classList && event.target.classList.contains('pay-button')) {
+        payButton = event.target;
+    } else {
+        payButton = document.querySelector('.default-pay-button');
+    }
+    const originalText = payButton ? payButton.textContent : 'Оплатить';
+
+    // Понимаем, использует ли пользователь форму "новая карта" или сохранённые карты / аванс
+    const isUsingNewCardForm = !!(event && event.target && event.target.closest && event.target.closest('.payment-middle-column'));
+
+    // Данные карты (нужны только если пользователь вводит новую карту)
+    const cardNumber = document.getElementById('cardNumberInput')?.value?.replace(/\s/g, '') || '';
+    const cardName = document.getElementById('cardNameInput')?.value?.trim() || '';
+    const cardExp = document.getElementById('cardExpInput')?.value || '';
+    const cardCvv = document.getElementById('cardCvvInput')?.value || '';
+    
+    if (isUsingNewCardForm) {
+        // Валидация только для сценария "Добавить новую карту"
+        if (cardNumber.length < 13) {
+            showPaymentError('Введите корректный номер карты');
+            return false;
+        }
+        if (cardName.length < 2) {
+            showPaymentError('Введите имя на карте');
+            return false;
+        }
+        if (!cardExp.match(/^\d{2}\/\d{2}$/)) {
+            showPaymentError('Введите срок действия карты (MM/YY)');
+            return false;
+        }
+        if (cardCvv.length < 3) {
+            showPaymentError('Введите CVV код');
+            return false;
+        }
+    }
+    
+    // Get payment data from session storage
+    let scope = sessionStorage.getItem('paymentScope') || 'month';
+    const isAdvanceTopupMode = isAdvanceTopupScope(scope);
+    let amount = parseFloat(sessionStorage.getItem('paymentAmount') || '0');
+    const invoiceIdStored = sessionStorage.getItem('paymentInvoiceId');
+    const invoiceId = invoiceIdStored ? parseInt(invoiceIdStored, 10) : null;
+    let selectedLineIds = [];
+    try {
+        selectedLineIds = JSON.parse(sessionStorage.getItem('paymentSelectedLineIds') || '[]') || [];
+    } catch (e) {
+        selectedLineIds = [];
+    }
+    let selectedLinesSummary = [];
+    try {
+        selectedLinesSummary = JSON.parse(sessionStorage.getItem('paymentSelectedLinesSummary') || '[]') || [];
+    } catch (e) {
+        selectedLinesSummary = [];
+    }
+    const wantsWaterSewerBundle = (selectedLinesSummary || []).some(item => {
+        const low = String(item?.description || '').toLowerCase();
+        return low.includes('вода') || low.includes('water') || low.includes('канализац') || low.includes('sewerage') || low.includes('meter_cold_water') || low.includes('meter_sewerage');
+    });
+
+    async function fetchSelectedLinesRemainingTotal(invId, lineIds) {
+        if (!invId || !Array.isArray(lineIds) || !lineIds.length) return null;
+        try {
+            const resp = await fetch(`${API_BASE}/api/resident/invoice/${invId}`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            if (!resp.ok) return null;
+            const inv = await resp.json();
+            const selectedSet = new Set((lineIds || []).map(x => Number(x)).filter(x => Number.isFinite(x) && x > 0));
+            if (wantsWaterSewerBundle) {
+                for (const line of (inv?.lines || [])) {
+                    const lid = Number(line?.id || 0);
+                    if (!lid) continue;
+                    const low = String(line?.description || '').toLowerCase();
+                    const isWaterOrSewer = low.includes('вода') || low.includes('water') || low.includes('канализац') || low.includes('sewerage') || low.includes('meter_cold_water') || low.includes('meter_sewerage');
+                    if (isWaterOrSewer) selectedSet.add(lid);
+                }
+            }
+            let sum = 0;
+            for (const line of (inv?.lines || [])) {
+                const lid = Number(line?.id || 0);
+                if (!lid || !selectedSet.has(lid)) continue;
+                const rem = Math.max(0, Number(line?.remaining_amount ?? line?.amount_total ?? 0));
+                sum += rem;
+            }
+            try {
+                sessionStorage.setItem('paymentSelectedLineIds', JSON.stringify(Array.from(selectedSet)));
+            } catch (e) {
+                console.warn('Failed to persist normalized selected line ids', e);
+            }
+            return Number(sum.toFixed(2));
+        } catch (e) {
+            console.warn('Failed to fetch selected lines remaining total', e);
+            return null;
+        }
+    }
+    
+    // Check if custom amount is enabled
+    const customAmountCheckbox = document.getElementById('customAmountCheckbox');
+    const customAmountInput = document.getElementById('customAmountInput');
+    const useCustomAmount = customAmountCheckbox && customAmountCheckbox.checked;
+    
+    // Проверяем, есть ли invoice для оплаты
+    const invoiceNumberEl = document.getElementById('invoiceNumber');
+    const hasInvoice = invoiceNumberEl && invoiceNumberEl.textContent && invoiceNumberEl.textContent.trim() !== '—';
+    
+    // Проверяем сумму из total элемента (сумма invoice)
+    const totalEl = document.getElementById('total');
+    let invoiceTotal = 0;
+    if (totalEl) {
+        const totalText = totalEl.textContent || '';
+        // Parse "1 234,56 ₼" format
+        const cleanAmount = totalText.replace(/[^\d,\.]/g, '').replace(',', '.');
+        invoiceTotal = parseFloat(cleanAmount) || 0;
+    }
+    
+    if (useCustomAmount && customAmountInput) {
+        // Use custom amount from input
+        const customAmount = parseFloat(String(customAmountInput.value || '').replace(',', '.')) || 0;
+        if (customAmount <= 0) {
+            showPaymentError('Введите сумму для оплаты');
+            return false;
+        }
+        amount = customAmount;
+        
+        // Если нет invoice (invoiceNumber = "—") или invoice total = 0, это пополнение аванса
+        // В этом случае scope должен быть null, чтобы платеж не применялся к счетам
+        if (isAdvanceTopupMode || !hasInvoice || invoiceTotal === 0) {
+            scope = null;
+        }
+        // Нельзя платить больше суммы счёта (излишек пойдёт на чужой счёт терминала)
+        if (hasInvoice && invoiceTotal > 0 && customAmount > invoiceTotal) {
+            const exceedMsg = (window.i18n?.translate?.('payment_error_amount_exceeds_invoice_detail', lang) || 'Сумма не может превышать сумму счёта ({amount} ₼)').replace('{amount}', invoiceTotal.toFixed(2));
+            showPaymentError(exceedMsg);
+            return false;
+        }
+    } else {
+        // Use default amount from session storage or total element
+        if (!amount || amount <= 0) {
+            amount = invoiceTotal;
+        }
+        
+        // Если нет invoice или invoice total = 0, это пополнение аванса
+        if (isAdvanceTopupMode || !hasInvoice || invoiceTotal === 0) {
+            scope = null;
+        }
+    }
+    
+    // Сохраняем scope для передачи в backend (null если пополнение аванса)
+    const paymentScope = scope;
+    const isTopupOnlyPayment = paymentScope === null;
+    
+    if (amount <= 0) {
+        showPaymentError('Сумма оплаты должна быть больше 0');
+        return false;
+    }
+
+    // Финальная синхронизация суммы по выбранным строкам перед отправкой платежа:
+    // чтобы исключить рассинхрон между invoice-view и report-payment.
+    if (invoiceId && selectedLineIds.length > 0) {
+        const selectedRemainingTotal = await fetchSelectedLinesRemainingTotal(invoiceId, selectedLineIds);
+        if (selectedRemainingTotal !== null) {
+            if (useCustomAmount) {
+                // В режиме custom amount НЕ режем сумму до выбранных строк:
+                // backend применит к строкам только их остаток, а излишек останется авансом.
+            } else {
+                amount = selectedRemainingTotal;
+            }
+        }
+    }
+
+    // В режиме пополнения аванса счёт и выбор строк всегда должны быть пустыми.
+    let invoiceIdForRequest = invoiceId;
+    let selectedLineIdsForRequest = selectedLineIds;
+    if (isTopupOnlyPayment) {
+        invoiceIdForRequest = null;
+        selectedLineIdsForRequest = [];
+    }
+    
+    // Get resident ID - приоритет: из sessionStorage (сохранен при нажатии кнопки), иначе из dashboard
+    let residentId = null;
+    
+    // Сначала проверяем sessionStorage (сохранен при нажатии "Оплатить за месяц" для конкретного резидента)
+    const residentIdStored = sessionStorage.getItem('paymentResidentId');
+    if (residentIdStored) {
+        residentId = parseInt(residentIdStored, 10);
+    }
+    
+    // Если не нашли в sessionStorage, получаем из dashboard (fallback)
+    if (!residentId) {
+        try {
+            const dashboardResp = await fetch(`${API_BASE}/api/resident/dashboard`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            if (dashboardResp.ok) {
+                const dashboardData = await dashboardResp.json();
+                if (dashboardData.residents && dashboardData.residents.length > 0) {
+                    // Use first resident ID (in case user has multiple)
+                    residentId = dashboardData.residents[0].id;
+                }
+            }
+        } catch (err) {
+            console.error('Failed to get resident ID:', err);
+        }
+    }
+    
+    if (!residentId) {
+        showPaymentError('Не удалось определить резидента. Попробуйте перезагрузить страницу.');
+        return false;
+    }
+
+    // Формируем более точные комментарии и референсы для истории
+    let paymentComment = '';
+    let paymentReference = '';
+    let paymentMethod = 'CARD'; // Default method
+
+    if (isUsingNewCardForm) {
+        const last4 = cardNumber.slice(-4);
+        const commentTemplate = window.i18n?.translate?.('payment_comment_new_card', lang) || 'Оплата новой картой ****{last4}';
+        paymentComment = commentTemplate.replace('{last4}', last4);
+        paymentReference = `CARD: ${last4}`;
+        paymentMethod = 'CARD';
+    } else {
+        const activeCard = window.selectedSavedCard || selectedSavedCard;
+        if (activeCard) {
+            if (isTopupOnlyPayment && activeCard.type === 'ADVANCE') {
+                showPaymentError('Пополнение аванса невозможно с карты аванса. Выберите банковскую карту.');
+                return false;
+            }
+            if (activeCard.type === 'ADVANCE') {
+                if (hasInvoice && invoiceTotal > 0 && amount > invoiceTotal) {
+                    const advExceedMsg = (window.i18n?.translate?.('payment_error_advance_exceeds_invoice', lang) || 'Сумма оплаты из аванса не может превышать сумму счёта ({amount} ₼)').replace('{amount}', invoiceTotal.toFixed(2));
+                    showPaymentError(advExceedMsg);
+                    if (useCustomAmount && customAmountInput) {
+                        customAmountInput.value = invoiceTotal.toFixed(2);
+                        customAmountInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                    return false;
+                }
+
+                // Проверяем достаточность средств на авансовом счету
+                // ПРИОРИТЕТ: берем актуальное значение из DOM, так как оно могло обновиться асинхронно
+                const advanceCardEl = document.querySelector('.resident-pass-card[data-card-type="ADVANCE"]');
+                const balance = advanceCardEl ? parseFloat(advanceCardEl.dataset.advanceBalance || 0) : (activeCard.advanceBalance || 0);
+                
+                if (amount > balance) {
+                    const diff = amount - balance;
+                    const errorMsg = window.i18n?.translate?.('payment_error_insufficient_advance', lang) || 
+                        `Недостаточно средств на авансе. Доступно: ${balance.toFixed(2)} ₼. Не хватает: ${diff.toFixed(2)} ₼`;
+                    showPaymentError(errorMsg);
+                    return false;
+                }
+                
+                paymentComment = window.i18n?.translate?.('payment_comment_advance', lang) || 'Списание из аванса Royal Park Pass';
+                paymentReference = `ADVANCE: PASS`;
+                paymentMethod = 'ADVANCE';
+            } else {
+                const brandName = activeCard.brand || 'Card';
+                const cardSuffix = activeCard.last4 ? `****${activeCard.last4}` : '';
+                const commentTemplate = window.i18n?.translate?.('payment_comment_saved_card', lang) || 'Оплата картой {brand} {suffix}';
+                paymentComment = commentTemplate.replace('{brand}', brandName).replace('{suffix}', cardSuffix);
+                paymentReference = `CARD: ${activeCard.last4 || 'SAVED'}`;
+                paymentMethod = 'CARD';
+            }
+        } else {
+            // Fallback
+            paymentComment = window.i18n?.translate?.('payment_comment_online', lang) || 'Онлайн-оплата';
+            paymentReference = 'ONLINE';
+        }
+    }
+
+    // Show loading state
+    if (payButton) {
+        payButton.disabled = true;
+        payButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Обработка...';
+    }
+
+    function submitToGateway(actionUrl, params) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = actionUrl;
+        form.style.display = 'none';
+
+        Object.entries(params || {}).forEach(([key, value]) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value == null ? '' : String(value);
+            form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    // DEMO: имитация успешной оплаты без обращения к backend
+    if (ENABLE_FAKE_PAYMENT) {
+        try {
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            showPaymentSuccess(
+                paymentMethod === 'ADVANCE'
+                    ? 'Платёж успешно проведён из аванса (демо-режим).'
+                    : 'Платёж успешно проведён (демо-режим).'
+            );
+
+            // Очищаем сессионные данные как при реальной оплате
+            clearPaymentSessionData();
+            stopPaymentCountdown();
+
+            // После оплаты не фиксируем фильтр по статусу:
+            // страница "Мои счета" должна открываться с "Все".
+            sessionStorage.removeItem('billsFilterStatuses');
+            sessionStorage.removeItem('billsSystemFilterMeta');
+
+            setTimeout(() => {
+                if (window.userSpaRouter && typeof window.userSpaRouter.navigate === 'function') {
+                    window.userSpaRouter.navigate('dashboard', true);
+                } else {
+                    window.location.href = '/user/dashboard.html';
+                }
+            }, 2000);
+        } finally {
+            if (payButton) {
+                payButton.disabled = false;
+                payButton.textContent = originalText;
+            }
+        }
+        return false;
+    }
+
+    // Для банковской карты используем реальный поток AzeriCard:
+    // инициируем ORDER на backend и редиректим пользователя на gateway.
+    if (paymentMethod === 'CARD') {
+        try {
+            const description = paymentComment || (isTopupOnlyPayment
+                ? 'Пополнение аванса'
+                : (paymentScope === 'all' ? 'Оплата всех счетов' : 'Оплата счета'));
+
+            const terminalCategory = sessionStorage.getItem('paymentTerminalCategory') || null;
+            const walletProvider = sessionStorage.getItem('paymentWalletProvider') || null;
+            const walletToken = sessionStorage.getItem('paymentWalletToken') || null;
+            const walletEci = sessionStorage.getItem('paymentWalletEci') || null;
+            const walletTavv = sessionStorage.getItem('paymentWalletTavv') || null;
+            const initiatePayload = {
+                resident_id: residentId,
+                amount: amount,
+                invoice_id: invoiceIdForRequest || null,
+                description,
+                terminal_category: terminalCategory,
+                wallet_provider: walletProvider,
+                wallet_token: walletToken,
+                wallet_eci: walletEci,
+                wallet_tavv: walletTavv
+            };
+
+            const response = await fetch(`${API_BASE}/api/azericard/initiate`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(initiatePayload)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || `Ошибка инициализации платежа: ${response.status}`);
+            }
+
+            const result = await response.json();
+            if (!result || !result.ok || !result.gateway_url || !result.params) {
+                throw new Error('Некорректный ответ сервера при инициализации платежа');
+            }
+
+            submitToGateway(result.gateway_url, result.params);
+            return false;
+        } catch (error) {
+            console.error('AzeriCard initiate error:', error);
+            showPaymentError(error.message || 'Не удалось открыть страницу оплаты банка');
+            if (payButton) {
+                payButton.disabled = false;
+                payButton.textContent = originalText;
+            }
+            return false;
+        }
+    }
+
+    try {
+        // Submit payment to backend (боевой режим)
+        const response = await fetch(`${API_BASE}/api/resident/payment`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                resident_id: residentId,
+                amount: amount,
+                method: paymentMethod,
+                reference: paymentReference,
+                comment: paymentComment,
+                scope: paymentScope,  // 'month' или 'all' - для применения к счетам, null - только пополнение аванса
+                invoice_id: invoiceIdForRequest,
+                selected_line_ids: (invoiceIdForRequest && selectedLineIdsForRequest.length) ? selectedLineIdsForRequest : null
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || `Ошибка сервера: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.ok) {
+            // Success!
+            const successMessage = localizeResidentPaymentMessage(result.message, paymentScope);
+            showPaymentSuccess(successMessage);
+            
+            // Сохраняем residentCode перед очисткой sessionStorage
+            const residentCode = sessionStorage.getItem('paymentResidentCode');
+            
+            // Clear payment session data
+            clearPaymentSessionData();
+            stopPaymentCountdown();
+            
+            // Обновляем аванс на странице оплаты перед редиректом
+            // Делаем это после небольшой задержки, чтобы бэкенд успел обработать платеж
+            if (residentCode && typeof setResidentPassInfo === 'function') {
+                setTimeout(() => {
+                    setResidentPassInfo(residentCode);
+                }, 300);
+            }
+            
+            // После оплаты не фиксируем фильтр по статусу:
+            // страница "Мои счета" должна открываться с "Все".
+            sessionStorage.removeItem('billsFilterStatuses');
+            sessionStorage.removeItem('billsSystemFilterMeta');
+            
+            // Redirect to dashboard to show updated data
+            setTimeout(() => {
+                if (window.userSpaRouter && typeof window.userSpaRouter.navigate === 'function') {
+                    // Navigate to dashboard.
+                    // Dashboard data will be refreshed once by SPA router (afterContentRender),
+                    // so do not trigger extra manual reloads here.
+                    window.userSpaRouter.navigate('dashboard', true);
+                } else {
+                    // Fallback for regular navigation
+                    window.location.href = '/user/dashboard.html';
+                }
+            }, 1500);
+        } else {
+            throw new Error(result.message || 'Не удалось обработать платёж');
+        }
+        
+    } catch (error) {
+        console.error('Payment error:', error);
+        showPaymentError(error.message || 'Произошла ошибка при обработке платежа');
+        
+        // Restore button
+        if (payButton) {
+            payButton.disabled = false;
+            payButton.textContent = originalText;
+        }
+    }
+    
+    return false;
+}
+
+// Show success message
+function showPaymentSuccess(message) {
+    // Try to use global notification system if available
+    if (window.showSuccess) {
+        window.showSuccess(message);
+        return;
+    }
+    
+    // Fallback: create custom toast
+    const toast = document.createElement('div');
+    toast.className = 'payment-toast payment-toast-success';
+    toast.innerHTML = `
+        <div class="payment-toast-icon">
+            <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <div class="payment-toast-message">${message}</div>
+    `;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 500;
+        box-shadow: 0 10px 40px rgba(16, 185, 129, 0.3);
+        z-index: 10000;
+        animation: slideIn 0.3s ease-out;
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function localizeResidentPaymentMessage(rawMessage, paymentScope) {
+    const lang = (typeof window.getUiLanguage === 'function'
+        ? window.getUiLanguage()
+        : (localStorage.getItem('language') || 'az'));
+    const t = (key, fallback) => window.i18n?.translate?.(key, lang) || fallback;
+    const raw = String(rawMessage || '').trim();
+
+    if (!raw) {
+        return t('payment_success_default', 'Payment completed successfully!');
+    }
+
+    // Keep backend RU message as-is for Russian UI.
+    if (lang === 'ru') return raw;
+
+    const countMatch = raw.match(/(\d+)\s*сч[её]т/i);
+    const affectedCount = countMatch ? Number(countMatch[1]) : 0;
+
+    if (raw.includes('пополнение аванса')) {
+        return t('payment_success_topup', 'Advance top-up completed successfully.');
+    }
+
+    if (raw.includes('Аванс применён к выбранным строкам')) {
+        return t('payment_success_advance_selected_lines', 'Advance was applied to selected service lines.');
+    }
+    if (raw.includes('Аванс успешно применён к выбранному счёту')) {
+        return t('payment_success_advance_selected_invoice', 'Advance was applied to the selected invoice.');
+    }
+    if (raw.includes('Аванс не применён')) {
+        return t('payment_success_advance_not_applied', 'Payment created, but no suitable open invoices for advance application.');
+    }
+    if (raw.includes('Аванс успешно применён к')) {
+        const template = t('payment_success_advance_applied_count', 'Advance was applied to {count} invoice(s).');
+        return template.replace('{count}', String(affectedCount || 0));
+    }
+
+    if (raw.includes('Платёж применён к выбранным строкам')) {
+        return t('payment_success_selected_lines', 'Payment was applied to selected service lines. Excess amount moved to advance.');
+    }
+    if (raw.includes('Платёж успешно создан и применён к выбранному счёту')) {
+        return t('payment_success_selected_invoice', 'Payment was successfully applied to the selected invoice.');
+    }
+    if (raw.includes('Платёж успешно создан (не применён к выбранному счёту)')) {
+        return t('payment_success_not_applied_selected_invoice', 'Payment created, but not applied to the selected invoice.');
+    }
+    if (raw.includes('Платёж успешно создан (не применён к счетам - нет подходящих счетов)')) {
+        return t('payment_success_not_applied_any', 'Payment created, but not applied to invoices (no suitable open invoices).');
+    }
+    if (raw.includes('Платёж успешно создан и применён к')) {
+        const template = t('payment_success_applied_count', 'Payment was successfully applied to {count} invoice(s).');
+        return template.replace('{count}', String(affectedCount || 0));
+    }
+    if (raw.includes('Платёж успешно создан, но не применён к счетам')) {
+        return t('payment_success_created_not_applied', 'Payment created, but not applied to invoices.');
+    }
+
+    if (paymentScope === 'advance_topup' || paymentScope === null) {
+        return t('payment_success_topup', 'Advance top-up completed successfully.');
+    }
+    return t('payment_success_default', 'Payment completed successfully!');
+}
+
+// Show error message
+function showPaymentError(message) {
+    // Try to use global notification system if available
+    if (window.showError) {
+        window.showError(message);
+        return;
+    }
+    
+    // Fallback: create custom toast
+    const toast = document.createElement('div');
+    toast.className = 'payment-toast payment-toast-error';
+    toast.innerHTML = `
+        <div class="payment-toast-icon">
+            <i class="bi bi-exclamation-circle-fill"></i>
+        </div>
+        <div class="payment-toast-message">${message}</div>
+    `;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 500;
+        box-shadow: 0 10px 40px rgba(239, 68, 68, 0.3);
+        z-index: 10000;
+        animation: slideIn 0.3s ease-out;
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
+// Add toast animations
+if (!document.getElementById('payment-toast-styles')) {
+    const style = document.createElement('style');
+    style.id = 'payment-toast-styles';
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Bind pay button
+function bindPayButton() {
+    const payForm = document.querySelector('.payment-card-form');
+    const payButton = document.querySelector('.default-pay-button');
+    
+    if (payForm) {
+        payForm.addEventListener('submit', submitPayment);
+    }
+    
+    if (payButton && !payButton.dataset.bound) {
+        payButton.dataset.bound = 'true';
+        payButton.addEventListener('click', function(e) {
+            if (!payForm) {
+                submitPayment(e);
+            }
+        });
+    }
+}
+
+// Saved cards selection (user can choose which card, including Royal Park advance pass)
+function setupSavedCardSelection() {
+    const savedCards = document.querySelectorAll('.saved-cards-container .bank-card, .saved-cards-container .resident-pass-card');
+    const advanceCard = document.querySelector('.resident-pass-card[data-card-type="ADVANCE"]');
+    const advanceMethodInput = document.getElementById('paymentMethodAdvance');
+    const cardMethodInput = document.getElementById('paymentMethodCard');
+    const methodSelector = document.querySelector('.payment-method-selector');
+    if (!savedCards.length && !cardMethodInput) return;
+
+    function applySelection(cardElement) {
+        savedCards.forEach(c => c.classList.remove('selected'));
+        cardElement.classList.add('selected');
+
+        const last4 = cardElement.dataset.cardLast4 || '';
+        const holder = cardElement.dataset.cardHolder || '';
+        const type = cardElement.dataset.cardType || 'CARD';
+        const advanceBalance = cardElement.dataset.advanceBalance ? parseFloat(cardElement.dataset.advanceBalance) : null;
+        const brandEl = cardElement.querySelector('.brand-name, .visa-badge');
+        const brand = brandEl ? brandEl.textContent.trim() : 'Card';
+
+        selectedSavedCard = {
+            id: cardElement.dataset.cardId || null,
+            last4,
+            holder,
+            type,
+            advanceBalance,
+            brand
+        };
+        // Update local variable for submitPayment
+        window.selectedSavedCard = selectedSavedCard;
+        if (advanceMethodInput && cardMethodInput) {
+            advanceMethodInput.checked = type === 'ADVANCE';
+            cardMethodInput.checked = type !== 'ADVANCE';
+        }
+        if (methodSelector) {
+            methodSelector.classList.toggle('card-selected', type !== 'ADVANCE');
+        }
+    }
+
+    function applyCardGatewaySelection() {
+        savedCards.forEach(c => c.classList.remove('selected'));
+        selectedSavedCard = {
+            id: 'azericard-gateway',
+            last4: '',
+            holder: 'AzeriCard',
+            type: 'CARD',
+            advanceBalance: null,
+            brand: 'Bank Card'
+        };
+        window.selectedSavedCard = selectedSavedCard;
+        if (cardMethodInput) cardMethodInput.checked = true;
+        if (advanceMethodInput) advanceMethodInput.checked = false;
+        if (methodSelector) methodSelector.classList.add('card-selected');
+    }
+
+    savedCards.forEach(card => {
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+
+        card.addEventListener('click', () => {
+            // Проверяем, не отключена ли карта (особенно для Royal Park с авансом = 0)
+            if (card.classList.contains('disabled') || card.getAttribute('aria-disabled') === 'true') {
+                return; // Не позволяем выбрать отключенную карту
+            }
+            applySelection(card);
+        });
+        card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                // Проверяем, не отключена ли карта
+                if (card.classList.contains('disabled') || card.getAttribute('aria-disabled') === 'true') {
+                    return; // Не позволяем выбрать отключенную карту
+                }
+                applySelection(card);
+            }
+        });
+    });
+
+    if (advanceMethodInput) {
+        advanceMethodInput.addEventListener('change', () => {
+            if (!advanceMethodInput.checked) return;
+            clearWalletSessionData();
+            setGooglePayContainerVisibility(false);
+            if (advanceCard && !advanceCard.classList.contains('disabled') && advanceCard.getAttribute('aria-disabled') !== 'true') {
+                applySelection(advanceCard);
+            } else {
+                applyCardGatewaySelection();
+            }
+        });
+    }
+
+    if (cardMethodInput) {
+        cardMethodInput.addEventListener('change', () => {
+            if (cardMethodInput.checked) {
+                clearWalletSessionData();
+                applyCardGatewaySelection();
+                setupGooglePayButton();
+            }
+        });
+    }
+
+    // Select the first available (not disabled) saved card by default
+    const availableCards = Array.from(savedCards).filter(card => 
+        !card.classList.contains('disabled') && card.getAttribute('aria-disabled') !== 'true'
+    );
+    if (cardMethodInput && cardMethodInput.checked) {
+        applyCardGatewaySelection();
+        setupGooglePayButton();
+    } else if (availableCards.length > 0) {
+        applySelection(availableCards[0]);
+    } else if (cardMethodInput) {
+        applyCardGatewaySelection();
+        setupGooglePayButton();
+    }
+}
+
+// Layout logic: show/hide card form and default pay button
+function setupPaymentLayout() {
+    const addCardBtn = document.querySelector('.add-card-btn');
+    const middleColumn = document.getElementById('paymentMiddleColumn');
+    const defaultPayActions = document.querySelector('.default-pay-actions');
+    const defaultPayButton = document.querySelector('.default-pay-button');
+
+    function toggleCardForm(show) {
+        if (middleColumn) {
+            if (show) {
+                middleColumn.classList.remove('is-hidden');
+            } else {
+                middleColumn.classList.add('is-hidden');
+            }
+        }
+        if (defaultPayActions) {
+            defaultPayActions.style.display = show ? 'none' : '';
+        }
+    }
+
+    if (addCardBtn) {
+        addCardBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            toggleCardForm(true);
+            // небольшая прокрутка к форме карты
+            if (middleColumn && typeof middleColumn.scrollIntoView === 'function') {
+                middleColumn.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+
+    if (defaultPayButton) {
+        defaultPayButton.addEventListener('click', function (e) {
+            // Используем тот же submitPayment, что и для формы
+            submitPayment(e);
+        });
+    }
+
+    // начальное состояние: форма скрыта, видна только правая кнопка "Оплатить"
+    toggleCardForm(false);
+}
+
+async function setupAdvanceTopupButton() {
+    const btn = document.getElementById('topupAdvanceBtn');
+    if (!btn) return;
+
+    function getI18nText(key, fallback) {
+        const lang = localStorage.getItem('language') || 'ru';
+        return window.i18n?.translate?.(key, lang) || fallback;
+    }
+
+    function isActiveAdvanceTopupSession() {
+        const scope = sessionStorage.getItem('paymentScope');
+        const paymentTimestampRaw = sessionStorage.getItem('paymentTimestamp');
+        if (!isAdvanceTopupScope(scope) || !paymentTimestampRaw) {
+            return false;
+        }
+        const paymentTimestamp = parseInt(paymentTimestampRaw, 10);
+        if (Number.isNaN(paymentTimestamp)) {
+            return false;
+        }
+        return (Date.now() - paymentTimestamp) <= PAYMENT_DATA_TTL_MS;
+    }
+
+    function setAdvanceTopupButtonState(isCancelMode) {
+        if (!btn.dataset.defaultI18n) {
+            btn.dataset.defaultI18n = btn.getAttribute('data-i18n') || 'payment_topup_advance_btn';
+        }
+
+        if (isCancelMode) {
+            btn.setAttribute('data-i18n', 'payment_cancel_topup_btn');
+            btn.textContent = getI18nText('payment_cancel_topup_btn', 'Отменить пополнение');
+            btn.classList.add('payment-secondary-btn--cancel');
+            return;
+        }
+
+        btn.setAttribute('data-i18n', btn.dataset.defaultI18n || 'payment_topup_advance_btn');
+        btn.textContent = getI18nText('payment_topup_advance_btn', 'Пополнить аванс');
+        btn.classList.remove('payment-secondary-btn--cancel');
+    }
+
+    function syncAdvanceTopupButtonState() {
+        setAdvanceTopupButtonState(isActiveAdvanceTopupSession());
+    }
+
+    function clearInvoiceUIForTopup() {
+        const paymentDateEl = document.getElementById('paymentDate');
+        const invoiceNumberEl = document.getElementById('invoiceNumber');
+        const totalEl = document.getElementById('total');
+        const amountLabelEl = document.getElementById('paymentAmountLabel');
+        if (paymentDateEl) paymentDateEl.textContent = '—';
+        if (invoiceNumberEl) {
+            invoiceNumberEl.textContent = '—';
+            invoiceNumberEl.classList.remove('invoice-link');
+            invoiceNumberEl.style.cursor = 'default';
+            invoiceNumberEl.onclick = null;
+        }
+        if (totalEl) totalEl.textContent = '0,00 ₼';
+        if (amountLabelEl) amountLabelEl.textContent = '0,00 ₼';
+    }
+
+    function resetCustomAmountControls() {
+        const checkbox = document.getElementById('customAmountCheckbox');
+        const fieldWrapper = document.getElementById('customAmountFieldWrapper');
+        const amountInput = document.getElementById('customAmountInput');
+        const hintEl = document.getElementById('customAmountHint');
+
+        if (checkbox) {
+            checkbox.checked = false;
+            checkbox.disabled = false;
+        }
+        if (fieldWrapper) {
+            fieldWrapper.style.display = 'none';
+        }
+        if (amountInput) {
+            amountInput.value = '';
+        }
+        if (hintEl) {
+            hintEl.textContent = '';
+            hintEl.className = 'custom-amount-hint';
+        }
+    }
+
+    if (btn.dataset.topupButtonBound === '1') {
+        syncAdvanceTopupButtonState();
+        return;
+    }
+    btn.dataset.topupButtonBound = '1';
+
+    btn.addEventListener('click', async () => {
+        if (isActiveAdvanceTopupSession()) {
+            clearPaymentSessionData();
+            stopPaymentCountdown();
+            resetCustomAmountControls();
+            if (window.paymentRedirectTimeout) {
+                clearTimeout(window.paymentRedirectTimeout);
+                window.paymentRedirectTimeout = null;
+            }
+            await initPaymentPage();
+            await loadSavedCards();
+            setupSavedCardSelection();
+            syncAdvanceTopupButtonState();
+            return;
+        }
+
+        let residentId = sessionStorage.getItem('paymentResidentId');
+        let residentCode = sessionStorage.getItem('paymentResidentCode');
+
+        if (!residentId || !residentCode) {
+            try {
+                const resp = await fetch(`${API_BASE}/api/resident/dashboard`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const firstResident = (data?.residents || [])[0] || null;
+                    if (firstResident) {
+                        residentId = String(firstResident.id);
+                        residentCode = firstResident.code || residentCode || '';
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to preload resident for advance top-up', e);
+            }
+        }
+
+        try {
+            sessionStorage.setItem('paymentScope', ADVANCE_TOPUP_SCOPE);
+            sessionStorage.setItem('paymentAmount', '0');
+            sessionStorage.setItem('paymentScopeLabel', 'Пополнение аванса');
+            sessionStorage.setItem('paymentTimestamp', String(Date.now()));
+            if (residentId) sessionStorage.setItem('paymentResidentId', String(residentId));
+            if (residentCode) sessionStorage.setItem('paymentResidentCode', residentCode);
+            sessionStorage.removeItem('paymentInvoiceId');
+            sessionStorage.removeItem('paymentSelectedLineIds');
+            sessionStorage.removeItem('paymentSelectedLinesSummary');
+        } catch (e) {
+            console.warn('Failed to set advance top-up payment mode', e);
+        }
+
+        // Сразу очищаем invoice-детали в UI, чтобы не ждать перезагрузки страницы.
+        clearInvoiceUIForTopup();
+        await initPaymentPage();
+        await loadSavedCards();
+        setupSavedCardSelection();
+        syncAdvanceTopupButtonState();
+    });
+
+    syncAdvanceTopupButtonState();
+}
+
+// Функция для очистки данных оплаты из sessionStorage
+function clearPaymentData() {
+    try {
+        clearPaymentSessionData();
+        stopPaymentCountdown();
+    } catch (e) {
+        console.warn('Failed to clear payment data from sessionStorage', e);
+    }
+}
+
+// Очищаем данные оплаты при уходе со страницы оплаты
+function setupPaymentDataCleanup() {
+    let previousHash = window.location.hash;
+    let wasOnReportPage = previousHash.includes('#report') || previousHash.endsWith('#report');
+    
+    // Отслеживаем изменения hash - если пользователь ушел со страницы #report, останавливаем таймер
+    const handleHashChange = () => {
+        const currentHash = window.location.hash;
+        const isOnReportPage = currentHash.includes('#report') || currentHash.endsWith('#report');
+        
+        // Если были на странице оплаты и ушли на другую страницу - просто остановим таймер
+        if (wasOnReportPage && !isOnReportPage) {
+            stopPaymentCountdown();
+            if (window.paymentRedirectTimeout) {
+                clearTimeout(window.paymentRedirectTimeout);
+                window.paymentRedirectTimeout = null;
+            }
+        }
+        
+        wasOnReportPage = isOnReportPage;
+        previousHash = currentHash;
+    };
+    
+    // Слушаем изменения hash
+    window.addEventListener('hashchange', handleHashChange);
+    
+    // Также очищаем при закрытии/перезагрузке страницы, если были на странице оплаты
+    window.addEventListener('beforeunload', () => {
+        const currentHash = window.location.hash;
+        const isOnReportPage = currentHash.includes('#report') || currentHash.endsWith('#report');
+        if (isOnReportPage) {
+            // Останавливаем таймер, данные очистятся по TTL
+            stopPaymentCountdown();
+        }
+    });
+    
+    // Очищаем данные при полном закрытии окна/вкладки
+    window.addEventListener('pagehide', (event) => {
+        // Если страница выгружается окончательно (не просто скрывается)
+        if (event.persisted === false) {
+            const currentHash = window.location.hash;
+            const isOnReportPage = currentHash.includes('#report') || currentHash.endsWith('#report');
+            if (isOnReportPage) {
+                stopPaymentCountdown();
+            }
+        }
+    });
+}
+
+// Инициализируем страницу как при обычной загрузке, так и при загрузке через SPA
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', async () => {
+        await initPaymentPage();
+        await loadSavedCards();
+        bindPayButton();
+        setupSavedCardSelection();
+        await setupGooglePayButton();
+        setupPaymentLayout();
+        setupAdvanceTopupButton();
+        setupPaymentDataCleanup();
+    });
+} else {
+    (async () => {
+        await initPaymentPage();
+        await loadSavedCards();
+        bindPayButton();
+        setupSavedCardSelection();
+        await setupGooglePayButton();
+        setupPaymentLayout();
+        setupAdvanceTopupButton();
+        setupPaymentDataCleanup();
+    })();
+}
+</script>

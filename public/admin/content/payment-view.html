@@ -1,0 +1,803 @@
+<link rel="stylesheet" href="/admin/content_css/payment-view.css">
+<div class="content-wrapper payment-view-page">
+    <div class="payment-header">
+        <div class="payment-header-left">
+            <button class="btn-back" onclick="goBackToPayments()">
+                <i class="bi bi-arrow-left"></i> <span data-i18n="user_invoice_back_to_list">Назад</span>
+            </button>
+            <h1 id="paymentTitle" data-i18n="payments_title">Платеж #1</h1>
+        </div>
+    </div>
+
+    <!-- Payment Summary -->
+    <div class="payment-summary" id="paymentSummary">
+        <div class="payment-summary-item">
+            <label data-i18n="resident">Резидент</label>
+            <div class="value" id="paymentResident">X / 2</div>
+        </div>
+        <div class="payment-summary-item">
+            <label data-i18n="nav_tenants">Житель</label>
+            <div class="value" id="paymentResidentUser">—</div>
+        </div>
+        <div class="payment-summary-item">
+            <label data-i18n="payment_link_comment">Ссылка / Комментарий</label>
+            <div class="value" id="paymentLink">123456</div>
+        </div>
+        <div class="payment-summary-item">
+            <label data-i18n="date">Дата</label>
+            <div class="value" id="paymentDate">2025-11-21</div>
+        </div>
+        <div class="payment-summary-item">
+            <label data-i18n="filter_method">Метод</label>
+            <div class="value" id="paymentMethod">CARD</div>
+        </div>
+        <div class="payment-summary-item">
+            <label data-i18n="amount">Сумма</label>
+            <div class="value amount" id="paymentAmount">30.00</div>
+        </div>
+        <div class="payment-summary-item">
+            <label data-i18n="payments_leftover">Остаток</label>
+            <div class="value balance">
+                <span class="badge-advance" id="paymentBalance" data-i18n="payment_advance_badge">Аванс 20.00</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Distribution Section -->
+    <div class="distribution-section">
+        <div class="distribution-header">
+            <h3 data-i18n="payment_distribution_title">Распределение по счетам</h3>
+            <div class="auto-distribute-info">
+                <span id="autoDistributeBalance" class="auto-distribute-balance"></span>
+                <span id="autoDistributeTimer" class="auto-distribute-timer">
+                    <i class="bi bi-clock"></i>
+                    <span class="auto-distribute-timer-text"></span>
+                </span>
+            </div>
+            <!-- Автораспределение выполняется по таймеру; кнопка не нужна -->
+        </div>
+        <div id="autoDistributeHelp" class="auto-distribute-help"></div>
+
+        <div class="distribution-table-wrapper">
+            <table class="distribution-table">
+                <thead>
+                    <tr>
+                        <th data-i18n="payment_distribution_invoice_period">Счёт (период)</th>
+                        <th data-i18n="amount">Сумма</th>
+                        <th data-i18n="payment_distribution_remaining">Осталось оплатить</th>
+                        <th data-i18n="apply">Применить</th>
+                    </tr>
+                </thead>
+                <tbody id="distributionTableBody">
+                    <!-- Заполняется из JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Save distribution button removed by new auto-apply flow -->
+    </div>
+
+    <!-- Applications Section -->
+    <div class="applications-section">
+        <h3 data-i18n="payment_applications_title">Применения</h3>
+        <table class="applications-table">
+            <thead>
+                <tr>
+                    <th data-i18n="nav_accounts">Счёт</th>
+                    <th data-i18n="amount">Сумма</th>
+                </tr>
+            </thead>
+            <tbody id="applicationsTable">
+                <tr>
+                    <td>
+                        <a href="#" class="account-link"
+                            onclick="viewInvoice(event, '2025-11/000001')">2025-11/000001</a>
+                    </td>
+                    <td class="amount-value">10.00</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const API_BASE = window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BASE || 'http://localhost:8000');
+        const t = (key, fallback = '') => window.i18n?.translate?.(key) || fallback || key;
+        function getMethodLabel(method) {
+            if (method === 'CASH') return t('payments_method_cash', 'Наличные');
+            if (method === 'TRANSFER') return t('payments_method_transfer', 'Банк');
+            if (method === 'ONLINE') return t('payments_method_online', 'Онлайн');
+            if (method === 'CARD') return t('payments_method_card', 'Карта');
+            return method || '-';
+        }
+
+        function setResidentUserName(value) {
+            const el = document.getElementById('paymentResidentUser');
+            if (!el) return;
+            el.textContent = value && String(value).trim() ? String(value).trim() : '—';
+        }
+
+        // Get payment ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        let paymentId = urlParams.get('id') || window.__currentPaymentId || window.location.hash.split('/').pop() || window.location.hash.split('=').pop();
+        if (paymentId) paymentId = parseInt(paymentId);
+
+        let currentPayment = null;
+        let currentDistributionRows = [];
+        let openInvoices = [];
+        let currentAdvanceBalance = 0;
+        let currentDueDate = null;
+        function isPaymentViewRoute() {
+            const route = String(window.spaRouter?.currentRoute || window.location.hash.replace('#', '') || '');
+            return route.includes('payment-view');
+        }
+
+        // Load payment data
+        async function loadPayment(id) {
+            if (!id) {
+                console.error('Payment ID is required');
+                return;
+            }
+
+            try {
+                let url = `${API_BASE}/api/payments/${id}`;
+                let response = await fetch(url, { credentials: 'include' });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const payment = await response.json();
+                currentPayment = payment;
+
+                // "Житель" приходит прямо из API payments (без доп. запросов)
+                setResidentUserName(payment.resident_user_full_name);
+
+                // Load open invoices for distribution
+                await loadOpenInvoices(id);
+
+                renderPayment(payment);
+            } catch (error) {
+                console.error('Error loading payment:', error);
+                if (typeof showError === 'function') {
+                    showError(t('payments_load_error_prefix', 'Ошибка загрузки платежа') + ': ' + error.message);
+                }
+            }
+        }
+
+        // Load open invoices for distribution
+        async function loadOpenInvoices(paymentId) {
+            try {
+                let url = `${API_BASE}/api/payments/${paymentId}/open-invoices`;
+                let response = await fetch(url, { credentials: 'include' });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('📋 Open invoices data:', data);
+                openInvoices = data.invoices || [];
+                console.log('📋 Open invoices count:', openInvoices.length);
+                console.log('📋 Open invoices:', openInvoices);
+
+                // Build distribution rows
+                currentDistributionRows = openInvoices.map(inv => {
+                    // Check if this invoice already has an application
+                    const existingApp = currentPayment?.applications?.find(app => app.invoice_id === inv.id);
+                    const row = {
+                        id: inv.id,
+                        invoice_number: inv.number || `${inv.period}/---`,
+                        period: inv.period,
+                        total: inv.amount_total,
+                        remaining: inv.left_to_pay,
+                        apply: existingApp ? parseFloat(existingApp.amount_applied) : 0,
+                        due_date: inv.due_date || null
+                    };
+                    console.log('📋 Distribution row:', row);
+                    return row;
+                });
+
+                console.log('📋 Total distribution rows:', currentDistributionRows.length);
+                renderDistributionTable();
+                currentAdvanceBalance = await fetchAdvanceBalance(paymentId);
+                currentDueDate = getEarliestDueDate(openInvoices);
+                updateAutoDistributeTimer();
+            } catch (error) {
+                console.error('Error loading open invoices:', error);
+                openInvoices = [];
+                currentDistributionRows = [];
+                renderDistributionTable();
+                currentAdvanceBalance = 0;
+                currentDueDate = null;
+                updateAutoDistributeTimer();
+            }
+        }
+
+        // Счетчик попыток для предотвращения бесконечного цикла
+        let renderPaymentAttempts = 0;
+        const MAX_RENDER_ATTEMPTS = 10;
+        const renderPaymentTimeout = null; // Для отслеживания таймера
+
+        function renderPayment(payment, attempt = 0) {
+            // Проверяем, что необходимые элементы существуют в DOM
+            const titleEl = document.getElementById('paymentTitle');
+            const contentWrapper = document.querySelector('.payment-view-page');
+            
+            if (!titleEl || !contentWrapper) {
+                if (attempt >= MAX_RENDER_ATTEMPTS) {
+                    console.error('Payment title element not found after', MAX_RENDER_ATTEMPTS, 'attempts. Payment data:', payment);
+                    console.error('Available elements:', {
+                        titleEl: !!titleEl,
+                        contentWrapper: !!contentWrapper,
+                        documentReady: document.readyState
+                    });
+                    if (typeof showError === 'function') {
+                        showError(t('payment_page_elements_error', 'Ошибка: элементы страницы не найдены. Попробуйте обновить страницу.'));
+                    }
+                    return;
+                }
+                console.warn('Payment title element not found, DOM may not be ready yet. Attempt:', attempt + 1);
+                // Повторяем попытку через небольшую задержку
+                setTimeout(() => renderPayment(payment, attempt + 1), 100);
+                return;
+            }
+
+            // Сбрасываем счетчик при успешной загрузке
+            renderPaymentAttempts = 0;
+
+            // Update title
+            if (titleEl) titleEl.textContent = `${t('payments_title', 'Платеж')} #${payment.id}`;
+
+            // Update summary
+            const residentEl = document.getElementById('paymentResident');
+            if (residentEl) residentEl.textContent = payment.resident_code || '-';
+
+            const linkEl = document.getElementById('paymentLink');
+            if (linkEl) linkEl.textContent = payment.reference || '-';
+
+            const dateEl = document.getElementById('paymentDate');
+            if (dateEl) {
+                if (payment.received_at) {
+                    try {
+                        const date = new Date(payment.received_at);
+                        if (!isNaN(date.getTime())) {
+                            // Форматируем в понятный формат: DD.MM.YYYY HH:MM
+                            const day = String(date.getDate()).padStart(2, '0');
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const year = date.getFullYear();
+                            const hours = String(date.getHours()).padStart(2, '0');
+                            const minutes = String(date.getMinutes()).padStart(2, '0');
+                            dateEl.textContent = `${day}.${month}.${year} ${hours}:${minutes}`;
+                        } else {
+                            dateEl.textContent = payment.received_at;
+                        }
+                    } catch (e) {
+                        console.error('Error formatting date:', e);
+                        dateEl.textContent = payment.received_at;
+                    }
+                } else {
+                    dateEl.textContent = '-';
+                }
+            }
+
+            const methodEl = document.getElementById('paymentMethod');
+            if (methodEl) methodEl.textContent = getMethodLabel(payment.method);
+
+            const amountEl = document.getElementById('paymentAmount');
+            if (amountEl) amountEl.textContent = parseFloat(payment.amount_total || 0).toFixed(2);
+
+            // Update balance badge
+            const balanceEl = document.getElementById('paymentBalance');
+            if (balanceEl) {
+                const leftover = parseFloat(payment.leftover || 0);
+                if (leftover > 0) {
+                    balanceEl.textContent = `${t('payment_advance_badge', 'Аванс')} ${leftover.toFixed(2)}`;
+                    balanceEl.className = 'badge-advance';
+                } else {
+                    balanceEl.textContent = '0.00';
+                    balanceEl.className = '';
+                }
+            }
+
+            // Update timer visibility after payment render
+            updateAutoDistributeTimer();
+
+            // Update applications table
+            const tbody = document.getElementById('applicationsTable');
+            if (tbody) {
+            if (payment.applications && payment.applications.length > 0) {
+                tbody.innerHTML = payment.applications.map(app => {
+                    const invoiceDisplay = app.invoice_number || app.invoice_period || `${app.invoice_id}`;
+                    return `
+                <tr>
+                    <td>
+                        <a href="#" class="account-link" onclick="viewInvoiceById(event, ${app.invoice_id})">${invoiceDisplay}</a>
+                    </td>
+                    <td class="amount-value">${parseFloat(app.amount_applied || 0).toFixed(2)}</td>
+                </tr>
+            `;
+                }).join('');
+            } else {
+                tbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: rgba(255,255,255,0.5); padding: 20px;">${t('payment_applications_empty', 'Нет применений')}</td></tr>`;
+                }
+            }
+
+            updateDistributionTotals();
+        }
+
+        async function fetchAdvanceBalance(paymentId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/payments/${paymentId}/advance-balance`, {
+                    credentials: 'include'
+                });
+                if (!response.ok) {
+                    return 0;
+                }
+                const data = await response.json();
+                return parseFloat(data.advance_balance || 0);
+            } catch (err) {
+                console.error('Failed to fetch advance balance:', err);
+                return 0;
+            }
+        }
+
+        function getEarliestDueDate(invoices) {
+            const dates = (invoices || [])
+                .map(inv => inv.due_date)
+                .filter(Boolean)
+                .map(val => {
+                    const parsed = new Date(`${val}T00:00:00`);
+                    return isNaN(parsed.getTime()) ? null : parsed;
+                })
+                .filter(Boolean);
+            if (!dates.length) return null;
+            return new Date(Math.min(...dates.map(d => d.getTime())));
+        }
+
+        function updateAutoDistributeTimer() {
+            const timerEl = document.getElementById('autoDistributeTimer');
+            if (!timerEl) return;
+            const timerTextEl = timerEl.querySelector('.auto-distribute-timer-text');
+            if (!timerTextEl) return;
+            const balanceEl = document.getElementById('autoDistributeBalance');
+            if (!balanceEl) return;
+            const helpEl = document.getElementById('autoDistributeHelp');
+            if (!helpEl) return;
+
+            if (window.autoDistributeTimerInterval) {
+                clearInterval(window.autoDistributeTimerInterval);
+                window.autoDistributeTimerInterval = null;
+            }
+            timerTextEl.textContent = '';
+
+            const hasAdvance = currentAdvanceBalance > 0;
+            const dueDate = currentDueDate;
+            if (!hasAdvance || !dueDate) {
+                timerEl.style.display = 'none';
+                balanceEl.style.display = 'none';
+                helpEl.style.display = 'none';
+                return;
+            }
+
+            const dueStart = new Date(dueDate.getTime());
+            const now = new Date();
+            if (now.getTime() < dueStart.getTime()) {
+                timerEl.style.display = 'none';
+                balanceEl.style.display = 'none';
+                helpEl.style.display = 'none';
+                return;
+            }
+
+            // 3 days from due date start (visual timer)
+            const deadline = dueStart.getTime() + (3 * 24 * 60 * 60 * 1000);
+            timerEl.style.display = 'inline-flex';
+            balanceEl.style.display = 'inline-flex';
+            balanceEl.textContent = `${t('payment_advance_auto_label', 'Аванс для авто‑списания')}: ${currentAdvanceBalance.toFixed(2)}`;
+            helpEl.style.display = 'block';
+            helpEl.textContent = t('payment_advance_auto_hint', 'Если оплата не будет внесена в течение 3 дней после срока, аванс автоматически распределится по неоплаченным счетам.');
+
+            const storageKey = currentPayment && currentPayment.id && dueDate
+                ? `autoAdvanceApplied:${currentPayment.id}:${dueDate.toISOString().slice(0, 10)}`
+                : null;
+
+            const tick = async () => {
+                const remaining = deadline - Date.now();
+                if (remaining <= 0) {
+                    timerTextEl.textContent = '00:00:00';
+                    const alreadyDone = storageKey ? localStorage.getItem(storageKey) : null;
+                    if (!alreadyDone) {
+                        await triggerAutoAdvanceApply(storageKey);
+                    }
+                    return;
+                }
+
+                const totalSeconds = Math.floor(remaining / 1000);
+                const days = Math.floor(totalSeconds / 86400);
+                const hours = Math.floor((totalSeconds % 86400) / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                const dayShort = t('payment_timer_day_short', 'д');
+                timerTextEl.textContent = `${days}${dayShort} ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            };
+
+            tick();
+            window.autoDistributeTimerInterval = setInterval(tick, 1000);
+        }
+
+        async function triggerAutoAdvanceApply(storageKey) {
+            if (!currentPayment || !currentPayment.id) return;
+            if (window.autoAdvanceInFlight) return;
+            const lastAttempt = window.autoAdvanceLastAttempt || 0;
+            if (Date.now() - lastAttempt < 10000) {
+                return;
+            }
+            window.autoAdvanceLastAttempt = Date.now();
+            window.autoAdvanceInFlight = true;
+            try {
+                const response = await fetch(`${API_BASE}/api/payments/${currentPayment.id}/auto-apply-advance`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                }
+                const result = await response.json();
+                if (storageKey) {
+                    localStorage.setItem(storageKey, '1');
+                }
+                await loadPayment(currentPayment.id);
+                if (typeof showSuccess === 'function') {
+                    showSuccess(t('payment_advance_auto_done', 'Аванс автоматически распределён по счетам'));
+                }
+            } catch (error) {
+                console.error('Auto advance apply failed:', error);
+                if (typeof showError === 'function') {
+                    showError(t('payment_advance_auto_error', 'Ошибка авто-распределения аванса') + ': ' + error.message);
+                }
+            } finally {
+                window.autoAdvanceInFlight = false;
+            }
+        }
+
+        window.goBackToPayments = function () {
+            // Navigate back to payments list using router
+            if (window.goBack) {
+                window.goBack('/payments');
+            } else if (window.spaRouter && typeof window.spaRouter.goBack === 'function') {
+                window.spaRouter.goBack('/payments');
+            } else if (window.spaRouter && typeof window.spaRouter.navigate === 'function') {
+                window.spaRouter.navigate('/payments');
+            } else {
+                // Fallback: update hash directly
+                window.location.hash = '#/payments';
+            }
+        };
+
+        // Update page header when payment view loads
+        function updatePageHeaderForPaymentsView() {
+            // Правильно обновляем заголовок через page-title-container
+            const titleContainer = document.getElementById('page-title-container');
+            if (titleContainer) {
+                const h1 = titleContainer.querySelector('h1');
+                if (h1) {
+                    h1.textContent = 'Платежи';
+                    // Удаляем любые inline стили, чтобы применились CSS стили
+                    h1.removeAttribute('style');
+                }
+
+                const breadcrumb = titleContainer.querySelector('.page-breadcrumb');
+            if (breadcrumb) {
+                    breadcrumb.innerHTML = `
+                        <span class="breadcrumb-item">
+                            <svg width="14" height="14" fill="currentColor" style="margin-right: 0.25rem; vertical-align: middle;">
+                                <use href="/images/icons.svg#icon-apartments"></use>
+                            </svg>
+                            Главная
+                        </span>
+                        <span>›</span>
+                        <span class="breadcrumb-item">Финансы</span>
+                        <span>›</span>
+                        <span class="breadcrumb-item">Платежи</span>
+                    `;
+                }
+            }
+        }
+
+        // Update page header when loaded in SPA
+        // Используем событие spa:contentLoaded для правильного обновления после загрузки контента
+        function initPaymentViewHeader() {
+            updatePageHeaderForPaymentsView();
+        }
+
+        // Вызываем при загрузке контента через SPA
+        if (window.spaRouter) {
+            // Если уже загружен, обновляем сразу
+            setTimeout(initPaymentViewHeader, 100);
+        } else {
+            // Иначе ждем события
+            document.addEventListener('spa:contentLoaded', function(e) {
+                if (e.detail && e.detail.route === '/payment-view') {
+                    setTimeout(initPaymentViewHeader, 100);
+                }
+            });
+        }
+
+        function renderDistributionTable() {
+            const tbody = document.getElementById('distributionTableBody');
+            if (!tbody) return;
+
+            if (!currentDistributionRows.length) {
+                tbody.innerHTML = '<tr><td colspan="4" style="padding: 14px; text-align: center; color: rgba(255,255,255,0.6);">' + t('payment_no_open_invoices', 'Нет открытых счетов') + '</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = currentDistributionRows.map(row => {
+                const invoiceDisplay = row.invoice_number || row.period || `${row.id}`;
+                return `
+            <tr>
+                <td>
+                    <a href="#" class="distribution-invoice-link" onclick="viewInvoiceById(event, ${row.id})">${invoiceDisplay}</a>
+                </td>
+                <td class="distribution-amount">${parseFloat(row.total || 0).toFixed(2)}</td>
+                <td class="distribution-remaining">${parseFloat(row.remaining || 0).toFixed(2)}</td>
+                <td>
+                    <input
+                        type="number"
+                        class="apply-input"
+                        min="0"
+                        step="0.01"
+                        max="${row.remaining}"
+                        value="${parseFloat(row.apply || 0).toFixed(2)}"
+                        data-id="${row.id}"
+                        oninput="updateDistributionFromInputs()"
+                        readonly
+                    />
+                </td>
+            </tr>
+        `;
+            }).join('');
+        }
+
+        function updateDistributionTotals() {
+            if (!currentPayment) return;
+            const totalApplied = currentDistributionRows.reduce((sum, r) => sum + (parseFloat(r.apply) || 0), 0);
+            const leftover = parseFloat(currentPayment.leftover || 0);
+            const remainingToPay = Math.max(0, leftover - totalApplied);
+
+            const remainingEl = document.getElementById('remainingToPay');
+            const applyEl = document.getElementById('applyAmount');
+            if (remainingEl) remainingEl.textContent = remainingToPay.toFixed(2);
+            if (applyEl) applyEl.textContent = totalApplied.toFixed(2);
+        }
+
+        window.updateDistributionFromInputs = function () {
+            const inputs = document.querySelectorAll('.apply-input[data-id]');
+            inputs.forEach(input => {
+                const id = Number(input.getAttribute('data-id'));
+                const row = currentDistributionRows.find(r => r.id === id);
+                if (!row) return;
+                const value = parseFloat(input.value.replace(',', '.')) || 0;
+                row.apply = Math.max(0, value);
+            });
+            updateDistributionTotals();
+        };
+
+        window.saveDistribution = async function () {
+            if (!currentPayment || !currentPayment.id) {
+                if (typeof showError === 'function') {
+                    showError(t('payment_not_loaded', 'Платеж не загружен'));
+                }
+                return;
+            }
+
+            const totalApplied = currentDistributionRows.reduce((sum, r) => sum + (parseFloat(r.apply) || 0), 0);
+
+            if (totalApplied <= 0) {
+                if (typeof showWarning === 'function') {
+                    showWarning(t('payments_amount_positive', 'Сумма применения должна быть больше нуля!'));
+                }
+                return;
+            }
+
+            // Build applications array
+            const applications = currentDistributionRows
+                .filter(row => parseFloat(row.apply) > 0)
+                .map(row => ({
+                    invoice_id: row.id,
+                    amount: parseFloat(row.apply)
+                }));
+
+            try {
+                const formData = new FormData();
+                formData.append('data_json', JSON.stringify(applications));
+
+                let response = await fetch(`${API_BASE}/api/payments/${currentPayment.id}/applications`, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                // Reload payment to get updated data
+                await loadPayment(currentPayment.id);
+
+                if (typeof showSuccess === 'function') {
+                    showSuccess(t('payment_distribution_saved', 'Распределение успешно сохранено!'));
+                }
+            } catch (error) {
+                console.error('Error saving distribution:', error);
+                if (typeof showError === 'function') {
+                    showError(t('payment_distribution_save_error', 'Ошибка сохранения распределения') + ': ' + error.message);
+                }
+            }
+        };
+
+        window.autoDistribute = async function () {
+            if (!currentPayment || !currentPayment.id) {
+                if (typeof showError === 'function') {
+                    showError(t('payment_not_loaded', 'Платеж не загружен'));
+                }
+                return;
+            }
+
+            if (!currentDistributionRows.length) {
+                if (typeof showWarning === 'function') {
+                    showWarning(t('payment_no_invoices_for_distribution', 'Нет счетов для распределения!'));
+                }
+                return;
+            }
+
+            try {
+                let response = await fetch(`${API_BASE}/api/payments/${currentPayment.id}/auto-apply`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                // Apply the plan to currentDistributionRows
+                if (result.plan && Array.isArray(result.plan)) {
+                    result.plan.forEach(planItem => {
+                        const row = currentDistributionRows.find(r => r.id === planItem.invoice_id);
+                        if (row) {
+                            row.apply = parseFloat(planItem.amount || 0);
+                        }
+                    });
+                } else {
+                    // Fallback: manual distribution
+                    let remaining = parseFloat(currentPayment.leftover || 0);
+                    currentDistributionRows.forEach(row => {
+                        const maxForRow = parseFloat(row.remaining || 0);
+                        const apply = Math.min(remaining, maxForRow);
+                        row.apply = apply;
+                        remaining -= apply;
+                    });
+                }
+
+                renderDistributionTable();
+                updateDistributionTotals();
+
+                if (typeof showSuccess === 'function') {
+                    showSuccess(t('payment_advance_auto_done', 'Автораспределение выполнено!'));
+                }
+            } catch (error) {
+                console.error('Error auto-distributing:', error);
+                if (typeof showError === 'function') {
+                    showError(t('payment_advance_auto_error', 'Ошибка автораспределения') + ': ' + error.message);
+                }
+            }
+        };
+
+        window.viewInvoiceById = function (event, invoiceId) {
+            if (event) {
+                event.preventDefault();
+            }
+
+            console.log('Opening invoice view for invoice ID:', invoiceId);
+
+            // Store invoice ID for invoice-view.html
+            window.__currentInvoiceId = invoiceId;
+
+            // Use SPA router to navigate - this prevents double-load issues
+            if (window.spaRouter && typeof window.spaRouter.navigate === 'function') {
+                window.spaRouter.navigate(`/invoice-view?id=${invoiceId}`);
+            } else {
+                // Fallback to direct hash navigation
+                window.location.hash = `#/invoice-view?id=${invoiceId}`;
+            }
+        };
+
+        // Проверка готовности DOM перед загрузкой платежа
+        function waitForDOM(callback, maxAttempts = 20, attempt = 0) {
+            const titleEl = document.getElementById('paymentTitle');
+            const contentWrapper = document.querySelector('.payment-view-page');
+            
+            if (titleEl && contentWrapper) {
+                callback();
+            } else if (attempt < maxAttempts) {
+                setTimeout(() => waitForDOM(callback, maxAttempts, attempt + 1), 50);
+            } else {
+                console.error('DOM elements not found after', maxAttempts, 'attempts');
+                if (typeof showError === 'function') {
+                    showError('Ошибка: элементы страницы не найдены. Попробуйте обновить страницу.');
+                }
+            }
+        }
+
+        // Load payment on page load
+        function initPaymentView() {
+            if (!paymentId) {
+                console.error('Payment ID not found');
+                if (typeof showError === 'function') {
+                    showError(t('payment_id_not_found', 'ID платежа не найден'));
+                }
+                return;
+            }
+
+            // Ждем готовности DOM перед загрузкой платежа
+            waitForDOM(() => {
+                loadPayment(paymentId);
+            });
+        }
+
+        // Listen for SPA content loaded event
+        // Удаляем старый обработчик, если он существует
+        if (window._paymentViewContentLoadedHandler) {
+            document.removeEventListener('spa:contentLoaded', window._paymentViewContentLoadedHandler);
+        }
+
+        window._paymentViewContentLoadedHandler = function () {
+            // Check if we're actually on the payment-view page
+            const route = window.spaRouter?.currentRoute || window.location.hash.replace('#', '');
+            if (!route.includes('payment-view')) {
+                return; // Not on payment-view page, skip
+            }
+            
+            // Re-extract payment ID in case it changed
+            const urlParams = new URLSearchParams(window.location.search);
+            paymentId = urlParams.get('id') || window.__currentPaymentId || window.location.hash.split('/').pop() || window.location.hash.split('=').pop();
+            if (paymentId) paymentId = parseInt(paymentId);
+            
+            // Небольшая задержка для гарантии, что DOM вставлен
+            setTimeout(() => {
+                initPaymentView();
+            }, 100);
+        };
+
+        document.addEventListener('spa:contentLoaded', window._paymentViewContentLoadedHandler);
+
+        // Инициализация при загрузке страницы
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(() => initPaymentView(), 100);
+            });
+        } else {
+            setTimeout(() => initPaymentView(), 100);
+        }
+
+        if (window._paymentViewLanguageChangedHandler) {
+            window.removeEventListener('languageChanged', window._paymentViewLanguageChangedHandler);
+        }
+        window._paymentViewLanguageChangedHandler = function() {
+            if (currentPayment && isPaymentViewRoute()) {
+                renderPayment(currentPayment);
+                renderDistributionTable();
+            }
+        };
+        window.addEventListener('languageChanged', window._paymentViewLanguageChangedHandler);
+    })();
+</script>

@@ -1,0 +1,1119 @@
+<section class="user-news-section">
+    <div class="news-list-container">
+        <div id="newsList" class="news-list">
+            <!-- News items will be loaded here -->
+        </div>
+        <div class="table-pagination">
+            <div class="pagination-controls" id="userNewsPaginationControls">
+                <button class="btn-pagination" onclick="goToUserNewsPage('prev')" disabled id="userNewsPrevBtn">
+                    <i class="bi bi-chevron-double-left"></i>
+                </button>
+                <div id="userNewsPageButtons" class="pagination-pages"></div>
+                <button class="btn-pagination" onclick="goToUserNewsPage('next')" disabled id="userNewsNextBtn">
+                    <i class="bi bi-chevron-double-right"></i>
+                </button>
+            </div>
+            <div class="pagination-info">
+                <span><span data-i18n="pagination_page">Стр.</span> <span id="userNewsCurrentPage">1</span> <span data-i18n="pagination_of">из</span> <span id="userNewsTotalPages">1</span> · <span data-i18n="pagination_total">всего</span>
+                    <span id="userNewsTotalItems">0</span></span>
+            </div>
+            <div class="pagination-per-page">
+                <span data-i18n="pagination_on">На</span>
+                <span data-i18n="pagination_per_page">странице:</span>
+                <div class="custom-pag-select" id="customUserNewsItemsPerPage">
+                    <select id="userNewsItemsPerPage" onchange="changeUserNewsItemsPerPage()" style="display: none;">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <div class="select-btn">
+                        <span class="select-text">25</span>
+                        <span class="arrow">▾</span>
+                    </div>
+                    <div class="select-options">
+                        <div class="select-option" data-value="10">10</div>
+                        <div class="select-option selected" data-value="25">25</div>
+                        <div class="select-option" data-value="50">50</div>
+                        <div class="select-option" data-value="100">100</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- News Detail Modal -->
+<div class="user-news-modal-overlay" id="newsDetailModal">
+    <div class="user-news-modal">
+        <div class="user-news-modal-header">
+            <div class="user-news-modal-icon" id="newsDetailIcon"></div>
+            <div class="user-news-modal-title-block">
+                <h3 id="newsDetailTitle"></h3>
+                <div class="user-news-modal-date" id="newsDetailDate"></div>
+            </div>
+            <button type="button" class="user-news-modal-close" id="newsDetailModalClose">&times;</button>
+        </div>
+        <div class="user-news-modal-body">
+            <div class="user-news-modal-content" id="newsDetailContent"></div>
+            <div class="user-news-modal-footer">
+                <button type="button" class="user-news-modal-close-btn" id="newsDetailCloseBtn" data-i18n="user_news_modal_close_btn">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.user-news-section {
+    padding: 2rem 0;
+}
+
+.news-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.news-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 1.25rem;
+    padding: 1.5rem;
+    align-items: center;
+    display: flex;
+    gap: 1.25rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.news-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    border-color: rgba(177, 186, 136, 0.45);
+}
+
+/* Тёмный фон убран: страница только в sakin portalı (body.user-app), токены — молочные */
+
+.news-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 28px;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.news-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.news-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.news-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.news-date {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.news-text {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.news-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-secondary);
+}
+
+.news-empty i {
+    font-size: 4rem;
+    opacity: 0.3;
+    margin-bottom: 1rem;
+}
+
+/* Pagination (mirrors admin news) */
+.table-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.9rem;
+    margin-top: 1.25rem;
+    gap: 1rem;
+}
+
+html[data-theme="dark"] body.user-app .table-pagination {
+    background: rgba(255, 255, 255, 0.94) !important;
+    border: 1px solid rgba(177, 186, 136, 0.28) !important;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.pagination-pages {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-pagination {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 12px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(177, 186, 136, 0.3);
+    border-radius: 8px;
+    color: #56565c;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+}
+
+.btn-pagination:hover:not(:disabled) {
+    background: rgba(177, 186, 136, 0.14);
+    border-color: rgba(177, 186, 136, 0.45);
+    color: #3d3d42;
+}
+
+.btn-pagination:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-pagination.active {
+    background: linear-gradient(135deg, #c5cd9f 0%, #b1ba88 100%);
+    border-color: #b1ba88;
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(177, 186, 136, 0.35);
+}
+
+.pagination-info {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.pagination-per-page {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.custom-pag-select {
+    position: relative;
+    display: inline-block;
+    min-width: 60px;
+}
+
+.custom-pag-select .select-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(177, 186, 136, 0.3);
+    border-radius: 6px;
+    color: #56565c;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 60px;
+    user-select: none;
+}
+
+.custom-pag-select .select-btn:hover {
+    background: #fff;
+    border-color: rgba(177, 186, 136, 0.45);
+}
+
+.custom-pag-select .select-options {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    background: #fafaf6 !important;
+    border: 1px solid rgba(177, 186, 136, 0.28) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 6px;
+    display: none;
+    min-width: 70px;
+    z-index: 5;
+}
+
+.custom-pag-select.open .select-options {
+    display: block;
+}
+
+.custom-pag-select .select-option {
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: #56565c;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.custom-pag-select .select-option:hover {
+    background: rgba(177, 186, 136, 0.16);
+}
+
+.custom-pag-select .select-option.selected {
+    background: linear-gradient(135deg, #c5cd9f 0%, #b1ba88 100%);
+    color: #fff;
+}
+
+.custom-pag-select .arrow {
+    margin-left: 6px;
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+/* News Detail Modal Styles */
+.user-news-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 1rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.user-news-modal-overlay.show {
+    display: flex;
+    opacity: 1;
+}
+
+.user-news-modal {
+    background: var(--bg-secondary);
+    border-radius: 1.25rem;
+    max-width: 700px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.user-news-modal-overlay.show .user-news-modal {
+    transform: scale(1);
+}
+
+html[data-theme="dark"] body.user-app .user-news-modal {
+    background: #fafaf6 !important;
+    border: 1px solid rgba(177, 186, 136, 0.25) !important;
+}
+
+.user-news-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+}
+
+html[data-theme="dark"] body.user-app .user-news-modal-header {
+    border-bottom-color: rgba(177, 186, 136, 0.22) !important;
+}
+
+.user-news-modal-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.user-news-modal-header h3 {
+    flex: 1;
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.user-news-modal-title-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 1;
+}
+
+.user-news-modal-close {
+    background: transparent;
+    border: none;
+    font-size: 2rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.user-news-modal-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.user-news-modal-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    align-items: center;
+    text-align: center;
+}
+
+.user-news-modal-date {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+html[data-theme="dark"] body.user-app .user-news-modal-date {
+    border-bottom-color: rgba(177, 186, 136, 0.2) !important;
+}
+
+.user-news-modal-content {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    text-align: center;
+}
+
+.user-news-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    margin-top: 0.25rem;
+}
+
+.user-news-modal-close-btn {
+    border: 1px solid rgba(177, 186, 136, 0.4);
+    background: linear-gradient(135deg, #c5cd9f 0%, #b1ba88 100%);
+    color: #fff;
+    padding: 0.7rem 1.6rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 4px 14px rgba(177, 186, 136, 0.3);
+}
+
+.user-news-modal-close-btn:hover {
+    background: linear-gradient(135deg, #b1ba88 0%, #9aa972 100%);
+    border-color: rgba(177, 186, 136, 0.55);
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .news-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .news-icon {
+        margin: 0 auto;
+    }
+    
+    .news-header {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .user-news-modal {
+        max-width: 100%;
+        margin: 0.5rem;
+        max-height: 95vh;
+    }
+    
+    .user-news-modal-header {
+        flex-wrap: wrap;
+    }
+    
+    .user-news-modal-header h3 {
+        font-size: 1.25rem;
+    }
+}
+</style>
+
+<script>
+(function() {
+    'use strict';
+    
+    const API_BASE_URL = window.getApiBase ? window.getApiBase() : (window.API_BASE_URL || window.BACKEND_API_BASE || 'http://localhost:8000');
+    const paginationState = {
+        currentPage: 1,
+        itemsPerPage: 25,
+        totalPages: 1,
+        totalItems: 0
+    };
+    let cachedSortedNews = [];
+    
+    // Get current language
+    const getCurrentLanguage = () => {
+        return localStorage.getItem('language') || 'ru';
+    };
+    
+    async function getResidentBlocks() {
+        const fromDashboard = (window.dashboardData?.residents || [])
+            .map(r => (r.code || '').split('/')[0].trim())
+            .filter(Boolean);
+        if (fromDashboard.length) {
+            return Array.from(new Set(fromDashboard));
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/resident/dashboard`, {
+                credentials: 'include'
+            });
+            if (!response.ok) {
+                return [];
+            }
+            const data = await response.json();
+            const blocks = (data.residents || [])
+                .map(r => (r.code || '').split('/')[0].trim())
+                .filter(Boolean);
+            return Array.from(new Set(blocks));
+        } catch (error) {
+            console.warn('Failed to load resident blocks for news:', error);
+            return [];
+        }
+    }
+
+    async function fetchPublicNews() {
+        const blocks = await getResidentBlocks();
+        const params = new URLSearchParams();
+        params.append('limit', '100');
+        if (blocks.length) {
+            params.append('blocks', blocks.join(','));
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/news/public?${params.toString()}`, {
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            throw new Error('Failed to load news');
+        }
+        return response.json();
+    }
+
+    // Load news
+    async function loadNews() {
+        const newsList = document.getElementById('newsList');
+        if (!newsList) return;
+        
+        newsList.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>';
+        
+        try {
+            const lang = getCurrentLanguage();
+            const data = await fetchPublicNews();
+            const activeNews = data.items || [];
+
+            // Сохраняем данные в кэш для быстрой перерисовки при смене языка
+            cachedNewsData = activeNews;
+            renderNews(activeNews, lang);
+        } catch (error) {
+            console.error('Error loading news:', error);
+            newsList.innerHTML = `
+                <div class="news-empty">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <p>Не удалось загрузить новости</p>
+                </div>
+            `;
+        }
+    }
+    
+    function renderNews(items, lang) {
+        const newsList = document.getElementById('newsList');
+        if (!lang) lang = getCurrentLanguage();
+        
+        if (!items || items.length === 0) {
+            newsList.innerHTML = `
+                <div class="news-empty">
+                    <i class="bi bi-newspaper"></i>
+                    <p data-i18n="user_no_news">Нет новостей</p>
+                </div>
+            `;
+            paginationState.totalItems = 0;
+            paginationState.totalPages = 1;
+            paginationState.currentPage = 1;
+            cachedSortedNews = [];
+            updateUserNewsPaginationUI();
+            // Применяем переводы если доступны
+            if (window.applyTranslations) {
+                setTimeout(() => window.applyTranslations(), 100);
+            }
+            return;
+        }
+        
+        // Сортируем по приоритету и дате публикации
+        const sortedItems = [...items].sort((a, b) => {
+            if (b.priority !== a.priority) {
+                return b.priority - a.priority;
+            }
+            return new Date(b.published_at) - new Date(a.published_at);
+        });
+        cachedSortedNews = sortedItems;
+
+        paginationState.totalItems = sortedItems.length;
+        paginationState.totalPages = Math.max(1, Math.ceil(paginationState.totalItems / paginationState.itemsPerPage));
+        if (paginationState.currentPage > paginationState.totalPages) {
+            paginationState.currentPage = paginationState.totalPages;
+        }
+
+        const startIdx = (paginationState.currentPage - 1) * paginationState.itemsPerPage;
+        const pageItems = sortedItems.slice(startIdx, startIdx + paginationState.itemsPerPage);
+        
+        const iconMap = {
+            'info': 'bi-info-circle-fill',
+            'announcement': 'bi-megaphone-fill',
+            'star': 'bi-star-fill',
+            'warning': 'bi-exclamation-triangle-fill',
+            'calendar': 'bi-calendar-event-fill',
+            'tools': 'bi-tools'
+        };
+        
+        newsList.innerHTML = pageItems.map(news => {
+            // Парсим JSON поля если нужно
+            let title, content;
+            try {
+                title = typeof news.title === 'string' ? JSON.parse(news.title) : news.title;
+                content = typeof news.content === 'string' ? JSON.parse(news.content) : news.content;
+            } catch (e) {
+                console.error('Error parsing news JSON:', e, news);
+                title = { ru: 'Ошибка загрузки', az: 'Yükləmə xətası', en: 'Loading error' };
+                content = { ru: 'Не удалось загрузить содержимое', az: 'Məzmun yüklənə bilmədi', en: 'Failed to load content' };
+            }
+            
+            // Выбираем язык с правильным fallback: сначала текущий язык, потом ru, потом az, потом en
+            const titleText = (title[lang] && title[lang].trim()) || 
+                             (title.ru && title.ru.trim()) || 
+                             (title.az && title.az.trim()) || 
+                             (title.en && title.en.trim()) || 
+                             'Без заголовка';
+            const contentText = (content[lang] && content[lang].trim()) || 
+                               (content.ru && content.ru.trim()) || 
+                               (content.az && content.az.trim()) || 
+                               (content.en && content.en.trim()) || 
+                               'Нет содержания';
+            
+            // Форматируем дату в зависимости от языка
+            const dateOptions = {
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric'
+            };
+            const locale = lang === 'ru' ? 'ru-RU' : (lang === 'az' ? 'az' : 'en-US');
+            let publishedDate;
+            try {
+                publishedDate = new Date(news.published_at).toLocaleDateString(locale, dateOptions);
+                // Проверка на некорректный формат (например, "2025 M12 22")
+                if (publishedDate.includes('M')) {
+                    throw new Error('Fallback to simple format');
+                }
+            } catch (e) {
+                // Простой числовой формат если локаль не поддерживается корректно
+                const d = new Date(news.published_at);
+                publishedDate = `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()}`;
+            }
+            
+            const iconColor =
+                typeof window.resolveUserNewsIconColor === 'function'
+                    ? window.resolveUserNewsIconColor(news.icon, news.icon_color)
+                    : news.icon_color || '#c5cd9f';
+            const iconShadow = `0 4px 15px ${iconColor}66`;
+            const modClass =
+                typeof window.newsItemModifierClass === 'function'
+                    ? window.newsItemModifierClass(news.icon)
+                    : 'news-item--info';
+
+            // Сохраняем данные для быстрой перерисовки при смене языка
+            return `
+                <div class="news-item ${modClass}" 
+                     onclick="window.openNewsDetail(${news.id})"
+                     data-news-id="${news.id}"
+                     data-published-at="${news.published_at}"
+                     data-title='${JSON.stringify(title)}'
+                     data-content='${JSON.stringify(content)}'>
+                    <div class="news-icon" style="background-color: ${iconColor} !important; box-shadow: ${iconShadow} !important;">
+                        <i class="bi ${iconMap[news.icon] || 'bi-info-circle-fill'}"></i>
+                    </div>
+                    <div class="news-content">
+                        <div class="news-header">
+                            <h3 class="news-title">${escapeHtml(titleText)}</h3>
+                            <span class="news-date">${publishedDate}</span>
+                        </div>
+                        <p class="news-text">${escapeHtml(contentText)}</p>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        updateUserNewsPaginationUI();
+        if (window.applyTranslations) {
+            setTimeout(() => window.applyTranslations(), 50);
+        }
+    }
+    
+    // Функция для экранирования HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    async function openNewsDetail(newsId) {
+        const modal = document.getElementById('newsDetailModal');
+        const modalTitle = document.getElementById('newsDetailTitle');
+        const modalContent = document.getElementById('newsDetailContent');
+        const modalDate = document.getElementById('newsDetailDate');
+        const modalIcon = document.getElementById('newsDetailIcon');
+        
+        if (!modal || !modalTitle || !modalContent) return;
+        
+        // Показываем модальное окно с загрузкой
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+        
+        modalTitle.textContent = 'Загрузка...';
+        modalContent.textContent = '';
+        modalDate.textContent = '';
+        
+        try {
+            // Ищем новость в кэше или загружаем с сервера
+            let news = null;
+            if (cachedNewsData) {
+                news = cachedNewsData.find(n => n.id === newsId);
+            }
+            
+            if (!news) {
+                const data = await fetchPublicNews();
+                const items = data.items || [];
+                cachedNewsData = items;
+                news = items.find(n => n.id === newsId) || null;
+            }
+
+            if (!news) {
+                throw new Error('News not found for current user');
+            }
+            
+            // Парсим JSON поля
+            let title, content;
+            try {
+                title = typeof news.title === 'string' ? JSON.parse(news.title) : news.title;
+                content = typeof news.content === 'string' ? JSON.parse(news.content) : news.content;
+            } catch (e) {
+                console.error('Error parsing news JSON:', e);
+                title = { ru: 'Ошибка загрузки', az: 'Yükləmə xətası', en: 'Loading error' };
+                content = { ru: 'Не удалось загрузить содержимое', az: 'Məzmun yüklənə bilmədi', en: 'Failed to load content' };
+            }
+            
+            const lang = getCurrentLanguage();
+            
+            // Выбираем язык с fallback
+            const titleText = (title[lang] && title[lang].trim()) || 
+                             (title.ru && title.ru.trim()) || 
+                             (title.az && title.az.trim()) || 
+                             (title.en && title.en.trim()) || 
+                             'Без заголовка';
+            const contentText = (content[lang] && content[lang].trim()) || 
+                               (content.ru && content.ru.trim()) || 
+                               (content.az && content.az.trim()) || 
+                               (content.en && content.en.trim()) || 
+                               'Нет содержания';
+            
+            // Форматируем дату
+            const dateOptions = {
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            const locale = lang === 'ru' ? 'ru-RU' : (lang === 'az' ? 'az' : 'en-US');
+            let publishedDate;
+            try {
+                publishedDate = new Date(news.published_at).toLocaleDateString(locale, dateOptions);
+                if (publishedDate.includes('M')) {
+                    throw new Error('Fallback');
+                }
+            } catch (e) {
+                const d = new Date(news.published_at);
+                publishedDate = `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+            }
+            
+            // Иконка
+            const iconMap = {
+                'info': 'bi-info-circle-fill',
+                'announcement': 'bi-megaphone-fill',
+                'star': 'bi-star-fill',
+                'warning': 'bi-exclamation-triangle-fill',
+                'calendar': 'bi-calendar-event-fill',
+                'tools': 'bi-tools'
+            };
+            
+            // Заполняем модальное окно
+            modalTitle.textContent = escapeHtml(titleText);
+            modalContent.textContent = escapeHtml(contentText);
+            modalDate.textContent = publishedDate;
+            
+            if (modalIcon) {
+                modalIcon.style.background =
+                    typeof window.resolveUserNewsIconColor === 'function'
+                        ? window.resolveUserNewsIconColor(news.icon, news.icon_color)
+                        : news.icon_color || '#c5cd9f';
+                modalIcon.innerHTML = `<i class="bi ${iconMap[news.icon] || 'bi-info-circle-fill'}"></i>`;
+            }
+            
+        } catch (error) {
+            console.error('Error loading news detail:', error);
+            modalTitle.textContent = 'Ошибка';
+            modalContent.textContent = 'Не удалось загрузить новость. Попробуйте позже.';
+            modalDate.textContent = '';
+        }
+    }
+    
+    function closeNewsDetailModal() {
+        const modal = document.getElementById('newsDetailModal');
+        if (modal) {
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+    }
+    
+    // Сохраняем загруженные новости для быстрой перерисовки при смене языка
+    let cachedNewsData = null;
+    
+    // Перерисовка новостей при смене языка
+    function refreshNewsLanguage() {
+        if (cachedNewsData && cachedNewsData.length > 0) {
+            // Если есть кэшированные данные, просто перерисовываем с новым языком
+            const lang = getCurrentLanguage();
+            renderNews(cachedNewsData, lang);
+        } else {
+            // Если данных нет, перезагружаем
+            loadNews();
+        }
+    }
+    
+    // Pagination helpers (match admin controls)
+    function updateUserNewsPaginationUI() {
+        const pageText = document.getElementById('userNewsCurrentPage');
+        const totalPageText = document.getElementById('userNewsTotalPages');
+        const totalItemsText = document.getElementById('userNewsTotalItems');
+        const prevBtn = document.getElementById('userNewsPrevBtn');
+        const nextBtn = document.getElementById('userNewsNextBtn');
+        const pagesContainer = document.getElementById('userNewsPageButtons');
+        const select = document.getElementById('userNewsItemsPerPage');
+        const selectText = document.querySelector('#customUserNewsItemsPerPage .select-text');
+
+        const { currentPage, totalPages, totalItems, itemsPerPage } = paginationState;
+
+        if (pageText) pageText.textContent = totalPages ? currentPage : 0;
+        if (totalPageText) totalPageText.textContent = totalPages || 1;
+        if (totalItemsText) totalItemsText.textContent = totalItems || 0;
+        if (prevBtn) prevBtn.disabled = currentPage <= 1;
+        if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+
+        if (select) select.value = String(itemsPerPage);
+        if (selectText) selectText.textContent = itemsPerPage;
+        
+        // Apply translations for pagination labels
+        const lang = getCurrentLanguage();
+        if (window.i18n && typeof window.i18n.translate === 'function') {
+            const paginationInfo = document.querySelector('.pagination-info');
+            if (paginationInfo) {
+                paginationInfo.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    const translated = window.i18n.translate(key, lang);
+                    if (translated && translated !== key) {
+                        el.textContent = translated;
+                    }
+                });
+            }
+            const paginationPerPage = document.querySelector('.pagination-per-page');
+            if (paginationPerPage) {
+                paginationPerPage.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    const translated = window.i18n.translate(key, lang);
+                    if (translated && translated !== key) {
+                        el.textContent = translated;
+                    }
+                });
+            }
+        }
+
+        if (pagesContainer) {
+            pagesContainer.innerHTML = '';
+            const pagesToShow = buildUserNewsPages(totalPages, currentPage);
+            pagesToShow.forEach(p => {
+                if (p === 'ellipsis') {
+                    const dot = document.createElement('span');
+                    dot.className = 'btn-pagination disabled';
+                    dot.textContent = '...';
+                    pagesContainer.appendChild(dot);
+                } else {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-pagination' + (p === currentPage ? ' active' : '');
+                    btn.textContent = p;
+                    btn.onclick = () => goToUserNewsPage(p);
+                    pagesContainer.appendChild(btn);
+                }
+            });
+        }
+    }
+
+    function buildUserNewsPages(totalPages, currentPage) {
+        const pages = [];
+        // Если страниц мало (<=5), показываем все
+        if (totalPages <= 5) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+            return pages;
+        }
+
+        pages.push(1);
+
+        // near start
+        if (currentPage <= 4) {
+            pages.push(2, 3, 4, 5);
+            pages.push('ellipsis');
+            pages.push(totalPages);
+            return pages;
+        }
+
+        // near end
+        if (currentPage >= totalPages - 3) {
+            pages.push('ellipsis');
+            for (let i = totalPages - 4; i < totalPages; i++) {
+                pages.push(i);
+            }
+            pages.push(totalPages);
+            return pages;
+        }
+
+        // middle
+        pages.push('ellipsis');
+        pages.push(currentPage - 1, currentPage, currentPage + 1);
+        pages.push('ellipsis');
+        pages.push(totalPages);
+
+        return pages;
+    }
+
+    function goToUserNewsPage(target) {
+        if (!cachedSortedNews.length) return;
+        if (target === 'prev' && paginationState.currentPage > 1) {
+            paginationState.currentPage -= 1;
+        } else if (target === 'next' && paginationState.currentPage < paginationState.totalPages) {
+            paginationState.currentPage += 1;
+        } else if (typeof target === 'number') {
+            paginationState.currentPage = Math.min(Math.max(1, target), paginationState.totalPages);
+        }
+        renderNews(cachedSortedNews, getCurrentLanguage());
+    }
+
+    function changeUserNewsItemsPerPage() {
+        const select = document.getElementById('userNewsItemsPerPage');
+        if (!select) return;
+        const value = parseInt(select.value, 10) || 25;
+        paginationState.itemsPerPage = value;
+        paginationState.currentPage = 1;
+
+        const options = document.querySelectorAll('#customUserNewsItemsPerPage .select-option');
+        options.forEach(opt => {
+            if (opt.getAttribute('data-value') === String(value)) {
+                opt.classList.add('selected');
+            } else {
+                opt.classList.remove('selected');
+            }
+        });
+
+        renderNews(cachedSortedNews.length ? cachedSortedNews : (cachedNewsData || []), getCurrentLanguage());
+    }
+
+    function initCustomUserNewsPaginationDropdown() {
+        const customSelect = document.getElementById('customUserNewsItemsPerPage');
+        if (!customSelect) return;
+
+        const selectBtn = customSelect.querySelector('.select-btn');
+        const options = customSelect.querySelectorAll('.select-option');
+
+        selectBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            customSelect.classList.toggle('open');
+        });
+
+        options.forEach(opt => {
+            opt.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const value = opt.getAttribute('data-value');
+                const select = document.getElementById('userNewsItemsPerPage');
+                if (select) {
+                    select.value = value;
+                    changeUserNewsItemsPerPage();
+                }
+                customSelect.classList.remove('open');
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!customSelect.contains(e.target)) {
+                customSelect.classList.remove('open');
+            }
+        });
+    }
+    
+    // Load news on page init
+    function initNewsPage() {
+        // Небольшая задержка для гарантии, что DOM готов
+        setTimeout(() => {
+            loadNews();
+            initCustomUserNewsPaginationDropdown();
+            
+            // Проверяем, нужно ли автоматически открыть новость (при переходе из уведомлений)
+            try {
+                const autoOpenNewsId = sessionStorage.getItem('autoOpenNewsId');
+                if (autoOpenNewsId) {
+                    sessionStorage.removeItem('autoOpenNewsId');
+                    // Открываем новость после загрузки (с небольшой задержкой)
+                    setTimeout(() => {
+                        if (window.openNewsDetail && typeof window.openNewsDetail === 'function') {
+                            window.openNewsDetail(parseInt(autoOpenNewsId));
+                        }
+                    }, 1500);
+                }
+            } catch (e) {
+                console.warn('Failed to check autoOpenNewsId', e);
+            }
+        }, 100);
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initNewsPage);
+    } else {
+        initNewsPage();
+    }
+    
+    // Reload news when language changes
+    window.addEventListener('languageChanged', () => {
+        refreshNewsLanguage();
+    });
+    
+    // Также слушаем изменения в localStorage для языка
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'language') {
+            refreshNewsLanguage();
+        }
+    });
+    
+    // Отслеживаем изменения языка через polling (на случай если событие не срабатывает)
+    let currentLang = getCurrentLanguage();
+    const langCheckInterval = setInterval(() => {
+        const newLang = getCurrentLanguage();
+        if (newLang !== currentLang) {
+            currentLang = newLang;
+            refreshNewsLanguage();
+        }
+    }, 300);
+    
+    // Очищаем интервал при размонтировании страницы
+    window.addEventListener('beforeunload', () => {
+        if (langCheckInterval) clearInterval(langCheckInterval);
+    });
+    
+    // Modal close handlers
+    const modalCloseBtn = document.getElementById('newsDetailModalClose');
+    const modalCloseBtnBottom = document.getElementById('newsDetailCloseBtn');
+    const newsDetailModal = document.getElementById('newsDetailModal');
+    
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener('click', closeNewsDetailModal);
+    }
+    if (modalCloseBtnBottom) {
+        modalCloseBtnBottom.addEventListener('click', closeNewsDetailModal);
+    }
+    
+    if (newsDetailModal) {
+        newsDetailModal.addEventListener('click', (e) => {
+            if (e.target === newsDetailModal) {
+                closeNewsDetailModal();
+            }
+        });
+        
+        // Закрытие по Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && newsDetailModal.classList.contains('show')) {
+                closeNewsDetailModal();
+            }
+        });
+    }
+    
+    // Expose functions globally for SPA router
+    window.openNewsDetail = openNewsDetail;
+    window.closeNewsDetailModal = closeNewsDetailModal;
+    window.loadNews = loadNews;
+    window.refreshNewsLanguage = refreshNewsLanguage;
+    window.goToUserNewsPage = goToUserNewsPage;
+    window.changeUserNewsItemsPerPage = changeUserNewsItemsPerPage;
+})();
+</script>
+

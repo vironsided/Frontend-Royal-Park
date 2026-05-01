@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="az" data-i18n-scope="local">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Печать QR-кода</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/admin/content_css/qr-print.css">
+</head>
+
+<body>
+    <div class="print-actions">
+        <button class="btn-print" onclick="window.print()">
+            <i class="bi bi-printer"></i>
+            <span data-i18n="print">Печать</span>
+        </button>
+    </div>
+
+    <div class="print-container">
+        <div class="print-header">
+            <div class="header-info">
+                <div class="badge" id="entityBadge">—</div>
+                <h1 id="pageTitle">—</h1>
+                <p class="subtitle" data-i18n="qr_print_subtitle">Отсканируйте QR-код, чтобы установить пароль и завершить регистрацию.</p>
+            </div>
+            <div class="qr-preview">
+                <canvas id="qrCanvas"></canvas>
+                <div id="qrFallback" class="qr-fallback" data-i18n="qr_print_qr_loading">QR загружается...</div>
+            </div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-card">
+                <label data-i18n="qr_print_label_login">Логин</label>
+                <div class="value" id="loginValue">—</div>
+            </div>
+            <div class="info-card">
+                <label data-i18n="qr_print_label_temp_password">Временный пароль</label>
+                <div class="value" id="passwordValue">—</div>
+            </div>
+            <div class="info-card">
+                <label data-i18n="qr_print_label_generated_date">Дата генерации</label>
+                <div class="value" id="generatedDate">—</div>
+            </div>
+            <div class="info-card" id="homesCard" style="display: none;">
+                <label data-i18n="qr_print_label_homes">Объекты</label>
+                <div class="homes-list" id="homesList"></div>
+            </div>
+        </div>
+
+        <div class="qr-url">
+            <div class="qr-url-label" data-i18n="qr_print_label_password_setup_link">Ссылка для установки пароля</div>
+            <div class="qr-url-value" id="qrUrlText">—</div>
+        </div>
+
+        <div class="instructions">
+            <h3 data-i18n="qr_print_instructions_title">Как пользоваться</h3>
+            <ul>
+                <li data-i18n="qr_print_instruction_1">Откройте камеру или сканер QR на телефоне и наведите на код.</li>
+                <li data-i18n="qr_print_instruction_2">Перейдите по ссылке, которая откроется после сканирования.</li>
+                <li data-i18n="qr_print_instruction_3">Сразу задайте новый пароль и подтвердите его — временный пароль не нужен.</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p data-i18n="qr_print_footer_note">QR для быстрой установки пароля для аккаунта. При необходимости перегенерируйте код, чтобы обновить ссылку.</p>
+        </div>
+    </div>
+
+    <script src="/js/i18n.js"></script>
+    <script>
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            const langFromQuery = params.get('lang');
+            const typeParam = params.get('type') === 'tenant' ? 'tenant' : 'user';
+            const isTenant = typeParam === 'tenant';
+            const username = params.get('username') || params.get('login') || '—';
+            const tempPassword = params.get('password') || params.get('tempPassword') || '—';
+            const qrUrl = params.get('qrUrl');
+            const homesRaw = params.get('homes');
+            const generatedAt = new Date();
+            const initialLang = String(langFromQuery || localStorage.getItem('language') || 'az').toLowerCase();
+
+            function resolveLang() {
+                const active = (window.i18n && window.i18n.currentLanguage)
+                    || localStorage.getItem('language')
+                    || initialLang;
+                return String(active).toLowerCase();
+            }
+
+            function tr(key, fallback) {
+                const lang = resolveLang();
+                if (window.i18n && typeof window.i18n.translate === 'function') {
+                    return window.i18n.translate(key, lang) || fallback || key;
+                }
+                return fallback || key;
+            }
+
+            if (window.i18n && typeof window.i18n.changeLanguage === 'function') {
+                window.i18n.changeLanguage(resolveLang());
+            }
+
+            function applyDynamicLanguage() {
+                const lang = resolveLang();
+                document.documentElement.lang = lang;
+                document.title = tr('qr_print_page_title', 'Печать QR-кода');
+
+                document.getElementById('entityBadge').textContent = isTenant
+                    ? tr('qr_print_badge_tenant', 'Житель')
+                    : tr('qr_print_badge_user', 'Пользователь');
+                document.getElementById('pageTitle').textContent = isTenant
+                    ? tr('qr_print_title_tenant', 'QR-код для жителя')
+                    : tr('qr_print_title_user', 'QR-код для пользователя');
+
+                const locale = lang === 'az' ? 'az-AZ' : (lang === 'en' ? 'en-US' : 'ru-RU');
+                document.getElementById('generatedDate').textContent = generatedAt.toLocaleString(locale);
+            }
+
+            document.getElementById('loginValue').textContent = username || '—';
+            document.getElementById('passwordValue').textContent = tempPassword || '—';
+            document.getElementById('qrUrlText').textContent = qrUrl || '—';
+            applyDynamicLanguage();
+            setTimeout(applyDynamicLanguage, 0);
+            setTimeout(applyDynamicLanguage, 120);
+
+            // Парсим список домов (для жителей)
+            if (homesRaw) {
+                try {
+                    const homes = JSON.parse(homesRaw);
+                    if (Array.isArray(homes) && homes.length > 0) {
+                        const homesCard = document.getElementById('homesCard');
+                        const homesList = document.getElementById('homesList');
+                        homesList.innerHTML = '';
+
+                        homes.forEach((home, idx) => {
+                            const chip = document.createElement('div');
+                            chip.className = 'home-chip';
+                            chip.textContent = `${home.block || '—'} / ${home.number || '—'}`;
+                            homesList.appendChild(chip);
+                        });
+
+                        homesCard.style.display = 'block';
+                    }
+                } catch (e) {
+                    console.warn('Не удалось распарсить список домов', e);
+                }
+            }
+
+            // Отрисовываем QR-код
+            function renderQRCode(url) {
+                const canvas = document.getElementById('qrCanvas');
+                const fallback = document.getElementById('qrFallback');
+
+                if (!url || !canvas) {
+                    if (fallback) {
+                        fallback.textContent = tr('qr_print_qr_missing_link', 'QR-ссылка отсутствует');
+                        fallback.style.display = 'block';
+                    }
+                    return;
+                }
+
+                const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=${encodeURIComponent(url)}`;
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+
+                img.onload = function () {
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = 360;
+                    canvas.height = 360;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, 360, 360);
+                    if (fallback) {
+                        fallback.style.display = 'none';
+                    }
+                };
+
+                img.onerror = function () {
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = 360;
+                    canvas.height = 360;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, 360, 360);
+                    ctx.fillStyle = '#111827';
+                    ctx.font = '14px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('QR URL:', 180, 170);
+                    ctx.fillText(url, 180, 190, 320);
+
+                    if (fallback) {
+                        fallback.textContent = tr('qr_print_qr_load_failed_fallback', 'QR не загрузился — использована текстовая ссылка');
+                        fallback.style.display = 'block';
+                    }
+                };
+
+                img.src = apiUrl;
+            }
+
+            renderQRCode(qrUrl);
+
+            window.addEventListener('languageChanged', applyDynamicLanguage);
+            window.addEventListener('storage', function (e) {
+                if (e.key === 'language') {
+                    applyDynamicLanguage();
+                }
+            });
+        })();
+    </script>
+</body>
+
+</html>
+
+
+
+
+
+

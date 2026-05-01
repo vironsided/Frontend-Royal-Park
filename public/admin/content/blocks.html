@@ -1,0 +1,928 @@
+<link rel="stylesheet" href="/admin/content_css/blocks.css">
+<div class="content-wrapper">
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card solid-blue">
+            <div class="stat-icon blue">
+                <svg width="40" height="40" fill="white">
+                    <use href="/images/icons.svg#icon-buildings"></use>
+                </svg>
+            </div>
+            <div class="stat-details">
+                <div class="stat-value">0</div>
+                <div class="stat-label" data-i18n="blocks_stat_total_blocks">Всего блоков</div>
+                <div class="stat-change positive">↑ 100%</div>
+            </div>
+        </div>
+
+        <div class="stat-card solid-green">
+            <div class="stat-icon green">
+                <svg width="40" height="40" fill="white">
+                    <use href="/images/icons.svg#icon-apartments"></use>
+                </svg>
+            </div>
+            <div class="stat-details">
+                <div class="stat-value">0</div>
+                <div class="stat-label" data-i18n="blocks_stat_active_houses">Активные дома</div>
+                <div class="stat-change positive" data-i18n="blocks_stat_new_hint">↑ 25 новых</div>
+            </div>
+        </div>
+
+        <div class="stat-card solid-orange">
+            <div class="stat-icon orange">
+                <svg width="40" height="40" fill="white">
+                    <use href="/images/icons.svg#icon-users"></use>
+                </svg>
+            </div>
+            <div class="stat-details">
+                <div class="stat-value">0%</div>
+                <div class="stat-label" data-i18n="blocks_stat_occupancy">Заселенность</div>
+                <div class="stat-change positive" data-i18n="blocks_stat_growth_hint">↑ 5% за месяц</div>
+            </div>
+        </div>
+
+        <div class="stat-card solid-red">
+            <div class="stat-icon red">
+                <svg width="40" height="40" fill="white">
+                    <use href="/images/icons.svg#icon-apartments"></use>
+                </svg>
+            </div>
+            <div class="stat-details">
+                <div class="stat-value">0</div>
+                <div class="stat-label" data-i18n="blocks_stat_inactive_houses">Неактивные дома</div>
+                <div class="stat-change negative" data-i18n="blocks_stat_attention_hint">Требуют внимания</div>
+            </div>
+        </div>
+
+        <!-- <div class="stat-card solid-red">
+            <div class="stat-icon purple">
+                <svg width="40" height="40" fill="white">
+                    <use href="/images/icons.svg#icon-users"></use>
+                </svg>
+            </div>
+            <div class="stat-details">
+                <div class="stat-value">1,850</div>
+                <div class="stat-label">Жителей</div>
+                <div class="stat-change positive">↑ 12% за месяц</div>
+            </div>
+        </div> -->
+    </div>
+
+    <!-- Complex Map -->
+    <div class="block-map-container">
+        <div class="block-actions">
+            <h2 class="mb-0 flex-grow-1" data-i18n="blocks_plan_title">План комплекса Royal Park</h2>
+            <input type="text" id="newBlockName" class="form-control" data-i18n-placeholder="blocks_new_block_placeholder" placeholder="Название нового блока">
+            <button class="btn btn-success w-auto" onclick="createBlock()">
+                <i class="bi bi-plus-lg"></i> <span data-i18n="blocks_create_button">Создать блок</span>
+            </button>
+        </div>
+
+        <div class="complex-map" id="complexMap">
+            <!-- Блоки будут загружаться динамически из базы данных -->
+        </div>
+
+        <div class="complex-plan-wrapper">
+            <div class="complex-plan-header">
+                <div>
+                    <h5 class="mb-1 text-white" data-i18n="blocks_plan_title">План комплекса Royal Park</h5>
+                </div>
+                <div class="plan-legend">
+                    <span data-block-code="A"><i style="background:#5ba344"></i> Блок A</span>
+                    <span data-block-code="B"><i style="background:#f4c64d"></i> Блок B</span>
+                    <span data-block-code="C"><i style="background:#a8577a"></i> Блок C</span>
+                    <span data-block-code="D"><i style="background:#9b6a33"></i> Блок D</span>
+                    <span data-block-code="E"><i style="background:#138666"></i> Блок E</span>
+                    <span data-block-code="F"><i style="background:#c20b6a"></i> Блок F</span>
+                    <span data-block-code="H"><i style="background:#20438a"></i> Блок H</span>
+                    <span data-block-code="K"><i style="background:#4a6fbf"></i> Блок K</span>
+                    <span data-block-code="X"><i style="background:#082b5c"></i> Блок X</span>
+                    <span data-block-code="G3"><i style="background:#6e1600"></i> Корпус G 3</span>
+                </div>
+            </div>
+            <div class="plan-image-frame">
+                <img src="/images/edited-photo.png" data-i18n-title="blocks_plan_title" alt="План комплекса Royal Park">
+                <svg class="plan-overlay" viewBox="0 0 2752 1536" preserveAspectRatio="xMidYMid meet"
+                    aria-hidden="true">
+                    <!-- Для каждого блока кладём в data-block-info готовый HTML-список -->
+                    <polygon class="plan-area" data-block-code="X" data-block-label="Block X"
+                        data-block-info='<ul class="list-unstyled"><li><strong>Жителей:</strong> 480</li><li><strong>Заселенность:</strong> 100%</li></ul>'
+                        points="846.769 248.281 778.819 224.76 548.832 564.513 836.315 601.102 927.787 483.495 718.708 444.293">
+                    </polygon>
+                    <polygon class="plan-area" data-block-code="H" data-block-label="Block H"
+                        data-block-info='<ul class="list-unstyled"><li><strong>Жителей:</strong> -</li><li><strong>Заселенность:</strong> -</li></ul>'
+                        points="853.189 242.878 1214.39 311.383 1167.69 404.797 797.14 330.066"></polygon>
+                    <polygon class="plan-area" data-block-code="K" data-block-label="Block K"
+                        data-block-info='<ul class="list-unstyled"><li><strong>Жителей:</strong> 385</li><li><strong>Заселенность:</strong> 100%</li></ul>'
+                        points="723.935 439.066 791.886 334.526 1176.07 407.704 1123.8 512.243"></polygon>
+                    <polygon class="plan-area" data-block-code="F" data-block-label="Block F"
+                        data-block-info='<ul class="list-unstyled"><li><strong>Жителей:</strong> -</li><li><strong>Заселенность:</strong> -</li></ul>'
+                        points="1267.06 716.285 1494.97 756.983 2021.33 1321.33 1788 1326.76"></polygon>
+                    <polygon class="plan-area" data-block-code="B" data-block-label="Block B"
+                        data-block-info='<ul class="list-unstyled"><li><strong>Жителей:</strong> 315</li><li><strong>Заселенность:</strong> 98%</li></ul>'
+                        points="1535.67 756.983 1804.28 808.534 2360.49 1353.89 2064.75 1334.9"></polygon>
+                    <polygon class="plan-area" data-block-code="A" data-block-label="Block A"
+                        data-block-info='<ul class="list-unstyled"><li><strong>Жителей:</strong> 320</li><li><strong>Заселенность:</strong> 100%</li></ul>'
+                        points="1796.14 805.821 2412.04 908.922 2569.4 1139.54 2585.68 1372.88 2346.92 1356.6">
+                    </polygon>
+                    <polygon class="plan-area" data-block-code="C" data-block-label="Block C"
+                        data-block-info='<ul class="list-unstyled"><li><strong>Жителей:</strong> -</li><li><strong>Заселенность:</strong> -</li></ul>'
+                        points="1755.44 436.825 1915.52 474.81 1942.65 784.115 1668.62 740.704"></polygon>
+                    <polygon class="plan-area" data-block-code="D" data-block-label="Block D"
+                        data-block-info='<ul class="list-unstyled"><li><strong>Жителей:</strong> -</li><li><strong>Заселенность:</strong> -</li></ul>'
+                        points="1926.37 474.81 2064.75 496.516 2105.44 811.247 1945.37 786.828"></polygon>
+                    <polygon class="plan-area" data-block-code="E" data-block-label="Block E"
+                        data-block-info='<ul class="list-unstyled"><li><strong>Жителей:</strong> -</li><li><strong>Заселенность:</strong> -</li></ul>'
+                        points="1769.01 396.127 2208.55 466.671 2284.52 835.666 2108.16 794.968 2070.17 496.516 1760.87 442.252">
+                    </polygon>
+                    <polygon class="plan-area" data-block-code="G3" data-block-label="Corpus G 3"
+                        data-block-info='<ul class="list-unstyled"><li><strong>Жителей:</strong> -</li><li><strong>Заселенность:</strong> -</li></ul>'
+                        points="901.652 561.899 1029.71 507.016 1076.76 554.059 940.855 624.623"></polygon>
+                </svg>
+            </div>
+            <div class="plan-note">Royal Park Baku, Yeni Yasamal, 10 Kenar Dairevi yol, AZ 1070</div>
+        </div>
+    </div>
+
+    <!-- Block Details -->
+    <div class="block-details mt-4" id="blockDetails" style="display: none;">
+        <div class="card">
+            <div class="card-header">
+                <h3 id="selectedBlockName" data-i18n="blocks_details_title">Детали блока</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 data-i18n="blocks_main_info_title">Основная информация</h5>
+                        <ul class="list-unstyled">
+                            <!-- <li><strong>Этажей:</strong> <span id="blockFloors">-</span></li> -->
+                            <li><strong data-i18n="blocks_houses_label">Домов:</strong> <span id="blockApartments">-</span></li>
+                            <li><strong data-i18n="blocks_active_label">Активных:</strong> <span id="blockActive">-</span></li>
+                            <li><strong data-i18n="blocks_inactive_label">Неактивных:</strong> <span id="blockInactive">-</span></li>
+                            <!-- <li><strong>Жителей:</strong> <span id="blockResidents">-</span></li> -->
+                            <li><strong data-i18n="blocks_occupancy_label">Заселенность:</strong> <span id="blockOccupancy">-</span></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 data-i18n="blocks_quick_actions_title">Быстрые действия</h5>
+                        <div class="d-flex flex-column gap-2">
+                            <!-- <button class="btn btn-success btn-sm" onclick="viewApartments()">
+                                <i class="bi bi-list"></i> Список квартир
+                            </button> -->
+                            <button class="btn btn-outline-primary btn-sm" onclick="viewResidents()">
+                                <i class="bi bi-people"></i> <span data-i18n="blocks_residents_list_button">Список жителей</span>
+                            </button>
+                            <!-- <button class="btn btn-outline-secondary btn-sm" onclick="viewMeters()">
+                                <i class="bi bi-speedometer"></i> Показатели счетчиков
+                            </button> -->
+                            <hr>
+                            <button class="btn btn-warning btn-sm" onclick="renameBlock()">
+                                <i class="bi bi-pencil"></i> <span data-i18n="blocks_rename_button">Переименовать</span>
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteBlock()">
+                                <i class="bi bi-trash"></i> <span data-i18n="blocks_delete_button">Удалить блок</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BASE || 'http://localhost:8000');
+    const getCurrentLang = () => (window.i18n?.currentLanguage || localStorage.getItem('language') || 'az');
+    const t = (key, fallback) => (window.i18n && typeof window.i18n.translate === 'function')
+        ? (window.i18n.translate(key, getCurrentLang()) || fallback || key)
+        : (fallback || key);
+    const formatText = (key, fallback, vars = {}) => {
+        let text = t(key, fallback);
+        Object.keys(vars).forEach((k) => {
+            text = text.replace(`{${k}}`, vars[k]);
+        });
+        return text;
+    };
+    const blockLabel = (name) => `${t('user_resident_block_label', 'Блок')} ${name}`;
+    const getHousesWord = (count) => {
+        const lang = getCurrentLang();
+        if (lang === 'en') return count === 1 ? 'house' : 'houses';
+        if (lang === 'az') return 'bina';
+        if (count % 10 === 1 && count % 100 !== 11) return 'дом';
+        if ([2, 3, 4].includes(count % 10) && ![12, 13, 14].includes(count % 100)) return 'дома';
+        return 'домов';
+    };
+    const localizePlanLegend = () => {
+        document.querySelectorAll('.plan-legend span[data-block-code]').forEach((item) => {
+            const code = item.getAttribute('data-block-code');
+            if (!code) return;
+            if (code === 'G3') {
+                item.innerHTML = `<i style="background:#6e1600"></i> ${t('blocks_corpus_word', 'Корпус')} G 3`;
+            } else {
+                item.innerHTML = `<i style="background:${item.querySelector('i')?.style.background || '#5ba344'}"></i> ${t('user_resident_block_label', 'Блок')} ${code}`;
+            }
+        });
+    };
+    let blocks = [];
+    let residents = [];
+    let selectedBlock = null;
+    let selectedBlockId = null;
+    let blocksLoaded = false; // Флаг для отслеживания завершения загрузки блоков
+
+    // Загрузка блоков из API
+    async function loadBlocks() {
+        try {
+            let resp = await fetch(`${API_BASE}/api/blocks`, { credentials: 'include' });
+            if (!resp.ok) throw new Error('Failed to load blocks');
+            blocks = await resp.json();
+            blocksLoaded = true; // Помечаем, что загрузка завершена
+            renderBlocks();
+            updateBlocksCount();
+            // Не вызываем updateActiveResidentsCount() здесь, так как residents может быть еще не загружен
+            // Это будет вызвано в loadResidents() после загрузки данных
+        } catch (e) {
+            console.error('Load blocks error:', e);
+            blocks = [];
+            blocksLoaded = true; // Помечаем, что загрузка завершена (даже при ошибке)
+            renderBlocks(); // Показываем сообщение об отсутствии блоков только после завершения загрузки
+            updateBlocksCount();
+            // Не вызываем updateActiveResidentsCount() здесь, так как residents может быть еще не загружен
+            // Это будет вызвано в loadResidents() после загрузки данных
+        }
+    }
+
+    // Загрузка резидентов (домов) из API (с пагинацией, до 100 за запрос)
+    async function loadResidents() {
+        try {
+            const perPage = 100; // лимит API (per_page <= 100)
+            let page = 1;
+            let allResidents = [];
+            let lastPage = 1;
+
+            while (page <= lastPage) {
+                // Основной запрос
+                let url = `${API_BASE}/api/residents?per_page=${perPage}&page=${page}`;
+                let resp = await fetch(url, { credentials: 'include' });
+                if (!resp.ok) throw new Error('Failed to load residents');
+                const data = await resp.json();
+
+                const items = Array.isArray(data) ? data : (data.items || []);
+                allResidents = allResidents.concat(items);
+
+                const pagination = data.pagination || {};
+                lastPage = pagination.last_page || 1;
+                page += 1;
+            }
+
+            residents = allResidents;
+            console.log('Loaded residents:', residents.length);
+            console.log('Sample resident:', residents[0]);
+            updateActiveResidentsCount();
+            updateInactiveResidentsCount();
+            updateOccupancyPercentage();
+            // Обновляем карточки блоков с новыми данными о резидентах
+            // Только если блоки уже загружены
+            if (blocksLoaded) {
+                renderBlocks();
+            }
+            // Обновляем tooltip-ы на основе новых данных
+            updatePlanTooltips();
+            // Если блок уже выбран, обновляем его детали
+            if (selectedBlockId) {
+                const block = blocks.find(b => b.id === selectedBlockId);
+                if (block) {
+                    selectBlock(block.name);
+                }
+            }
+        } catch (e) {
+            console.error('Load residents error:', e);
+            residents = [];
+            updateActiveResidentsCount();
+            updateInactiveResidentsCount();
+            updateOccupancyPercentage();
+            // Обновляем карточки блоков даже при ошибке, но только если блоки уже загружены
+            if (blocksLoaded) {
+                renderBlocks();
+            }
+            // Обновляем tooltip-ы даже при ошибке
+            updatePlanTooltips();
+        }
+    }
+
+    // Обновление счетчика блоков в карточке статистики
+    function updateBlocksCount() {
+        const statValue = document.querySelector('.stat-card.solid-blue .stat-value');
+        if (statValue) {
+            // Подсчитываем только активные блоки
+            const activeBlocksCount = blocks.filter(b => b.is_active !== false).length;
+            statValue.textContent = activeBlocksCount;
+        }
+    }
+
+    // Обновление счетчика активных домов (резидентов) в карточке статистики
+    function updateActiveResidentsCount() {
+        const statValue = document.querySelector('.stat-card.solid-green .stat-value');
+        if (!statValue) {
+            console.warn('Stat card for active residents not found');
+            return;
+        }
+
+        if (!residents || residents.length === 0) {
+            console.warn('No residents data available');
+            statValue.textContent = '0';
+            return;
+        }
+
+        // Подсчитываем только активные резиденты (дома)
+        // API возвращает статус как строку 'ACTIVE' или 'INACTIVE'
+        const activeResidentsCount = residents.filter(r => {
+            if (!r) return false;
+            const status = String(r.status || '').trim().toUpperCase();
+            return status === 'ACTIVE';
+        }).length;
+
+        console.log(`Active residents count: ${activeResidentsCount} out of ${residents.length} total`);
+        statValue.textContent = activeResidentsCount;
+    }
+
+    // Обновление счетчика неактивных домов (резидентов) в карточке статистики
+    function updateInactiveResidentsCount() {
+        const statValue = document.querySelector('.stat-card.solid-red .stat-value');
+        if (!statValue) {
+            console.warn('Stat card for inactive residents not found');
+            return;
+        }
+
+        if (!residents || residents.length === 0) {
+            console.warn('No residents data available');
+            statValue.textContent = '0';
+            return;
+        }
+
+        // Подсчитываем только неактивные резиденты (дома)
+        // API возвращает статус как строку 'ACTIVE' или 'INACTIVE'
+        const inactiveResidentsCount = residents.filter(r => {
+            if (!r) return false;
+            const status = String(r.status || '').trim().toUpperCase();
+            return status === 'INACTIVE';
+        }).length;
+
+        console.log(`Inactive residents count: ${inactiveResidentsCount} out of ${residents.length} total`);
+        statValue.textContent = inactiveResidentsCount;
+    }
+
+    // Обновление процента заселенности в карточке статистики
+    function updateOccupancyPercentage() {
+        const statValue = document.querySelector('.stat-card.solid-orange .stat-value');
+        if (statValue && residents.length > 0) {
+            // Подсчитываем активные и неактивные резиденты
+            const activeResidents = residents.filter(r => r.status === 'ACTIVE').length;
+            const inactiveResidents = residents.filter(r => r.status === 'INACTIVE').length;
+            const totalResidents = activeResidents + inactiveResidents;
+
+            if (totalResidents > 0) {
+                // Вычисляем процент заселенности: (активные / всего) * 100
+                const occupancyPercentage = Math.round((activeResidents / totalResidents) * 100);
+                statValue.textContent = `${occupancyPercentage}%`;
+            } else {
+                statValue.textContent = '0%';
+            }
+        } else if (statValue) {
+            statValue.textContent = '0%';
+        }
+    }
+
+    // Получение статистики блока (количество домов и процент заселённости)
+    function getBlockStats(blockId) {
+        // Фильтруем резидентов по block_id
+        const blockResidents = residents.filter(r => r.block_id === blockId);
+        const totalResidents = blockResidents.length;
+        const activeResidents = blockResidents.filter(r => {
+            const status = String(r.status || '').trim().toUpperCase();
+            return status === 'ACTIVE';
+        }).length;
+        const inactiveResidents = blockResidents.filter(r => {
+            const status = String(r.status || '').trim().toUpperCase();
+            return status === 'INACTIVE';
+        }).length;
+
+        // Вычисляем процент заселённости
+        const occupancyPercentage = totalResidents > 0
+            ? Math.round((activeResidents / totalResidents) * 100)
+            : 0;
+
+        return {
+            total: totalResidents,
+            active: activeResidents,
+            inactive: inactiveResidents,
+            occupancy: occupancyPercentage
+        };
+    }
+
+    // Отрисовка блоков на странице
+    function renderBlocks() {
+        const complexMap = document.getElementById('complexMap');
+        if (!complexMap) return;
+
+        // Удаляем ВСЕ существующие блоки (и статические, и динамические)
+        const existingCards = complexMap.querySelectorAll('.block-card');
+        existingCards.forEach(card => card.remove());
+
+        // Удаляем сообщение "Блоки не найдены", если оно существует
+        const existingEmptyMessage = complexMap.querySelector('.empty-blocks-message');
+        if (existingEmptyMessage) {
+            existingEmptyMessage.remove();
+        }
+
+        // Если блоков нет, показываем сообщение ТОЛЬКО после завершения загрузки
+        // Это предотвращает показ сообщения во время загрузки данных
+        if (blocksLoaded && blocks.length === 0) {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.className = 'empty-blocks-message';
+            emptyMessage.style.cssText = 'text-align: center; padding: 40px; color: #999;';
+            emptyMessage.textContent = t('blocks_no_blocks_message', 'Блоки не найдены. Создайте первый блок.');
+            complexMap.appendChild(emptyMessage);
+            return;
+        }
+
+        // Если загрузка еще не завершена, просто выходим (не показываем сообщение)
+        if (!blocksLoaded) {
+            return;
+        }
+
+        // Создаём блоки из базы данных
+        blocks.forEach(block => {
+            if (!block.is_active) return; // Пропускаем неактивные
+
+            // Получаем статистику для блока
+            const stats = getBlockStats(block.id);
+
+            const blockCard = document.createElement('div');
+            blockCard.className = 'block-card';
+            blockCard.setAttribute('data-block', block.name);
+            blockCard.setAttribute('data-block-id', block.id);
+            blockCard.setAttribute('onclick', `selectBlockById(${block.id})`);
+            blockCard.innerHTML = `
+                <div class="block-name">${blockLabel(block.name)}</div>
+                <div class="block-info">
+                    <div>${stats.total} ${getHousesWord(stats.total)}</div>
+                    <div class="block-status-info">
+                        <span class="block-active-count">${t('blocks_active_label_short', 'Активных')}: ${stats.active}</span>
+                        <span class="block-inactive-count">${t('blocks_inactive_label_short', 'Неактивных')}: ${stats.inactive}</span>
+                    </div>
+                    <div>${stats.occupancy}% ${t('blocks_occupancy_short', 'заселённость')}</div>
+                </div>
+            `;
+            complexMap.appendChild(blockCard);
+        });
+    }
+
+    function selectBlock(blockName) {
+        selectedBlock = blockName;
+
+        // Находим блок в массиве blocks
+        const block = blocks.find(b => b.name === blockName);
+        if (block) {
+            selectedBlockId = block.id;
+        }
+
+        // Remove active class from all blocks
+        document.querySelectorAll('.block-card').forEach(card => {
+            card.classList.remove('active');
+        });
+
+        // Add active class to selected block
+        const blockCard = document.querySelector(`[data-block="${blockName}"]`);
+        if (blockCard) {
+            blockCard.classList.add('active');
+        }
+
+        // Show block details
+        document.getElementById('blockDetails').style.display = 'block';
+        document.getElementById('selectedBlockName').textContent = blockLabel(blockName);
+
+        // Загружаем реальные данные для выбранного блока
+        if (selectedBlockId) {
+            const stats = getBlockStats(selectedBlockId);
+            document.getElementById('blockApartments').textContent = stats.total;
+            document.getElementById('blockActive').textContent = stats.active;
+            document.getElementById('blockInactive').textContent = stats.inactive;
+            document.getElementById('blockOccupancy').textContent = `${stats.occupancy}%`;
+        } else {
+            document.getElementById('blockApartments').textContent = '-';
+            document.getElementById('blockActive').textContent = '-';
+            document.getElementById('blockInactive').textContent = '-';
+            document.getElementById('blockOccupancy').textContent = '-';
+        }
+
+        // Прокручиваем к карточке с деталями блока
+        setTimeout(() => {
+            document.getElementById('blockDetails').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    }
+
+    window.selectBlockById = function (blockId) {
+        console.log('selectBlockById called with id:', blockId);
+        const block = blocks.find(b => b.id === blockId);
+        if (!block) {
+            console.error('Block not found with id:', blockId);
+            return;
+        }
+        selectedBlock = block.name;
+        selectedBlockId = block.id;
+        console.log('Selected block:', selectedBlock, 'ID:', selectedBlockId);
+        selectBlock(block.name);
+    }
+
+    window.createBlock = async function () {
+        const blockName = document.getElementById('newBlockName').value.trim();
+
+        if (!blockName) {
+            if (window.showWarning) {
+                showWarning(t('blocks_warning_enter_name', 'Пожалуйста, введите название блока'));
+            } else {
+                alert(t('blocks_warning_enter_name', 'Пожалуйста, введите название блока'));
+            }
+            return;
+        }
+
+        try {
+            let resp = await fetch(`${API_BASE}/api/blocks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ name: blockName })
+            });
+            if (!resp.ok) {
+                const errorData = await resp.json().catch(() => ({ detail: t('blocks_create_error', 'Ошибка создания блока') }));
+                throw new Error(errorData.detail || 'Failed to create block');
+            }
+
+            await loadBlocks();
+            document.getElementById('newBlockName').value = '';
+            updateBlocksCount();
+            updateActiveResidentsCount(); // Обновляем счетчик активных домов
+            updateInactiveResidentsCount(); // Обновляем счетчик неактивных домов
+            // Резиденты не меняются при создании блока, но можно перезагрузить для актуальности
+            await loadResidents();
+            updateOccupancyPercentage();
+            // Обновляем tooltip-ы после создания блока
+            updatePlanTooltips();
+
+            if (window.showSuccess) {
+                showSuccess(formatText('blocks_created_success', 'Блок "{name}" успешно создан!', { name: blockName }));
+            } else {
+                alert(formatText('blocks_created_success', 'Блок "{name}" успешно создан!', { name: blockName }));
+            }
+        } catch (e) {
+            console.error('Create block error:', e);
+            if (window.showError) {
+                showError(formatText('blocks_create_failed', 'Не удалось создать блок: {message}', { message: e.message }));
+            } else {
+                alert(formatText('blocks_create_failed', 'Не удалось создать блок: {message}', { message: e.message }));
+            }
+        }
+    }
+
+    window.renameBlock = function () {
+        console.log('renameBlock called, selectedBlockId:', selectedBlockId, 'selectedBlock:', selectedBlock);
+
+        if (!selectedBlockId) {
+            if (typeof showWarning === 'function') {
+                showWarning(t('blocks_warning_select_block', 'Пожалуйста, выберите блок'));
+            } else {
+                alert(t('blocks_warning_select_block', 'Пожалуйста, выберите блок'));
+            }
+            return;
+        }
+
+        // Используем showPrompt с колбэком
+        if (typeof showPrompt === 'function') {
+            showPrompt(
+                formatText('blocks_rename_prompt', 'Введите новое название для блока {block}:', { block: selectedBlock }),
+                selectedBlock,
+                async (newName) => {
+                    if (!newName || !newName.trim() || newName.trim() === selectedBlock) {
+                        return;
+                    }
+                    await performRename(newName.trim());
+                }
+            );
+        } else {
+            const newName = prompt(formatText('blocks_rename_prompt', 'Введите новое название для блока {block}:', { block: selectedBlock }), selectedBlock);
+            if (newName && newName.trim() && newName.trim() !== selectedBlock) {
+                performRename(newName.trim());
+            }
+        }
+    }
+
+    async function performRename(newName) {
+        try {
+            let resp = await fetch(`${API_BASE}/api/blocks/${selectedBlockId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ name: newName })
+            });
+            if (!resp.ok) {
+                const errorData = await resp.json().catch(() => ({ detail: t('blocks_rename_error', 'Ошибка переименования') }));
+                throw new Error(errorData.detail || 'Failed to rename block');
+            }
+
+            // Обновляем локальные переменные
+            selectedBlock = newName;
+
+            // Обновляем заголовок сразу
+            const selectedBlockNameEl = document.getElementById('selectedBlockName');
+            if (selectedBlockNameEl) {
+                selectedBlockNameEl.textContent = blockLabel(newName);
+            }
+
+            // Обновляем карточку блока в списке
+            const blockCard = document.querySelector(`[data-block-id="${selectedBlockId}"]`);
+            if (blockCard) {
+                blockCard.setAttribute('data-block', newName);
+                const blockNameEl = blockCard.querySelector('.block-name');
+                if (blockNameEl) {
+                    blockNameEl.textContent = blockLabel(newName);
+                }
+            }
+
+            // Перезагружаем список блоков из базы
+            await loadBlocks();
+            updateBlocksCount();
+            updateActiveResidentsCount(); // Обновляем счетчик активных домов
+            updateInactiveResidentsCount(); // Обновляем счетчик неактивных домов
+            // Обновляем tooltip-ы после переименования
+            updatePlanTooltips();
+
+            // После перезагрузки снова выбираем блок, чтобы обновить все данные
+            if (selectedBlockId) {
+                selectBlockById(selectedBlockId);
+            }
+
+            if (typeof showSuccess === 'function') {
+                showSuccess(formatText('blocks_renamed_success', 'Блок успешно переименован в "{name}"!', { name: newName }));
+            } else {
+                alert(formatText('blocks_renamed_success', 'Блок успешно переименован в "{name}"!', { name: newName }));
+            }
+        } catch (e) {
+            console.error('Rename block error:', e);
+            if (typeof showError === 'function') {
+                showError(formatText('blocks_rename_failed', 'Не удалось переименовать блок: {message}', { message: e.message }));
+            } else {
+                alert(formatText('blocks_rename_failed', 'Не удалось переименовать блок: {message}', { message: e.message }));
+            }
+        }
+    }
+
+    window.deleteBlock = function () {
+        console.log('deleteBlock called, selectedBlockId:', selectedBlockId, 'selectedBlock:', selectedBlock);
+
+        if (!selectedBlockId) {
+            if (typeof showWarning === 'function') {
+                showWarning(t('blocks_warning_select_block', 'Пожалуйста, выберите блок'));
+            } else {
+                alert(t('blocks_warning_select_block', 'Пожалуйста, выберите блок'));
+            }
+            return;
+        }
+
+        // Используем showConfirm с колбэком
+        if (typeof showConfirm === 'function') {
+            showConfirm(
+                formatText('blocks_delete_confirm', 'Вы уверены, что хотите удалить блок "{block}"?', { block: selectedBlock }),
+                async (confirmed) => {
+                    // Удаление происходит ТОЛЬКО если confirmed === true (нажата кнопка OK)
+                    if (confirmed === true) {
+                        await performDelete();
+                    }
+                    // Если confirmed === false, ничего не делаем (отмена)
+                },
+                () => {
+                    // Явный обработчик отмены - ничего не делаем
+                    // Это гарантирует, что при нажатии "Отмена" удаление не произойдет
+                }
+            );
+        } else {
+            if (confirm(formatText('blocks_delete_confirm', 'Вы уверены, что хотите удалить блок "{block}"?', { block: selectedBlock }))) {
+                performDelete();
+            }
+        }
+    }
+
+    async function performDelete() {
+        try {
+            let resp = await fetch(`${API_BASE}/api/blocks/${selectedBlockId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+            if (!resp.ok) {
+                throw new Error('Failed to delete block');
+            }
+
+            await loadBlocks();
+            updateBlocksCount();
+            updateActiveResidentsCount(); // Обновляем счетчик активных домов
+            updateInactiveResidentsCount(); // Обновляем счетчик неактивных домов
+
+            // Hide block details
+            document.getElementById('blockDetails').style.display = 'none';
+            selectedBlock = null;
+            selectedBlockId = null;
+
+            if (typeof showSuccess === 'function') {
+                showSuccess(t('blocks_deleted_success', 'Блок успешно удален!'));
+            } else {
+                alert(t('blocks_deleted_success', 'Блок успешно удален!'));
+            }
+        } catch (e) {
+            console.error('Delete block error:', e);
+            if (typeof showError === 'function') {
+                showError(t('blocks_delete_failed', 'Не удалось удалить блок'));
+            } else {
+                alert(t('blocks_delete_failed', 'Не удалось удалить блок'));
+            }
+        }
+    }
+
+    window.viewApartments = function () {
+        if (!selectedBlock) {
+            showWarning(t('blocks_warning_select_block', 'Пожалуйста, выберите блок'));
+            return;
+        }
+        showInfo(formatText('blocks_navigate_apartments', 'Переход к списку квартир блока {block}...', { block: selectedBlock }));
+        // TODO: Navigate to apartments page with block filter
+        // window.location.href = `/admin/apartments.html?block=${selectedBlock}`;
+    }
+
+    window.viewResidents = function () {
+        if (!selectedBlock || !selectedBlockId) {
+            if (typeof showWarning === 'function') {
+                showWarning(t('blocks_warning_select_block', 'Пожалуйста, выберите блок'));
+            } else {
+                alert(t('blocks_warning_select_block', 'Пожалуйста, выберите блок'));
+            }
+            return;
+        }
+
+        // Сохраняем имя блока в sessionStorage для применения фильтра на странице tenants
+        sessionStorage.setItem('filterBlockByName', selectedBlock);
+
+        // Переходим на страницу tenants
+        if (window.spaRouter && typeof window.spaRouter.navigate === 'function') {
+            window.spaRouter.navigate('/tenants');
+        } else {
+            window.location.hash = '#/tenants';
+        }
+    }
+
+    window.viewMeters = function () {
+        if (!selectedBlock) {
+            showWarning(t('blocks_warning_select_block', 'Пожалуйста, выберите блок'));
+            return;
+        }
+        showInfo(formatText('blocks_navigate_meters', 'Переход к показателям счетчиков блока {block}...', { block: selectedBlock }));
+        // TODO: Navigate to meters page with block filter
+        // window.location.href = `/admin/meters.html?block=${selectedBlock}`;
+    }
+
+    // Функция для обновления tooltip-ов на основе данных блоков
+    function updatePlanTooltips() {
+        const planOverlay = document.querySelector('.plan-overlay');
+        if (!planOverlay) return;
+
+        const polygons = planOverlay.querySelectorAll('.plan-area');
+        polygons.forEach(polygon => {
+            const blockCode = polygon.getAttribute('data-block-code');
+            if (!blockCode) return;
+
+            // Находим блок по названию (block.name совпадает с data-block-code)
+            const block = blocks.find(b => b.name === blockCode);
+            if (!block) {
+                // Если блока нет в базе, оставляем дефолтные значения
+                return;
+            }
+
+            // Получаем статистику для блока (те же данные, что и на карточках)
+            const stats = getBlockStats(block.id);
+
+            // Обновляем label (как на карточке: "Блок А")
+            polygon.setAttribute('data-block-label', blockLabel(block.name));
+
+            // Формируем данные в том же формате, что и на карточках
+            // На карточке: "2 дома" и "100% заселённость"
+            const housesInfo = stats.total > 0
+                ? `${stats.total} ${getHousesWord(stats.total)}`
+                : t('blocks_no_houses', 'Нет домов');
+            const occupancyInfo = `${stats.occupancy}% ${t('blocks_occupancy_short', 'заселённость')}`;
+
+            // Формируем HTML для tooltip с теми же данными, что и на карточке
+            const tooltipInfo = `
+                <ul class="list-unstyled">
+                    <li>${housesInfo}</li>
+                    <li>${occupancyInfo}</li>
+                </ul>
+            `;
+
+            // Обновляем data-block-info
+            polygon.setAttribute('data-block-info', tooltipInfo);
+        });
+
+        // Обновляем кеш после обновления tooltip-ов
+        if (window.__cachedPlanOverlay) {
+            window.__cachedPlanOverlay = planOverlay.cloneNode(true);
+        }
+    }
+
+    // Функция инициализации страницы
+    async function initBlocksPage() {
+        // Сбрасываем флаг загрузки при инициализации
+        blocksLoaded = false;
+        localizePlanLegend();
+
+        await Promise.all([
+            loadBlocks(),
+            loadResidents()
+        ]);
+
+        // Обновляем счетчики после завершения обеих загрузок
+        updateActiveResidentsCount();
+        updateInactiveResidentsCount();
+        updateOccupancyPercentage();
+
+        // Небольшая задержка для гарантии что DOM обновлен после SPA-перехода
+        setTimeout(() => {
+            // Сохраняем SVG overlay в глобальный кеш при инициализации страницы
+            const planOverlay = document.querySelector('.plan-overlay');
+            if (planOverlay) {
+                // Обновляем tooltip-ы на основе данных из API
+                updatePlanTooltips();
+
+                // Всегда обновляем кеш при инициализации страницы
+                window.__cachedPlanOverlay = planOverlay.cloneNode(true);
+                console.log('Plan overlay cached, polygons:', planOverlay.querySelectorAll('.plan-area').length);
+            }
+
+            // Настройка обработчиков для полигонов плана через делегирование.
+            // Важно: при SPA-возврате overlay может восстанавливаться из cloneNode,
+            // а cloneNode переносит data-атрибуты, но НЕ переносит addEventListener-хендлеры.
+            // Поэтому не полагаемся на data-flag и каждый раз перевешиваем обработчик безопасно.
+            if (planOverlay) {
+                if (typeof planOverlay._planClickHandler === 'function') {
+                    planOverlay.removeEventListener('click', planOverlay._planClickHandler);
+                }
+
+                const handlePlanClick = (e) => {
+                    const area = e.target.closest('.plan-area');
+                    if (!area) return;
+
+                    const blockCode = area.getAttribute('data-block-code');
+                    if (!blockCode) return;
+
+                    const block = blocks.find(b => b.name === blockCode);
+                    if (block) {
+                        selectBlockById(block.id);
+                    } else {
+                        selectBlock(blockCode);
+                    }
+                };
+
+                planOverlay.addEventListener('click', handlePlanClick);
+                planOverlay._planClickHandler = handlePlanClick;
+            }
+        }, 150);
+    }
+
+    // Вызываем сразу при загрузке скрипта (для SPA роутера)
+    initBlocksPage();
+
+    // Также слушаем событие от роутера (на случай повторной загрузки)
+    // Удаляем старый обработчик, если он существует
+    if (window._blocksContentLoadedHandler) {
+        window.removeEventListener('spa:contentLoaded', window._blocksContentLoadedHandler);
+    }
+
+    window._blocksContentLoadedHandler = (e) => {
+        if (e.detail && e.detail.route === '/blocks') {
+            initBlocksPage();
+        }
+    };
+
+    window.refreshPageTranslations = function () {
+        if (!window.location.hash.includes('/blocks')) return;
+        localizePlanLegend();
+        renderBlocks();
+        updatePlanTooltips();
+        if (selectedBlockId) {
+            selectBlockById(selectedBlockId);
+        }
+    };
+
+    // Обновляем счетчики при изменении данных
+    // Можно добавить периодическое обновление, если нужно
+    // setInterval(() => { loadResidents(); }, 60000); // каждую минуту
+
+    window.addEventListener('spa:contentLoaded', window._blocksContentLoadedHandler);
+
+</script>

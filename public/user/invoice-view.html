@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Счёт: 2025-11/000001</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Favicon: Royal Park tree emblem -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/branding/favicon-32.png?v=rp1">
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/branding/favicon-192.png?v=rp1">
+    <link rel="apple-touch-icon" href="/images/branding/apple-touch-icon.png?v=rp1">
+    <link rel="shortcut icon" href="/favicon.ico?v=rp1">
+
+    <!-- Брендовые шрифты: Spectral (заголовки) + Montserrat (UI); основной текст — Times -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+    <!-- Общие стили пользователя -->
+    <link rel="stylesheet" href="/css/layout.css">
+    <link rel="stylesheet" href="/css/dark-theme.css">
+    <link rel="stylesheet" href="/css/user.css">
+    <link rel="stylesheet" href="/css/user-theme.css?v=brand-spectral-1">
+
+    <!-- Стили страницы счёта (из админки, чтобы сохранить такой же вид) -->
+    <link rel="stylesheet" href="/admin/content_css/invoice-view.css">
+</head>
+<body class="user-app">
+    <div class="user-invoice-shell">
+        <header class="user-invoice-topbar">
+            <nav class="user-invoice-nav">
+                <a href="/user/dashboard.html" class="user-invoice-nav-link">Главная</a>
+                <a href="/user/dashboard.html#bills" class="user-invoice-nav-link active">Мои счета</a>
+                <a href="#" class="user-invoice-nav-link">Сообщить об оплате</a>
+            </nav>
+        </header>
+
+        <main class="user-invoice-main">
+            <div class="content-wrapper invoice-view-page">
+                <div class="invoice-header">
+                    <button class="btn-back" onclick="window.location.href='/user/dashboard.html#bills'">
+                        ← К списку счетов
+                    </button>
+                    <h1>Счёт: 2025-11/000001</h1>
+                    <button class="btn-outline-secondary invoice-pdf-btn" type="button">
+                        PDF
+                    </button>
+                </div>
+
+                <!-- Краткая информация по счёту -->
+                <div class="invoice-summary user-invoice-summary">
+                    <div class="invoice-summary-item">
+                        <label>Дом</label>
+                        <div class="value">X / 2</div>
+                    </div>
+                    <div class="invoice-summary-item">
+                        <label>Период</label>
+                        <div class="value">2025-11</div>
+                    </div>
+                    <div class="invoice-summary-item">
+                        <label>Статус</label>
+                        <div class="value">
+                            <span class="user-bill-status paid">PAID</span>
+                        </div>
+                    </div>
+                    <div class="invoice-summary-item">
+                        <label>Срок оплаты</label>
+                        <div class="value">—</div>
+                    </div>
+                    <div class="invoice-summary-item">
+                        <label>Итого</label>
+                        <div class="value total">30000.00</div>
+                    </div>
+                </div>
+
+                <!-- Оплаты по счёту -->
+                <div class="payments-section user-invoice-payments">
+                    <h3>Оплаты по счёту</h3>
+                    <table class="line-items-table">
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Метод</th>
+                                <th>Сумма</th>
+                                <th>Комментарий</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2025-11-21</td>
+                                <td>CARD</td>
+                                <td>10.00</td>
+                                <td>—</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="payments-summary">
+                        Оплачено: <strong>10.00</strong> · Остаток: <strong>29990.00</strong> из <strong>30000.00</strong>
+                    </div>
+                </div>
+
+                <!-- Позиции счёта -->
+                <div class="user-invoice-items">
+                    <h3>Описание</h3>
+                    <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 20px; overflow-x: auto;">
+                        <table class="line-items-table">
+                            <thead>
+                                <tr>
+                                    <th>Описание</th>
+                                    <th>Начислено</th>
+                                    <th>НДС</th>
+                                    <th>Итого</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Электричество 200.0 кВт·ч</td>
+                                    <td>15000.00</td>
+                                    <td>0.00</td>
+                                    <td class="total-value">15000.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Вода 300.0 м³</td>
+                                    <td>15000.00</td>
+                                    <td>0.00</td>
+                                    <td class="total-value">15000.00</td>
+                                </tr>
+                                <tr class="total-row">
+                                    <td colspan="3">Итого к оплате</td>
+                                    <td class="total-value">30000.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+
+

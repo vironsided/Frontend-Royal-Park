@@ -1,0 +1,2162 @@
+<link rel="stylesheet" href="/admin/content_css/payment.css">
+<div class="content-wrapper payments-page">
+    <!-- Filters Section -->
+    <div class="payments-filters">
+        <div class="payments-filters-row">
+            <div class="payments-filters-group">
+                <label data-i18n="resident">Резидент</label>
+                <select id="filterResident">
+                    <option value="all" data-i18n="all">Все</option>
+                    <option value="1">Резидент 1</option>
+                    <option value="2">Резидент 2</option>
+                </select>
+        </div>
+
+            <div class="payments-filters-group">
+                <label data-i18n="filter_method">Метод</label>
+                <select id="filterMethod">
+                    <option value="all" data-i18n="all">Все</option>
+                    <option value="ADVANCE" data-i18n="payments_method_advance">Аванс</option>
+                    <option value="CARD" data-i18n="payments_method_card">CARD</option>
+                    <!-- <option value="TRANSFER" data-i18n="payments_method_transfer">Банк</option>
+                    <option value="ONLINE" data-i18n="payments_method_online">Онлайн</option> -->
+                </select>
+            </div>
+            
+            <div class="payments-filters-group">
+                <label data-i18n="payments_date_from_short">От</label>
+                <div class="date-input-wrapper">
+                    <input type="date" style="border-radius: 8px !important;" id="filterDateFrom">
+                    <button type="button" class="btn-calendar" onclick="openDatePicker('filterDateFrom')" title="Открыть календарь">
+                        <i class="bi bi-calendar"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="payments-filters-group">
+                <label data-i18n="payments_date_to_short">До</label>
+                <div class="date-input-wrapper">
+                    <input type="date" style="border-radius: 8px !important;" id="filterDateTo">
+                    <button type="button" class="btn-calendar" onclick="openDatePicker('filterDateTo')" title="Открыть календарь">
+                        <i class="bi bi-calendar"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="payments-filters-group">
+                <label data-i18n="filter">Поиск</label>
+                <input type="text" id="filterSearch" placeholder="№ чека / комментарий" data-i18n-placeholder="payments_search_placeholder">
+            </div>
+
+            <div class="payments-filters-group payments-filters-group-wide">
+                <label data-i18n="payments_services_export">Услуги для экспорта</label>
+                <details class="service-filter-details" id="serviceExportDetails">
+                    <summary id="serviceExportSummary">Все категории</summary>
+                    <div class="service-filter-dropdown">
+                        <div class="service-filter-options" id="serviceExportOptions">
+                            <label><input type="checkbox" value="utility" checked> <span data-i18n="payments_service_utility">Utility</span></label>
+                            <label><input type="checkbox" value="electric" checked> <span data-i18n="meter_electricity">Электричество</span></label>
+                            <label><input type="checkbox" value="gas" checked> <span data-i18n="meter_gas">Газ</span></label>
+                            <label><input type="checkbox" value="water" checked> <span data-i18n="meter_cold_water">Вода</span></label>
+                            <label><input type="checkbox" value="sewerage" checked> <span data-i18n="readings_meter_sewerage">Канализация</span></label>
+                            <label><input type="checkbox" value="service" checked> <span data-i18n="tariffs_purpose_service">Сервис</span></label>
+                            <label><input type="checkbox" value="rent" checked> <span data-i18n="tariffs_purpose_rent">Аренда</span></label>
+                            <label><input type="checkbox" value="construction" checked> <span data-i18n="tariffs_purpose_construction">Строительство</span></label>
+                            <label><input type="checkbox" value="unallocated" checked> <span data-i18n="payments_service_unallocated">Без распределения</span></label>
+                        </div>
+                        <div class="service-filter-actions">
+                            <button type="button" class="btn-filter-mini" id="serviceSelectAllBtn" data-i18n="select_all">Выбрать все</button>
+                            <button type="button" class="btn-filter-mini" id="serviceOkBtn">OK</button>
+                            <button type="button" class="btn-filter-mini" id="serviceClearBtn" data-i18n="clear">Очистить</button>
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </div>
+        
+        <div class="payments-filters-actions">
+            <div class="payments-filters-actions-left">
+                <input type="number" id="filterAmountMin" placeholder="Сумма от" step="0.01" min="0" aria-label="Минимальная сумма для экспорта" data-i18n-placeholder="payments_amount_from">
+                <input type="number" id="filterAmountMax" placeholder="Сумма до" step="0.01" min="0" aria-label="Максимальная сумма для экспорта" data-i18n-placeholder="payments_amount_to">
+                <label class="export-only-checkbox">
+                    <input type="checkbox" id="filterAllocatedOnly">
+                    <span data-i18n="payments_only_distributed">Только распределенные</span>
+                </label>
+            </div>
+            <div class="payments-filters-actions-right">
+                <select id="paymentExportFormat" aria-label="Формат экспорта">
+                    <option value="csv">Excel (CSV)</option>
+                    <option value="pdf" data-i18n="residents_export_pdf_print">PDF (печать)</option>
+                </select>
+                <button class="btn-filter" onclick="applyPaymentFilters()">
+                    <i class="bi bi-funnel"></i> <span data-i18n="filter">Фильтр</span>
+                </button>
+                <button class="btn btn-outline-warning" type="button" onclick="resetPaymentsExportFilters()">
+                    <i class="bi bi-x-circle"></i> <span data-i18n="reset">Сброс</span>
+                </button>
+                <button class="btn btn-success" type="button" onclick="exportPayments()">
+                    <i class="bi bi-box-arrow-down"></i> <span data-i18n="export">Экспорт</span>
+                </button>
+                <button class="btn-accept-payment" onclick="acceptPayment()">
+                    <span data-i18n="payments_accept_payment">Принять платеж</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div style="position: relative;">
+        <!-- Payments Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th data-i18n="date">Дата</th>
+                            <th data-i18n="resident">Резидент</th>
+                            <th data-i18n="nav_tenants">Житель</th>
+                            <th data-i18n="amount">Сумма</th>
+                            <th data-i18n="filter_method">Метод</th>
+                            <th data-i18n="payments_leftover">Остаток</th>
+                            <th data-i18n="payments_link">Ссылка</th>
+                            <th data-i18n="actions">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentsTable"></tbody>
+                </table>
+            </div>
+
+            
+        </div>
+            <!-- Pagination -->
+    <div class="table-pagination">
+        <div class="pagination-controls" id="paymentPaginationControls">
+            <button class="btn-pagination" onclick="goToPaymentPage('prev')" disabled id="paymentPrevBtn">
+                <i class="bi bi-chevron-double-left"></i>
+            </button>
+            <div id="paymentPageButtons" class="pagination-pages"></div>
+            <button class="btn-pagination" onclick="goToPaymentPage('next')" disabled id="paymentNextBtn">
+                <i class="bi bi-chevron-double-right"></i>
+            </button>
+        </div>
+        <div class="pagination-info">
+            <span><span data-i18n="residents_pagination_page_short">Стр.</span> <span id="paymentCurrentPage">1</span> <span data-i18n="residents_pagination_of">из</span> <span id="paymentTotalPages">1</span> · <span data-i18n="residents_pagination_total">всего</span> <span id="paymentTotalItems">0</span></span>
+        </div>
+        <div class="pagination-per-page">
+            <span data-i18n="residents_pagination_on">На</span>
+            <span data-i18n="residents_pagination_per_page">странице:</span>
+            <div class="custom-pag-select" id="customPaymentItemsPerPage">
+                <select id="paymentItemsPerPage" onchange="changePaymentItemsPerPage()" style="display: none;">
+                    <option value="10">10</option>
+                    <option value="25" selected>25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <div class="select-btn">
+                    <span class="select-text">25</span>
+                    <span class="arrow">▾</span>
+        </div>
+                <div class="select-options" style="background: rgba(36, 40, 49, 0.95) !important">
+                    <div class="select-option" data-value="10">10</div>
+                    <div class="select-option selected" data-value="25">25</div>
+                    <div class="select-option" data-value="50">50</div>
+                    <div class="select-option" data-value="100">100</div>
+        </div>
+        </div>
+        </div>
+    </div>
+    </div>
+    </div>
+</div>
+
+<!-- Accept Payment Modal -->
+<div class="accept-payment-modal-overlay" id="acceptPaymentModal">
+    <div class="accept-payment-modal">
+        <div class="accept-payment-modal-header">
+            <h3 data-i18n="payments_accept_payment">Принять платеж</h3>
+            <button class="accept-payment-modal-close" onclick="closeAcceptPaymentModal()" type="button">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="accept-payment-modal-body">
+            <form id="acceptPaymentForm" onsubmit="savePayment(event)">
+                <div class="accept-payment-form-row">
+                    <div class="accept-payment-form-group">
+                        <label for="paymentResident" data-i18n="resident">Резидент</label>
+                        <select id="paymentResident" required>
+                            <option value="1">X / 2</option>
+                            <option value="2">Резидент 2</option>
+                            <option value="3">Резидент 3</option>
+                        </select>
+                    </div>
+                    <div class="accept-payment-form-group">
+                        <label for="paymentDate" data-i18n="payments_income_date">Дата поступления</label>
+                        <div class="accept-payment-date-wrapper">
+                            <input type="date" id="paymentDate" required>
+                            <button type="button" class="btn-calendar" onclick="openDatePicker('paymentDate')" title="Открыть календарь">
+                                <i class="bi bi-calendar"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="accept-payment-form-group">
+                        <label for="paymentAmount" data-i18n="amount">Сумма</label>
+                        <input type="number" id="paymentAmount" step="0.01" min="0" placeholder="0.00" required>
+                    </div>
+                    <div class="accept-payment-form-group">
+                        <label for="paymentMethod" data-i18n="filter_method">Метод</label>
+                        <select id="paymentMethod" required>
+                            <option value="CASH" selected>CASH</option>
+                            <option value="CARD">CARD</option>
+                            <option value="TRANSFER">Банк</option>
+                            <option value="ONLINE">Онлайн</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="accept-payment-form-row">
+                    <div class="accept-payment-form-group">
+                        <label for="paymentReference" data-i18n="payments_reference_number">№/Референс</label>
+                        <input type="text" id="paymentReference" placeholder="">
+                    </div>
+                    <div class="accept-payment-form-group">
+                        <label for="paymentComment" data-i18n="comment">Комментарий</label>
+                        <input type="text" id="paymentComment" placeholder="">
+                    </div>
+                </div>
+                <div class="accept-payment-form-row">
+                    <div class="accept-payment-form-group full-width">
+                        <label for="paymentCheckNumber" data-i18n="payments_check_number">номер чека/платёжки</label>
+                        <input type="text" id="paymentCheckNumber" placeholder="">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="accept-payment-modal-footer">
+            <button type="button" class="btn-modal-cancel" onclick="closeAcceptPaymentModal()" data-i18n="cancel">Отмена</button>
+            <button type="button" class="btn-modal-save" onclick="savePayment(event)" data-i18n="save">Сохранить</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){
+    const API_BASE = window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BASE || 'http://localhost:8000');
+    const t = (key, fallback = '') => window.i18n?.translate?.(key) || fallback || key;
+    function isPaymentsRoute() {
+        const route = String(window.spaRouter?.currentRoute || window.location.hash.replace('#', '') || '');
+        return route === '/payments' || route.startsWith('/payments');
+    }
+    function hasPaymentsDom() {
+        return !!document.querySelector('.payments-page');
+    }
+    const serviceKeys = ['utility', 'electric', 'gas', 'water', 'sewerage', 'service', 'rent', 'construction', 'unallocated'];
+    const serviceLabelKeyMap = {
+        utility: 'payments_service_utility',
+        electric: 'meter_electricity',
+        gas: 'meter_gas',
+        water: 'meter_cold_water',
+        sewerage: 'readings_meter_sewerage',
+        service: 'tariffs_purpose_service',
+        rent: 'tariffs_purpose_rent',
+        construction: 'tariffs_purpose_construction',
+        unallocated: 'payments_service_unallocated'
+    };
+    const utilityServiceKeys = ['electric', 'gas', 'water', 'sewerage'];
+
+    function getMethodLabel(method) {
+        if (method === 'CASH') return t('payments_method_cash', 'Наличные');
+        if (method === 'TRANSFER') return t('payments_method_transfer', 'Банк');
+        if (method === 'ONLINE') return t('payments_method_online', 'Онлайн');
+        if (method === 'CARD') return t('payments_method_card', 'Карта');
+        return method || '—';
+    }
+
+    function getReferenceLabel(reference) {
+        if (!reference) return '—';
+        const raw = String(reference);
+
+        if (raw.startsWith('ADVANCE_USE')) {
+            return t('payment_advance_auto_done', 'Аванс автоматически распределён по счетам');
+        }
+
+        return raw;
+    }
+
+    function getServiceLabel(key) {
+        const i18nKey = serviceLabelKeyMap[key];
+        if (!i18nKey) return key;
+        return t(i18nKey, key);
+    }
+
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function formatPaymentDate(dateStr) {
+        if (!dateStr) return '—';
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mi = String(d.getMinutes()).padStart(2, '0');
+        const ss = String(d.getSeconds()).padStart(2, '0');
+        return `${yyyy}/${mm}/${dd} ${hh}:${mi}:${ss}`;
+    }
+    
+    let residents = [];
+    let paymentsData = {
+        items: [],
+        total: 0,
+        page: 1,
+        per_page: 25,
+        last_page: 1
+    };
+    
+    // Pagination state
+    let paginationState = {
+        currentPage: 1,
+        itemsPerPage: 25,
+        totalItems: 0,
+        totalPages: 1
+    };
+    const invoiceBreakdownCache = new Map();
+    const invoiceAllocationCache = new Map();
+    let clientFilteredPayments = null;
+
+    function renderClientPaymentsPage() {
+        if (!Array.isArray(clientFilteredPayments)) return false;
+
+        const total = clientFilteredPayments.length;
+        const totalPages = Math.max(1, Math.ceil(total / paginationState.itemsPerPage));
+        paginationState.totalItems = total;
+        paginationState.totalPages = totalPages;
+        if (paginationState.currentPage > totalPages) {
+            paginationState.currentPage = totalPages;
+        }
+
+        const start = (paginationState.currentPage - 1) * paginationState.itemsPerPage;
+        const end = start + paginationState.itemsPerPage;
+        const pageItems = clientFilteredPayments.slice(start, end);
+
+        paymentsData = {
+            items: pageItems,
+            total,
+            page: paginationState.currentPage,
+            per_page: paginationState.itemsPerPage,
+            last_page: totalPages
+        };
+        renderTable();
+        return true;
+    }
+    
+    // Load payments from API
+    async function loadPayments(forceServer = false) {
+        if (!forceServer && renderClientPaymentsPage()) {
+            return;
+        }
+
+        const tbody = document.getElementById('paymentsTable');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">${t('loading', 'Загрузка...')}</td></tr>`;
+        }
+        
+        const params = buildPaymentFilterParams();
+        params.append('page', paginationState.currentPage);
+        params.append('per_page', paginationState.itemsPerPage);
+        
+        try {
+            let response = await fetch(`${API_BASE}/api/payments?${params.toString()}`, { credentials: 'include' });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            paymentsData = data;
+            paginationState.totalItems = data.total;
+            paginationState.totalPages = data.last_page;
+            paginationState.currentPage = data.page;
+            
+            renderTable();
+        } catch (error) {
+            console.error('Error loading payments:', error);
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">${t('error_loading_data', 'Ошибка загрузки данных')}</td></tr>`;
+            }
+            if (typeof showError === 'function') {
+                showError(`${t('payments_load_error_prefix', 'Ошибка загрузки платежей')}: ${error.message}`);
+            }
+        }
+    }
+
+    function buildPaymentFilterParams() {
+        const params = new URLSearchParams();
+
+        const residentId = document.getElementById('filterResident')?.value;
+        if (residentId && residentId !== 'all') {
+            params.append('resident_id', residentId);
+        }
+
+        const method = document.getElementById('filterMethod')?.value;
+        if (method && method !== 'all') {
+            params.append('method', method);
+        }
+
+        const dateFrom = document.getElementById('filterDateFrom')?.value;
+        if (dateFrom) {
+            params.append('date_from', dateFrom);
+        }
+
+        const dateTo = document.getElementById('filterDateTo')?.value;
+        if (dateTo) {
+            params.append('date_to', dateTo);
+        }
+
+        const search = document.getElementById('filterSearch')?.value.trim();
+        if (search) {
+            params.append('q', search);
+        }
+
+        return params;
+    }
+
+    async function fetchPaymentsPage(page, perPage) {
+        const params = buildPaymentFilterParams();
+        params.append('page', page);
+        params.append('per_page', perPage);
+
+        const response = await fetch(`${API_BASE}/api/payments?${params.toString()}`, { credentials: 'include' });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    }
+
+    async function fetchAllFilteredPayments() {
+        const perPage = 100;
+        let page = 1;
+        let lastPage = 1;
+        const allItems = [];
+
+        while (page <= lastPage) {
+            const data = await fetchPaymentsPage(page, perPage);
+            const items = Array.isArray(data) ? data : (data.items || []);
+            allItems.push(...items);
+            lastPage = data.last_page || 1;
+            page += 1;
+        }
+
+        return allItems;
+    }
+
+    function toCsvValue(value) {
+        const str = value === null || value === undefined ? '' : String(value);
+        const escaped = str.replace(/"/g, '""');
+        return `"${escaped}"`;
+    }
+
+    function toMoney(value) {
+        const num = Number(value || 0);
+        return Number.isFinite(num) ? num.toFixed(2) : '0.00';
+    }
+
+    function getServiceDisplayLabel(key) {
+        if (key === 'utility') {
+            const includes = utilityServiceKeys.map((k) => getServiceLabel(k)).join(', ');
+            return `${getServiceLabel('utility')} (${includes})`;
+        }
+        return getServiceLabel(key);
+    }
+
+    function getServiceRowLabel(key) {
+        return getServiceLabel(key);
+    }
+
+    function getUtilityAmount(serviceBreakdown) {
+        return utilityServiceKeys.reduce((acc, key) => acc + Number(serviceBreakdown[key] || 0), 0);
+    }
+
+    function classifyServiceByDescription(description) {
+        const low = String(description || '').toLowerCase();
+        if (!low) return 'unallocated';
+        if (low.includes('электр') || low.includes('electric') || low.includes('meter_electric')) return 'electric';
+        if (low.includes('газ') || low.includes('meter_gas')) return 'gas';
+        if (low.includes('вода') || low.includes('water') || low.includes('meter_cold_water') || low.includes('meter_water')) return 'water';
+        if (low.includes('канализац') || low.includes('sewerage') || low.includes('meter_sewerage')) return 'sewerage';
+        if (low.includes('сервис') || low.includes('service') || low.includes('коммун') || low.includes('utility')) return 'service';
+        if (low.includes('аренда') || low.includes('rent')) return 'rent';
+        if (low.includes('строител') || low.includes('construction')) return 'construction';
+        return 'service';
+    }
+
+    function getSelectedExportServices() {
+        const checked = Array.from(
+            document.querySelectorAll('#serviceExportOptions input[type="checkbox"]:checked')
+        ).map((el) => el.value);
+
+        // Если все сняты, считаем как "все", чтобы не получить пустой отчёт случайно.
+        if (checked.length === 0) {
+            return serviceKeys.slice();
+        }
+        return checked;
+    }
+
+    function applyUtilitySelectionRules(optionsRoot) {
+        const utilityCb = optionsRoot.querySelector('input[type="checkbox"][value="utility"]');
+        if (!utilityCb) return;
+
+        const utilityChildren = utilityServiceKeys
+            .map((key) => optionsRoot.querySelector(`input[type="checkbox"][value="${key}"]`))
+            .filter(Boolean);
+
+        if (utilityCb.checked) {
+            utilityChildren.forEach((cb) => {
+                cb.checked = true;
+                cb.disabled = true;
+            });
+            utilityCb.disabled = false;
+            return;
+        }
+
+        utilityChildren.forEach((cb) => {
+            cb.disabled = false;
+        });
+
+        const anyChildChecked = utilityChildren.some((cb) => cb.checked);
+        utilityCb.disabled = anyChildChecked;
+        if (anyChildChecked) {
+            utilityCb.checked = false;
+        }
+    }
+
+    function updateServiceSummaryLabel() {
+        const summaryEl = document.getElementById('serviceExportSummary');
+        if (!summaryEl) return;
+        const selected = getSelectedExportServices();
+        if (selected.length === serviceKeys.length) {
+            summaryEl.textContent = t('payments_services_all_categories', 'Все категории');
+            return;
+        }
+        const preview = selected.slice(0, 2).map((k) => getServiceLabel(k)).join(', ');
+        summaryEl.textContent = selected.length > 2 ? `${preview} +${selected.length - 2}` : preview;
+    }
+
+    function initServiceExportFilters() {
+        const details = document.getElementById('serviceExportDetails');
+        const optionsRoot = document.getElementById('serviceExportOptions');
+        const selectAllBtn = document.getElementById('serviceSelectAllBtn');
+        const okBtn = document.getElementById('serviceOkBtn');
+        const clearBtn = document.getElementById('serviceClearBtn');
+        if (!optionsRoot) return;
+
+        if (okBtn) {
+            if (okBtn._clickHandler) okBtn.removeEventListener('click', okBtn._clickHandler);
+            okBtn._clickHandler = function () {
+                if (details) details.open = false;
+            };
+            okBtn.addEventListener('click', okBtn._clickHandler);
+        }
+
+        if (optionsRoot.dataset.initialized === 'true') {
+            applyUtilitySelectionRules(optionsRoot);
+            updateServiceSummaryLabel();
+            return;
+        }
+        optionsRoot.dataset.initialized = 'true';
+
+        optionsRoot.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+            cb.addEventListener('change', function () {
+                applyUtilitySelectionRules(optionsRoot);
+                updateServiceSummaryLabel();
+            });
+        });
+
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', function () {
+                optionsRoot.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+                    cb.checked = true;
+                    cb.disabled = false;
+                });
+                applyUtilitySelectionRules(optionsRoot);
+                updateServiceSummaryLabel();
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function () {
+                optionsRoot.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+                    cb.checked = false;
+                    cb.disabled = false;
+                });
+                applyUtilitySelectionRules(optionsRoot);
+                updateServiceSummaryLabel();
+            });
+        }
+
+        applyUtilitySelectionRules(optionsRoot);
+        updateServiceSummaryLabel();
+    }
+
+    function getExportExtraFilters() {
+        const minAmountRaw = document.getElementById('filterAmountMin')?.value;
+        const maxAmountRaw = document.getElementById('filterAmountMax')?.value;
+        const minAmount = minAmountRaw === '' || minAmountRaw === undefined ? null : Number(minAmountRaw);
+        const maxAmount = maxAmountRaw === '' || maxAmountRaw === undefined ? null : Number(maxAmountRaw);
+        return {
+            minAmount: Number.isFinite(minAmount) ? minAmount : null,
+            maxAmount: Number.isFinite(maxAmount) ? maxAmount : null,
+            allocatedOnly: !!document.getElementById('filterAllocatedOnly')?.checked,
+        };
+    }
+
+    function hasAlternativeExportFilter() {
+        const residentId = document.getElementById('filterResident')?.value;
+        if (residentId && residentId !== 'all') return true;
+
+        const method = document.getElementById('filterMethod')?.value;
+        if (method && method !== 'all') return true;
+
+        const dateTo = document.getElementById('filterDateTo')?.value;
+        if (dateTo) return true;
+
+        const search = document.getElementById('filterSearch')?.value?.trim();
+        if (search) return true;
+
+        const extraFilters = getExportExtraFilters();
+        if (extraFilters.minAmount !== null || extraFilters.maxAmount !== null || extraFilters.allocatedOnly) {
+            return true;
+        }
+
+        return false;
+    }
+
+    async function getInvoiceServiceBreakdown(invoiceId) {
+        const id = Number(invoiceId);
+        if (!Number.isFinite(id) || id <= 0) {
+            return { total: 0, serviceTotals: {} };
+        }
+        if (invoiceBreakdownCache.has(id)) {
+            return invoiceBreakdownCache.get(id);
+        }
+
+        const response = await fetch(`${API_BASE}/api/invoices/${id}`, { credentials: 'include' });
+        if (!response.ok) {
+            const fallback = { total: 0, serviceTotals: {} };
+            invoiceBreakdownCache.set(id, fallback);
+            return fallback;
+        }
+
+        const invoice = await response.json();
+        const lines = Array.isArray(invoice.lines) ? invoice.lines : [];
+        const serviceTotals = {};
+        let total = 0;
+
+        lines.forEach((line) => {
+            const amount = Number(line.amount_total || 0);
+            if (!(amount > 0)) return;
+            const key = classifyServiceByDescription(line.description);
+            serviceTotals[key] = (serviceTotals[key] || 0) + amount;
+            total += amount;
+        });
+
+        if (!(total > 0)) {
+            total = Number(invoice.amount_total || 0);
+        }
+
+        const breakdown = { total, serviceTotals };
+        invoiceBreakdownCache.set(id, breakdown);
+        return breakdown;
+    }
+
+    function parseSelectedLineIds(reference) {
+        if (!reference) return [];
+        const marker = 'LINESEL:';
+        const idx = String(reference).indexOf(marker);
+        if (idx < 0) return [];
+        const raw = String(reference).slice(idx + marker.length).split('|')[0];
+        return raw
+            .split(',')
+            .map((v) => Number(String(v).trim()))
+            .filter((v) => Number.isFinite(v) && v > 0);
+    }
+
+    function normalizeSelectedLineIdsForWaterSewer(selectedIds, linesById) {
+        const normalized = new Set(selectedIds);
+        const list = Array.from(normalized);
+        const isWater = (line) => {
+            const d = String(line?.description || '').toLowerCase();
+            return d.includes('вода');
+        };
+        const isSewer = (line) => {
+            const d = String(line?.description || '').toLowerCase();
+            return d.includes('канализац');
+        };
+        for (const lineId of list) {
+            const line = linesById.get(lineId);
+            if (!line) continue;
+            if (isWater(line)) {
+                const pair = Array.from(linesById.values()).find((candidate) => (
+                    !normalized.has(Number(candidate.id || 0))
+                    && isSewer(candidate)
+                    && Number(candidate.amount_total || 0) === Number(line.amount_total || 0)
+                ));
+                if (pair?.id) normalized.add(Number(pair.id));
+            } else if (isSewer(line)) {
+                const pair = Array.from(linesById.values()).find((candidate) => (
+                    !normalized.has(Number(candidate.id || 0))
+                    && isWater(candidate)
+                    && Number(candidate.amount_total || 0) === Number(line.amount_total || 0)
+                ));
+                if (pair?.id) normalized.add(Number(pair.id));
+            }
+        }
+        return Array.from(normalized);
+    }
+
+    async function getInvoiceAllocationSnapshot(invoiceId) {
+        const id = Number(invoiceId);
+        if (!Number.isFinite(id) || id <= 0) {
+            return { linesById: new Map(), appLineAllocations: new Map() };
+        }
+        if (invoiceAllocationCache.has(id)) {
+            return invoiceAllocationCache.get(id);
+        }
+
+        const response = await fetch(`${API_BASE}/api/invoices/${id}`, { credentials: 'include' });
+        if (!response.ok) {
+            const fallback = { linesById: new Map(), appLineAllocations: new Map() };
+            invoiceAllocationCache.set(id, fallback);
+            return fallback;
+        }
+
+        const invoice = await response.json();
+        const lines = Array.isArray(invoice?.lines) ? invoice.lines : [];
+        const invoiceApps = Array.isArray(invoice?.payments) ? invoice.payments : [];
+
+        const linesById = new Map();
+        const defaultLineOrder = [];
+        lines.forEach((line) => {
+            const lineId = Number(line?.id || 0);
+            if (!(lineId > 0)) return;
+            linesById.set(lineId, line);
+            defaultLineOrder.push(lineId);
+        });
+
+        const linePaid = new Map();
+        defaultLineOrder.forEach((lineId) => linePaid.set(lineId, 0));
+
+        const orderedApps = invoiceApps
+            .map((app) => ({
+                id: Number(app?.id || 0),
+                amount: Number(app?.amount || 0),
+                appReference: String(app?.app_reference || ''),
+                dateMs: new Date(app?.date || 0).getTime(),
+            }))
+            .filter((app) => app.id > 0 && app.amount > 0)
+            .sort((a, b) => {
+                const ta = Number.isFinite(a.dateMs) ? a.dateMs : 0;
+                const tb = Number.isFinite(b.dateMs) ? b.dateMs : 0;
+                if (ta !== tb) return ta - tb;
+                return a.id - b.id;
+            });
+
+        const appLineAllocations = new Map();
+        orderedApps.forEach((app) => {
+            let selectedIds = parseSelectedLineIds(app.appReference);
+            if (selectedIds.length > 0) {
+                selectedIds = normalizeSelectedLineIdsForWaterSewer(selectedIds, linesById);
+            } else {
+                selectedIds = defaultLineOrder.slice();
+            }
+
+            let remaining = app.amount;
+            const lineAmounts = {};
+            for (const lineId of selectedIds) {
+                if (!(remaining > 0)) break;
+                const line = linesById.get(lineId);
+                if (!line) continue;
+                const total = Number(line.amount_total || 0);
+                const alreadyPaid = Number(linePaid.get(lineId) || 0);
+                const capacity = Math.max(0, total - alreadyPaid);
+                if (!(capacity > 0)) continue;
+                const take = Math.min(capacity, remaining);
+                if (take > 0) {
+                    lineAmounts[lineId] = (lineAmounts[lineId] || 0) + take;
+                    linePaid.set(lineId, alreadyPaid + take);
+                    remaining -= take;
+                }
+            }
+            appLineAllocations.set(app.id, lineAmounts);
+        });
+
+        const snapshot = { linesById, appLineAllocations };
+        invoiceAllocationCache.set(id, snapshot);
+        return snapshot;
+    }
+
+    async function buildPaymentServiceBreakdown(payment) {
+        const result = {};
+        const apps = Array.isArray(payment.applications) ? payment.applications : [];
+
+        if (apps.length === 0) {
+            result.unallocated = Number(payment.amount_total || 0);
+            return result;
+        }
+
+        for (const app of apps) {
+            const appId = Number(app?.id || 0);
+            const appAmount = Number(app?.amount_applied || 0);
+            const invoiceId = Number(app?.invoice_id || 0);
+            if (!(appAmount > 0) || !(invoiceId > 0)) continue;
+
+            const snapshot = await getInvoiceAllocationSnapshot(invoiceId);
+            const lineAmounts = snapshot.appLineAllocations.get(appId) || {};
+            let allocated = 0;
+
+            Object.entries(lineAmounts).forEach(([lineIdRaw, lineAmountRaw]) => {
+                const lineAmount = Number(lineAmountRaw || 0);
+                if (!(lineAmount > 0)) return;
+                const lineId = Number(lineIdRaw);
+                const line = snapshot.linesById.get(lineId);
+                const serviceKey = classifyServiceByDescription(line?.description);
+                result[serviceKey] = (result[serviceKey] || 0) + lineAmount;
+                allocated += lineAmount;
+            });
+
+            if (allocated < appAmount) {
+                result.unallocated = (result.unallocated || 0) + (appAmount - allocated);
+            }
+        }
+
+        const hasAny = Object.values(result).some((v) => Number(v) > 0);
+        if (!hasAny) {
+            result.unallocated = Number(payment.amount_total || 0);
+        }
+        return result;
+    }
+
+    function paymentMatchesExportFilters(payment, selectedServices, extraFilters, serviceBreakdown) {
+        const amount = Number(payment.amount_total || 0);
+        if (extraFilters.minAmount !== null && amount < extraFilters.minAmount) return false;
+        if (extraFilters.maxAmount !== null && amount > extraFilters.maxAmount) return false;
+
+        if (extraFilters.allocatedOnly) {
+            const apps = Array.isArray(payment.applications) ? payment.applications : [];
+            if (apps.length === 0) return false;
+        }
+
+        const serviceKeys = Object.keys(serviceBreakdown).filter((k) => Number(serviceBreakdown[k]) > 0);
+        if (serviceKeys.length === 0) return false;
+
+        const utilitySelected = selectedServices.includes('utility');
+        if (utilitySelected && getUtilityAmount(serviceBreakdown) > 0) {
+            return true;
+        }
+        return serviceKeys.some((k) => selectedServices.includes(k));
+    }
+
+    function formatServiceBreakdown(serviceBreakdown, selectedServices) {
+        const parts = [];
+        const utilitySelected = selectedServices.includes('utility');
+        const utilityAmount = getUtilityAmount(serviceBreakdown);
+        if (utilitySelected && utilityAmount > 0) {
+            parts.push(`${getServiceRowLabel('utility')}: ${toMoney(utilityAmount)} ₼`);
+        }
+
+        Object.entries(serviceBreakdown)
+            .filter(([key, value]) => selectedServices.includes(key) && Number(value) > 0)
+            .sort((a, b) => Number(b[1]) - Number(a[1]))
+            .forEach(([key, value]) => {
+                if (utilitySelected && utilityServiceKeys.includes(key)) return;
+                parts.push(`${getServiceRowLabel(key)}: ${toMoney(value)} ₼`);
+            });
+
+        return parts.length ? parts.join('; ') : '—';
+    }
+
+    function buildExportFiltersText(selectedServices, extraFilters) {
+        const chunks = [];
+        const resident = document.getElementById('filterResident');
+        if (resident && resident.value && resident.value !== 'all') {
+            chunks.push(`${t('payments_export_filters_resident', 'Резидент')}: ${resident.options[resident.selectedIndex]?.text || resident.value}`);
+        }
+        const method = document.getElementById('filterMethod');
+        if (method && method.value && method.value !== 'all') {
+            chunks.push(`${t('payments_export_filters_method', 'Метод')}: ${method.options[method.selectedIndex]?.text || method.value}`);
+        }
+        const dateFrom = document.getElementById('filterDateFrom')?.value;
+        const dateTo = document.getElementById('filterDateTo')?.value;
+        if (dateFrom || dateTo) {
+            chunks.push(`${t('payments_export_filters_period', 'Период')}: ${dateFrom || '...'} — ${dateTo || '...'}`);
+        }
+        const search = document.getElementById('filterSearch')?.value?.trim();
+        if (search) chunks.push(`${t('payments_export_filters_search', 'Поиск')}: "${search}"`);
+        if (extraFilters.minAmount !== null || extraFilters.maxAmount !== null) {
+            chunks.push(`${t('payments_export_filters_amount', 'Сумма')}: ${extraFilters.minAmount ?? '...'} — ${extraFilters.maxAmount ?? '...'}`);
+        }
+        if (extraFilters.allocatedOnly) {
+            chunks.push(t('payments_export_filters_allocated_only', 'Только распределенные платежи'));
+        }
+        chunks.push(`${t('payments_export_filters_services', 'Услуги')}: ${selectedServices.map((k) => getServiceDisplayLabel(k)).join(', ')}`);
+        return chunks.join(' | ');
+    }
+
+    function extractPaymentInvoiceText(payment) {
+        if ((payment?.method || '').toUpperCase() === 'ADVANCE') {
+            return '—';
+        }
+        const apps = Array.isArray(payment?.applications) ? payment.applications : [];
+        if (!apps.length) return '—';
+        const invoiceAmounts = new Map();
+
+        apps.forEach((app) => {
+            const number = String(app?.invoice_number || '').trim();
+            if (!number) return;
+            const amount = Number(app?.amount_applied || 0);
+            invoiceAmounts.set(number, (invoiceAmounts.get(number) || 0) + (Number.isFinite(amount) ? amount : 0));
+        });
+
+        if (!invoiceAmounts.size) return '—';
+        return Array.from(invoiceAmounts.entries())
+            .map(([number, amount]) => `${number} -> ${toMoney(amount)} ₼`)
+            .join(' | ');
+    }
+
+    async function buildPaymentInvoiceAllocations(payment, selectedServices) {
+        if ((payment?.method || '').toUpperCase() === 'ADVANCE') {
+            return [{ invoice: '—', services: '—', serviceBreakdown: {} }];
+        }
+
+        const apps = Array.isArray(payment?.applications) ? payment.applications : [];
+        if (!apps.length) {
+            return [{ invoice: '—', services: '—' }];
+        }
+
+        const byInvoice = new Map();
+        apps.forEach((app) => {
+            const invoiceId = Number(app?.invoice_id || 0);
+            const invoiceNumber = String(app?.invoice_number || '').trim() || `INV-${invoiceId}`;
+            const amount = Number(app?.amount_applied || 0);
+            if (!(invoiceId > 0) || !(amount > 0)) return;
+
+            const key = `${invoiceId}:${invoiceNumber}`;
+            const prev = byInvoice.get(key) || { invoiceId, invoiceNumber, appliedAmount: 0, appIds: [] };
+            prev.appliedAmount += amount;
+            prev.appIds.push(Number(app?.id || 0));
+            byInvoice.set(key, prev);
+        });
+
+        if (!byInvoice.size) {
+            return [{ invoice: '—', services: '—', serviceBreakdown: {} }];
+        }
+
+        const allocations = [];
+        for (const item of byInvoice.values()) {
+            const invoiceServiceBreakdown = {};
+            let allocated = 0;
+
+            const snapshot = await getInvoiceAllocationSnapshot(item.invoiceId);
+            item.appIds.forEach((appId) => {
+                const lineAmounts = snapshot.appLineAllocations.get(appId) || {};
+                Object.entries(lineAmounts).forEach(([lineIdRaw, lineAmountRaw]) => {
+                    const lineAmount = Number(lineAmountRaw || 0);
+                    if (!(lineAmount > 0)) return;
+                    const lineId = Number(lineIdRaw);
+                    const line = snapshot.linesById.get(lineId);
+                    const serviceKey = classifyServiceByDescription(line?.description);
+                    invoiceServiceBreakdown[serviceKey] = (invoiceServiceBreakdown[serviceKey] || 0) + lineAmount;
+                    allocated += lineAmount;
+                });
+            });
+
+            if (allocated < item.appliedAmount) {
+                invoiceServiceBreakdown.unallocated = (invoiceServiceBreakdown.unallocated || 0) + (item.appliedAmount - allocated);
+            }
+
+            const services = formatServiceBreakdown(invoiceServiceBreakdown, selectedServices);
+            allocations.push({
+                invoice: `${item.invoiceNumber} ->`,
+                services,
+                serviceBreakdown: invoiceServiceBreakdown
+            });
+        }
+
+        return allocations.length ? allocations : [{ invoice: '—', services: '—', serviceBreakdown: {} }];
+    }
+
+    function joinAllocationPartsForCell(parts) {
+        const values = (parts || []).map((v) => String(v || '—')).filter(Boolean);
+        if (!values.length) return '—';
+        if (values.length === 1) return values[0];
+        return values.join(' | ');
+    }
+
+    async function buildExportDataset(items, selectedServices, extraFilters) {
+        const rows = [];
+        const serviceStats = {};
+        serviceKeys.forEach((key) => {
+            serviceStats[key] = { count: 0, amount: 0 };
+        });
+
+        let totalAmount = 0;
+        for (const payment of items) {
+            const serviceBreakdown = await buildPaymentServiceBreakdown(payment);
+            if (!paymentMatchesExportFilters(payment, selectedServices, extraFilters, serviceBreakdown)) {
+                continue;
+            }
+
+            const amount = Number(payment.amount_total || 0);
+            totalAmount += amount;
+
+            const utilitySelected = selectedServices.includes('utility');
+            const utilityAmount = getUtilityAmount(serviceBreakdown);
+            const countedForThisPayment = new Set();
+            Object.entries(serviceBreakdown).forEach(([key, value]) => {
+                const numeric = Number(value || 0);
+                if (!(numeric > 0) || !selectedServices.includes(key)) return;
+                if (utilitySelected && utilityServiceKeys.includes(key)) return;
+                serviceStats[key].amount += numeric;
+                if (!countedForThisPayment.has(key)) {
+                    serviceStats[key].count += 1;
+                    countedForThisPayment.add(key);
+                }
+            });
+
+            if (utilitySelected && utilityAmount > 0) {
+                serviceStats.utility.amount += utilityAmount;
+                serviceStats.utility.count += 1;
+            }
+
+            const selectedAmount = Object.entries(serviceBreakdown).reduce((acc, [key, value]) => {
+                const numeric = Number(value || 0);
+                if (!(numeric > 0)) return acc;
+                if (!selectedServices.includes(key)) return acc;
+                if (utilitySelected && utilityServiceKeys.includes(key)) return acc;
+                return acc + numeric;
+            }, 0) + ((utilitySelected && utilityAmount > 0) ? utilityAmount : 0);
+
+            const invoiceAllocations = await buildPaymentInvoiceAllocations(payment, selectedServices);
+            const invoiceCell = joinAllocationPartsForCell(invoiceAllocations.map((a) => a.invoice));
+            const servicesCell = joinAllocationPartsForCell(invoiceAllocations.map((a) => a.services));
+
+            const serviceFlags = {};
+            selectedServices.forEach((key) => {
+                let amountForKey = 0;
+                if (key === 'utility') {
+                    amountForKey = getUtilityAmount(serviceBreakdown);
+                } else {
+                    amountForKey = Number(serviceBreakdown[key] || 0);
+                }
+                serviceFlags[key] = amountForKey;
+            });
+
+            rows.push({
+                date: formatExportDate(payment.received_at),
+                resident: payment.resident_code || '—',
+                resident_user_full_name: payment.resident_user_full_name || '—',
+                amount: toMoney(payment.amount_total),
+                method: getMethodLabel(payment.method),
+                leftover: toMoney(payment.leftover),
+                reference: getReferenceLabel(payment.reference),
+                invoice: invoiceCell,
+                services: servicesCell,
+                invoice_allocations: invoiceAllocations,
+                serviceAmounts: serviceFlags,
+                selected_services_amount: toMoney(selectedAmount),
+            });
+        }
+
+        return {
+            rows,
+            summary: {
+                selectedServices,
+                serviceStats,
+                totalPayments: rows.length,
+                totalAmount: toMoney(totalAmount),
+                filtersText: buildExportFiltersText(selectedServices, extraFilters),
+            }
+        };
+    }
+
+    function formatExportDate(dateStr) {
+        if (!dateStr) return '—';
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return String(dateStr);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mi = String(d.getMinutes()).padStart(2, '0');
+        const ss = String(d.getSeconds()).padStart(2, '0');
+        // Prefix with tab to force Excel to keep text and avoid "####"
+        return `\t${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+    }
+
+    function downloadCsv(rows, summary) {
+        const toText = (value) => String(value === null || value === undefined ? '' : value).replace(/\t/g, '').trim();
+        const toHtmlCell = (value) => escapeHtml(toText(value));
+        const toExcelMoney = (value) => {
+            const raw = String(value === null || value === undefined ? '' : value).trim();
+            if (!raw) return '';
+            const normalized = raw.replace(/\s+/g, '').replace(',', '.');
+            const num = Number(normalized);
+            if (!Number.isFinite(num)) return raw.replace('.', ',');
+            return num.toFixed(2).replace('.', ',');
+        };
+
+        const flatRows = [];
+        const selectedServiceKeys = Array.isArray(summary.selectedServices) ? summary.selectedServices : [];
+        rows.forEach((row) => {
+            const allocations = Array.isArray(row.invoice_allocations) && row.invoice_allocations.length
+                ? row.invoice_allocations
+                : [{ invoice: row.invoice || '—', services: row.services || '—', serviceBreakdown: row.serviceAmounts || {} }];
+
+            allocations.forEach((alloc, idx) => {
+                const breakdown = alloc.serviceBreakdown || {};
+                const perServiceColumns = {};
+                selectedServiceKeys.forEach((key) => {
+                    let amount = 0;
+                    if (key === 'utility') {
+                        utilityServiceKeys.forEach((uKey) => {
+                            amount += Number(breakdown[uKey] || 0);
+                        });
+                    } else {
+                        amount = Number(breakdown[key] || 0);
+                    }
+                    if (amount > 0) {
+                        perServiceColumns[key] = toExcelMoney(toMoney(amount));
+                    } else {
+                        perServiceColumns[key] = '—';
+                    }
+                });
+
+                flatRows.push({
+                    date: idx === 0 ? row.date : '',
+                    // Repeat resident identifiers on every invoice row so Excel filters
+                    // still show all allocations for the same apartment/unit.
+                    resident: row.resident,
+                    resident_user_full_name: idx === 0 ? row.resident_user_full_name : '',
+                    amount: idx === 0 ? toExcelMoney(row.amount) : '',
+                    method: idx === 0 ? row.method : '',
+                    leftover: idx === 0 ? toExcelMoney(row.leftover) : '',
+                    reference: idx === 0 ? row.reference : '',
+                    invoice: toText(alloc?.invoice || '—'),
+                    servicesByKey: perServiceColumns,
+                    selected_services_amount: idx === 0 ? toExcelMoney(row.selected_services_amount) : '',
+                    isContinuation: idx > 0,
+                });
+            });
+        });
+
+        const serviceSummaryRows = summary.selectedServices.map((key) => {
+            const s = summary.serviceStats[key] || { count: 0, amount: 0 };
+            return `
+                <tr>
+                    <td class="cell label-cell">${toHtmlCell(getServiceDisplayLabel(key))}</td>
+                    <td class="cell center-cell">${toHtmlCell(s.count)}</td>
+                    <td class="cell money-cell">${toHtmlCell(toExcelMoney(toMoney(s.amount)))}</td>
+                </tr>
+            `;
+        }).join('');
+
+        const dataRowsHtml = flatRows.map((row) => {
+            const serviceCells = selectedServiceKeys.map((key) => {
+                const value = row.servicesByKey && row.servicesByKey[key] !== undefined
+                    ? row.servicesByKey[key]
+                    : '';
+                return `<td class="cell center-cell">${toHtmlCell(value)}</td>`;
+            }).join('');
+
+            return `
+            <tr class="${row.isContinuation ? 'continuation-row' : 'main-row'}">
+                <td class="cell">${toHtmlCell(row.date)}</td>
+                <td class="cell">${toHtmlCell(row.resident)}</td>
+                <td class="cell">${toHtmlCell(row.resident_user_full_name)}</td>
+                <td class="cell money-cell">${toHtmlCell(row.amount)}</td>
+                <td class="cell center-cell">${toHtmlCell(row.method)}</td>
+                <td class="cell money-cell">${toHtmlCell(row.leftover)}</td>
+                <td class="cell">${toHtmlCell(row.reference)}</td>
+                <td class="cell">${toHtmlCell(row.invoice)}</td>
+                ${serviceCells}
+                <td class="cell money-cell">${toHtmlCell(row.selected_services_amount)}</td>
+            </tr>
+        `;
+        }).join('');
+
+        const html = `
+            <html>
+            <head>
+                <meta charset="utf-8" />
+                <style>
+                    body { font-family: Calibri, Arial, sans-serif; color: #111827; }
+                    .title-table { border-collapse: collapse; width: 100%; margin-bottom: 10px; }
+                    .title-cell { border: 2px solid #1f2937; padding: 12px; background: #f8fafc; }
+                    .title-main { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+                    .title-sub { font-size: 12px; color: #4b5563; }
+                    .meta-table, .service-table, .data-table { border-collapse: collapse; width: 100%; margin-bottom: 12px; }
+                    .meta-table td { border: 1px solid #9ca3af; padding: 6px 8px; font-size: 12px; }
+                    .meta-label { background: #eef2ff; font-weight: 700; width: 180px; }
+                    .block-title { font-size: 13px; font-weight: 700; margin: 8px 0 4px; color: #1f2937; }
+                    .service-table th, .service-table td,
+                    .data-table th, .data-table td { border: 1px solid #9ca3af; padding: 6px 8px; font-size: 12px; vertical-align: top; }
+                    .service-table th, .data-table th { background: #dbeafe; font-weight: 700; text-align: center; }
+                    .cell { background: #ffffff; }
+                    .label-cell { background: #f9fafb; }
+                    .center-cell { text-align: center; }
+                    .money-cell { text-align: right; font-weight: 600; color: #0f172a; mso-number-format: "\\@"; }
+                    .main-row td { border-top: 2px solid #6b7280; }
+                    .continuation-row td { background: #fcfcfd; color: #374151; }
+                </style>
+            </head>
+            <body>
+                <table class="title-table">
+                    <tr>
+                        <td class="title-cell">
+                            <div class="title-main">${toHtmlCell(t('payments_export_title', 'Отчет по платежам'))}</div>
+                            <div class="title-sub">${toHtmlCell(t('payments_export_subtitle', 'Royal Park - Экспорт для бухгалтерии'))}</div>
+                        </td>
+                    </tr>
+                </table>
+
+                <table class="meta-table">
+                    <tr>
+                        <td class="meta-label">${toHtmlCell(t('payments_export_generated', 'Сформировано'))}</td>
+                        <td>${toHtmlCell(new Date().toLocaleString())}</td>
+                    </tr>
+                    <tr>
+                        <td class="meta-label">${toHtmlCell(t('payments_export_filters', 'Фильтры'))}</td>
+                        <td>${toHtmlCell(summary.filtersText || '—')}</td>
+                    </tr>
+                    <tr>
+                        <td class="meta-label">${toHtmlCell(t('payments_export_count', 'Количество платежей'))}</td>
+                        <td>${toHtmlCell(summary.totalPayments)}</td>
+                    </tr>
+                    <tr>
+                        <td class="meta-label">${toHtmlCell(t('payments_export_total', 'Общая сумма'))}</td>
+                        <td>${toHtmlCell(toExcelMoney(summary.totalAmount))}</td>
+                    </tr>
+                </table>
+
+                <div class="block-title">${toHtmlCell(t('payments_export_services_block_title', 'Сводка по услугам'))}</div>
+                <table class="service-table">
+                    <thead>
+                        <tr>
+                            <th>${toHtmlCell(t('payments_export_services_header_service', 'Услуга'))}</th>
+                            <th>${toHtmlCell(t('payments_export_services_header_count', 'Кол-во платежей'))}</th>
+                            <th>${toHtmlCell(t('payments_export_services_header_amount', 'Сумма'))}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${serviceSummaryRows || '<tr><td colspan="3" class="cell center-cell">' + toHtmlCell(t('payments_export_services_no_data', 'Нет данных')) + '</td></tr>'}
+                    </tbody>
+                </table>
+
+                <div class="block-title">${toHtmlCell(t('payments_export_details_block_title', 'Детализация платежей'))}</div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>${toHtmlCell(t('payments_export_details_date', 'Дата'))}</th>
+                            <th>${toHtmlCell(t('payments_export_details_resident', 'Резидент'))}</th>
+                            <th>${toHtmlCell(t('payments_export_details_tenant', 'Житель'))}</th>
+                            <th>${toHtmlCell(t('payments_export_details_amount', 'Сумма'))}</th>
+                            <th>${toHtmlCell(t('payments_export_details_method', 'Метод'))}</th>
+                            <th>${toHtmlCell(t('payments_export_details_leftover', 'Остаток'))}</th>
+                            <th>${toHtmlCell(t('payments_export_details_reference', 'Ссылка'))}</th>
+                            <th>${toHtmlCell(t('payments_export_details_invoice', 'Invoice'))}</th>
+                            ${selectedServiceKeys.map((key) => `<th>${toHtmlCell(getServiceDisplayLabel(key))}</th>`).join('')}
+                            <th>${toHtmlCell(t('payments_export_details_services_total', 'Сумма по услугам'))}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${dataRowsHtml || '<tr><td colspan="' + (8 + selectedServiceKeys.length + 1) + '" class="cell center-cell">' + toHtmlCell(t('payments_export_details_no_data', 'Нет данных для экспорта')) + '</td></tr>'}
+                    </tbody>
+                </table>
+            </body>
+            </html>
+        `;
+
+        const blob = new Blob(['\ufeff' + html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `payments_export_${new Date().toISOString().slice(0, 10)}.xls`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    function openPrintView(rows, summary) {
+        const renderAllocationCell = (allocations, key) => {
+            if (!Array.isArray(allocations) || allocations.length === 0) return '—';
+            return allocations.map((alloc) => {
+                const raw = String((alloc && alloc[key]) || '—');
+                const html = escapeHtml(raw).replace(/;\s+/g, '<br>');
+                return `<div class="alloc-segment">${html}</div>`;
+            }).join('');
+        };
+
+        const serviceSummaryRows = summary.selectedServices.map((key) => {
+            const s = summary.serviceStats[key] || { count: 0, amount: 0 };
+            return `<tr>
+                <td>${getServiceDisplayLabel(key)}</td>
+                <td>${s.count}</td>
+                <td>${toMoney(s.amount)}</td>
+            </tr>`;
+        }).join('');
+
+        const tableRows = rows.map(row => `
+            <tr>
+                <td>${row.date}</td>
+                <td>${row.resident}</td>
+                <td>${row.resident_user_full_name}</td>
+                <td>${row.amount}</td>
+                <td>${row.method}</td>
+                <td>${row.leftover}</td>
+                <td>${row.reference}</td>
+                <td>${renderAllocationCell(row.invoice_allocations, 'invoice')}</td>
+                <td>${renderAllocationCell(row.invoice_allocations, 'services')}</td>
+                <td>${row.selected_services_amount}</td>
+            </tr>
+        `).join('');
+
+        const html = `
+            <html>
+            <head>
+                <title>Экспорт платежей</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 24px; color: #111; }
+                    h2 { margin: 0 0 12px; }
+                    p { margin: 0 0 18px; color: #555; }
+                    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+                    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+                    th { background: #f3f4f6; }
+                    .alloc-segment { padding: 4px 0; }
+                    .alloc-segment + .alloc-segment { border-top: 1px dashed #b9bcc4; margin-top: 4px; }
+                </style>
+            </head>
+            <body>
+                <h2>Отчет по платежам</h2>
+                <p>Сформировано: ${new Date().toLocaleString()}</p>
+                <p><strong>Фильтры:</strong> ${escapeHtml(summary.filtersText || '—')}</p>
+                <p><strong>Количество платежей:</strong> ${summary.totalPayments} | <strong>Сумма:</strong> ${summary.totalAmount}</p>
+                <table style="margin-bottom: 16px;">
+                    <thead>
+                        <tr>
+                            <th>Услуга</th>
+                            <th>Кол-во платежей</th>
+                            <th>Сумма</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${serviceSummaryRows || '<tr><td colspan="3">Нет данных</td></tr>'}
+                    </tbody>
+                </table>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Резидент</th>
+                            <th>Житель</th>
+                            <th>Сумма</th>
+                            <th>Метод</th>
+                            <th>Остаток</th>
+                            <th>Ссылка</th>
+                            <th>Invoice</th>
+                            <th>Услуги</th>
+                            <th>Сумма по услугам</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows || '<tr><td colspan="10">Нет данных для экспорта</td></tr>'}
+                    </tbody>
+                </table>
+            </body>
+            </html>
+        `;
+
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        iframe.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow?.document;
+        if (!doc || !iframe.contentWindow) {
+            iframe.remove();
+            throw new Error('Не удалось подготовить печать. Разрешите всплывающие окна или попробуйте CSV.');
+        }
+
+        doc.open();
+        doc.write(html);
+        doc.close();
+
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        setTimeout(() => iframe.remove(), 1000);
+    }
+
+    window.exportPayments = async function() {
+        const exportBtn = document.querySelector('.btn-export');
+        const formatSelect = document.getElementById('paymentExportFormat');
+        const dateFromInput = document.getElementById('filterDateFrom');
+        const format = formatSelect ? formatSelect.value : 'csv';
+
+        if (!dateFromInput?.value && !hasAlternativeExportFilter()) {
+            const message = t('payments_export_date_from_required', 'Для экспорта обязательно выберите дату начала в поле "От".');
+            if (typeof showWarning === 'function') {
+                showWarning(message);
+            } else if (typeof showError === 'function') {
+                showError(message);
+            } else {
+                alert(message);
+            }
+            dateFromInput?.focus();
+            return;
+        }
+
+        if (exportBtn) {
+            exportBtn.disabled = true;
+            exportBtn.textContent = `${t('export', 'Экспорт')}...`;
+        }
+
+        try {
+            const items = await fetchAllFilteredPayments();
+            const selectedServices = getSelectedExportServices();
+            const extraFilters = getExportExtraFilters();
+            const dataset = await buildExportDataset(items, selectedServices, extraFilters);
+            const rows = dataset.rows;
+            const summary = dataset.summary;
+
+            if (rows.length === 0) {
+                if (typeof showNotification === 'function') {
+                    showNotification('info', t('payments_export_no_data', 'Нет данных для экспорта по текущим фильтрам и услугам.'));
+                }
+                return;
+            }
+
+            if (format === 'pdf') {
+                openPrintView(rows, summary);
+            } else {
+                downloadCsv(rows, summary);
+            }
+
+            if (typeof showNotification === 'function') {
+                showNotification('success', t('export_completed', 'Экспорт выполнен.'));
+            }
+        } catch (error) {
+            console.error('Export payments error:', error);
+            if (typeof showError === 'function') {
+                showError(`${t('payments_export_error_prefix', 'Ошибка экспорта')}: ${error.message}`);
+            }
+        } finally {
+            if (exportBtn) {
+                exportBtn.disabled = false;
+                exportBtn.innerHTML = '<i class="bi bi-box-arrow-down"></i> Экспорт';
+            }
+        }
+    };
+
+    window.resetPaymentsExportFilters = function() {
+        const byId = (id) => document.getElementById(id);
+
+        if (byId('filterResident')) byId('filterResident').value = 'all';
+        if (byId('filterMethod')) byId('filterMethod').value = 'all';
+        if (byId('filterDateFrom')) byId('filterDateFrom').value = '';
+        if (byId('filterDateTo')) byId('filterDateTo').value = '';
+        if (byId('filterSearch')) byId('filterSearch').value = '';
+
+        if (byId('filterAmountMin')) byId('filterAmountMin').value = '';
+        if (byId('filterAmountMax')) byId('filterAmountMax').value = '';
+        if (byId('filterAllocatedOnly')) byId('filterAllocatedOnly').checked = false;
+        if (byId('paymentExportFormat')) byId('paymentExportFormat').value = 'csv';
+
+        const optionsRoot = byId('serviceExportOptions');
+        if (optionsRoot) {
+            optionsRoot.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+                cb.checked = true;
+                cb.disabled = false;
+            });
+            applyUtilitySelectionRules(optionsRoot);
+            updateServiceSummaryLabel();
+        }
+
+        if (byId('serviceExportDetails')) byId('serviceExportDetails').open = false;
+    };
+    
+    // Render table function
+    function renderTable() {
+        const tbody = document.getElementById('paymentsTable');
+        if (!tbody) return;
+        
+        const payments = paymentsData.items || [];
+        
+        if (payments.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">${t('payments_no_data_for_filters', 'Нет данных по текущим фильтрам')}</td></tr>`;
+        } else {
+            tbody.innerHTML = payments.map(p => {
+                const date = formatPaymentDate(p.received_at);
+                const resident = p.resident_code || '—';
+                const residentUserFullName = p.resident_user_full_name || '—';
+                const amount = typeof p.amount_total === 'number' ? p.amount_total.toFixed(2) : (p.amount_total || '0.00');
+                const method = getMethodLabel(p.method);
+                const leftover = typeof p.leftover === 'number' ? p.leftover.toFixed(2) : '0.00';
+                const reference = getReferenceLabel(p.reference);
+                
+                return `<tr>
+                    <td>${date}</td>
+                    <td><strong>${resident}</strong></td>
+                    <td>${escapeHtml(residentUserFullName)}</td>
+                    <td class="amount-red">${amount} ₼</td>
+                    <td>${method}</td>
+                    <td>
+                        ${parseFloat(leftover) > 0 ? `<span class="badge-advance">${t('payment_advance_badge', 'Аванс')} ${leftover}</span>` : '0.00'}
+                    </td>
+                    <td>${reference}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewPayment(${p.id})">${t('open', 'Открыть')}</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+        
+        updatePaginationUI();
+    }
+    
+    function buildPaymentPageList(current, total) {
+        if (total <= 5) {
+            return Array.from({ length: total }, (_, i) => i + 1);
+        }
+        const pages = new Set([1, total]);
+        if (current <= 3) {
+            [2, 3, 4, 5].forEach(p => pages.add(p));
+        } else if (current >= total - 2) {
+            [total - 1, total - 2, total - 3, total - 4].forEach(p => pages.add(p));
+        } else {
+            [current - 2, current - 1, current, current + 1, current + 2].forEach(p => pages.add(p));
+        }
+        const sorted = Array.from(pages).filter(p => p >= 1 && p <= total).sort((a, b) => a - b);
+        const result = [];
+        for (let i = 0; i < sorted.length; i++) {
+            const page = sorted[i];
+            result.push(page);
+            const next = sorted[i + 1];
+            if (next && next - page > 1) {
+                result.push('dots');
+            }
+        }
+        return result;
+    }
+
+    // Update pagination UI
+    function updatePaginationUI() {
+        const currentPageEl = document.getElementById('paymentCurrentPage');
+        const totalPagesEl = document.getElementById('paymentTotalPages');
+        const totalItemsEl = document.getElementById('paymentTotalItems');
+        const prevBtn = document.getElementById('paymentPrevBtn');
+        const nextBtn = document.getElementById('paymentNextBtn');
+        const pagesContainer = document.getElementById('paymentPageButtons');
+        
+        if (currentPageEl) currentPageEl.textContent = paginationState.currentPage;
+        if (totalPagesEl) totalPagesEl.textContent = paginationState.totalPages;
+        if (totalItemsEl) totalItemsEl.textContent = paginationState.totalItems;
+        if (prevBtn) prevBtn.disabled = paginationState.currentPage <= 1;
+        if (nextBtn) nextBtn.disabled = paginationState.currentPage >= paginationState.totalPages;
+
+        if (!pagesContainer) return;
+        pagesContainer.innerHTML = '';
+
+        const pages = buildPaymentPageList(paginationState.currentPage, paginationState.totalPages);
+        pages.forEach(p => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-pagination';
+
+            if (p === 'dots') {
+                btn.textContent = '...';
+                btn.disabled = true;
+                btn.classList.add('dots');
+            } else {
+                btn.textContent = p;
+                if (p > paginationState.totalPages) {
+                    btn.disabled = true;
+                } else {
+                    btn.onclick = () => {
+                        if (p !== paginationState.currentPage) {
+                            goToPaymentPage(p);
+                        }
+                    };
+                }
+                if (p === paginationState.currentPage) {
+                    btn.classList.add('active');
+                    btn.setAttribute('aria-current', 'page');
+                }
+            }
+
+            pagesContainer.appendChild(btn);
+        });
+    }
+    
+    // Pagination functions
+    window.goToPaymentPage = function(page) {
+        if (page === 'prev') {
+            if (paginationState.currentPage > 1) {
+                paginationState.currentPage--;
+                loadPayments();
+            }
+        } else if (page === 'next') {
+            if (paginationState.currentPage < paginationState.totalPages) {
+                paginationState.currentPage++;
+                loadPayments();
+            }
+        } else if (typeof page === 'number') {
+            paginationState.currentPage = page;
+            loadPayments();
+        }
+    };
+    
+    window.changePaymentItemsPerPage = function() {
+        const select = document.getElementById('paymentItemsPerPage');
+        if (select) {
+            paginationState.itemsPerPage = parseInt(select.value);
+            paginationState.currentPage = 1;
+            loadPayments();
+            updateCustomPaginationDropdown();
+        }
+    };
+    
+    // Filter functions
+    window.applyPaymentFilters = async function() {
+        paginationState.currentPage = 1;
+        const tbody = document.getElementById('paymentsTable');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">${t('payments_applying_filters', 'Применение фильтров...')}</td></tr>`;
+        }
+
+        try {
+            const selectedServices = getSelectedExportServices();
+            const extraFilters = getExportExtraFilters();
+            const items = await fetchAllFilteredPayments(); // базовые фильтры API: resident/method/date/search
+
+            const filtered = [];
+            for (const payment of items) {
+                const serviceBreakdown = await buildPaymentServiceBreakdown(payment);
+                if (paymentMatchesExportFilters(payment, selectedServices, extraFilters, serviceBreakdown)) {
+                    filtered.push(payment);
+                }
+            }
+
+            clientFilteredPayments = filtered;
+            renderClientPaymentsPage();
+        } catch (error) {
+            console.error('Error applying full payment filters:', error);
+            clientFilteredPayments = null;
+            await loadPayments(true);
+            if (typeof showError === 'function') {
+                showError('Ошибка применения фильтров: ' + error.message);
+            }
+        }
+    };
+    
+    // Load residents for filters and modal (учитываем пагинацию API)
+    async function loadResidents() {
+        if (!isPaymentsRoute() && !hasPaymentsDom()) return;
+        try {
+            const perPage = 100;
+            let page = 1;
+            let allResidents = [];
+            let lastPage = 1;
+
+            while (page <= lastPage) {
+                let url = `${API_BASE}/api/residents?per_page=${perPage}&page=${page}`;
+                let response = await fetch(url, { credentials: 'include' });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const items = Array.isArray(data) ? data : (data.items || data.residents || []);
+                allResidents = allResidents.concat(items);
+
+                const pagination = data.pagination || {};
+                lastPage = pagination.last_page || 1;
+                page += 1;
+            }
+
+            residents = allResidents;
+            console.log('Loaded residents for payments:', residents.length);
+
+            // Populate filter dropdown
+            const filterResident = document.getElementById('filterResident');
+            if (filterResident && filterResident.tagName === 'SELECT') {
+                filterResident.innerHTML = `<option value="all" data-i18n="all">${t('all', 'Все')}</option>` +
+                    residents.map(r => `<option value="${r.id}">${r.block_name} / ${r.unit_number}</option>`).join('');
+            }
+
+            // Populate modal dropdown
+            const paymentResident = document.getElementById('paymentResident');
+            if (paymentResident && paymentResident.tagName === 'SELECT') {
+                paymentResident.innerHTML = `<option value="">${t('payments_select_resident', 'Выберите резидента')}</option>` +
+                    residents.map(r => `<option value="${r.id}">${r.block_name} / ${r.unit_number}</option>`).join('');
+            }
+        } catch (error) {
+            console.error('Error loading residents:', error);
+            residents = [];
+        }
+    }
+    
+    window.acceptPayment = function() {
+        const modal = document.getElementById('acceptPaymentModal');
+        if (modal) {
+            modal.classList.add('show');
+            
+            // Set default date to today
+            const dateInput = document.getElementById('paymentDate');
+            if (dateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.value = today;
+            }
+            
+            // Reset form
+            const form = document.getElementById('acceptPaymentForm');
+            if (form) {
+                form.reset();
+                // Set default values
+                if (dateInput) {
+                    const today = new Date().toISOString().split('T')[0];
+                    dateInput.value = today;
+                }
+                const residentSelect = document.getElementById('paymentResident');
+                if (residentSelect) {
+                    residentSelect.value = '';
+                }
+                const methodSelect = document.getElementById('paymentMethod');
+                if (methodSelect) {
+                    methodSelect.value = 'CASH';
+                }
+            }
+        }
+    };
+    
+    window.closeAcceptPaymentModal = function() {
+        const modal = document.getElementById('acceptPaymentModal');
+        if (modal) {
+            modal.classList.remove('show');
+        }
+    };
+    
+    window.savePayment = async function(event) {
+        if (event) {
+            event.preventDefault();
+        }
+        
+        const form = document.getElementById('acceptPaymentForm');
+        if (!form) return;
+        
+        // Get form values
+        const residentId = parseInt(document.getElementById('paymentResident').value);
+        const date = document.getElementById('paymentDate').value;
+        const amount = parseFloat(document.getElementById('paymentAmount').value);
+        const method = document.getElementById('paymentMethod').value;
+        const reference = document.getElementById('paymentReference').value.trim();
+        const comment = document.getElementById('paymentComment').value.trim();
+        const checkNumber = document.getElementById('paymentCheckNumber').value.trim();
+        
+        // Validate required fields
+        if (!residentId || !date || !amount || !method) {
+            if (typeof showWarning === 'function') {
+                showWarning(t('payments_fill_required_fields', 'Пожалуйста, заполните все обязательные поля!'));
+            }
+            return;
+        }
+        
+        if (amount <= 0) {
+            if (typeof showWarning === 'function') {
+                showWarning(t('payments_amount_positive', 'Сумма должна быть больше нуля!'));
+            }
+            return;
+        }
+        
+        // Create payment object
+        const paymentData = {
+            resident_id: residentId,
+            received_at: date,
+            amount_total: amount,
+            method: method,
+            reference: reference || checkNumber || null,
+            comment: comment || null
+        };
+        
+        try {
+            let response = await fetch(`${API_BASE}/api/payments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(paymentData),
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            // Close modal
+            closeAcceptPaymentModal();
+            
+            // Reload payments
+            loadPayments();
+            
+            // Show success message
+            if (typeof showSuccess === 'function') {
+                showSuccess(t('payments_accept_success', 'Платеж успешно принят!'));
+            }
+            
+            // Open payment view
+            if (result.id) {
+                setTimeout(() => {
+                    viewPayment(result.id);
+                }, 500);
+            }
+        } catch (error) {
+            console.error('Error saving payment:', error);
+            if (typeof showError === 'function') {
+                showError(`${t('payments_save_error_prefix', 'Ошибка сохранения платежа')}: ${error.message}`);
+            }
+        }
+    };
+    
+    // Close modal on overlay click
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('acceptPaymentModal');
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeAcceptPaymentModal();
+                }
+            });
+        }
+    });
+    
+    window.viewPayment = function(id) {
+        console.log('Opening payment view for ID:', id);
+        
+        // Store payment ID for payment-view.html
+        window.__currentPaymentId = id;
+        
+        // Use SPA router to navigate - this prevents double-load issues
+        if (window.spaRouter && typeof window.spaRouter.navigate === 'function') {
+            window.spaRouter.navigate(`/payment-view?id=${id}`);
+        } else {
+            // Fallback to direct hash navigation
+            window.location.hash = `#/payment-view?id=${id}`;
+        }
+    };
+    
+    window.openDatePicker = function(inputId) {
+        const input = document.getElementById(inputId);
+        if (input) {
+            if (input.showPicker && typeof input.showPicker === 'function') {
+                input.showPicker().catch(err => {
+                    input.focus();
+                    input.click();
+                });
+            } else {
+                input.focus();
+                input.click();
+            }
+        }
+    };
+    
+    // Initialize custom pagination dropdown
+    function updateCustomPaginationDropdown() {
+        const customSelect = document.getElementById('customPaymentItemsPerPage');
+        if (!customSelect) return;
+        
+        const nativeSelect = document.getElementById('paymentItemsPerPage');
+        const selectText = customSelect.querySelector('.select-text');
+        const options = customSelect.querySelectorAll('.select-option');
+        
+        if (nativeSelect && selectText) {
+            const selectedValue = nativeSelect.value;
+            selectText.textContent = selectedValue;
+            options.forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.dataset.value === selectedValue) {
+                    opt.classList.add('selected');
+                }
+            });
+        }
+    }
+    
+    function initCustomPaginationDropdown() {
+        const customSelect = document.getElementById('customPaymentItemsPerPage');
+        if (!customSelect || customSelect.dataset.initialized === 'true') return;
+        customSelect.dataset.initialized = 'true';
+        
+        const nativeSelect = document.getElementById('paymentItemsPerPage');
+        const selectBtn = customSelect.querySelector('.select-btn');
+        const selectText = customSelect.querySelector('.select-text');
+        const options = customSelect.querySelectorAll('.select-option');
+        
+        if (nativeSelect) {
+            const selectedValue = nativeSelect.value;
+            selectText.textContent = selectedValue;
+            options.forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.dataset.value === selectedValue) {
+                    opt.classList.add('selected');
+                }
+            });
+        }
+        
+        selectBtn.onclick = function(e) {
+            e.stopPropagation();
+            customSelect.classList.toggle('open');
+        };
+        
+        options.forEach(option => {
+            option.onclick = function(e) {
+                e.stopPropagation();
+                const value = option.dataset.value;
+                if (nativeSelect) {
+                    nativeSelect.value = value;
+                    nativeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                selectText.textContent = value;
+                options.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                customSelect.classList.remove('open');
+            };
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (!customSelect.contains(e.target)) {
+                customSelect.classList.remove('open');
+            }
+        });
+    }
+    
+    // Инициализация фильтров (БЕЗ автоматического применения)
+    // Фильтрация происходит ТОЛЬКО при нажатии на кнопку "Фильтр" или Enter в поле поиска
+    function initFilters() {
+        // Убираем все автоматические обработчики событий (onchange, oninput)
+        // Фильтрация будет происходить только при нажатии на кнопку "Фильтр"
+        initServiceExportFilters();
+        
+        // Добавляем обработчик Enter для поля поиска (удобство для пользователя)
+        const searchInput = document.getElementById('filterSearch');
+        if (searchInput) {
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    applyPaymentFilters();
+                }
+            });
+        }
+        
+        // Инициализируем только pagination dropdown
+        setTimeout(() => {
+            initCustomPaginationDropdown();
+        }, 500);
+    }
+    
+    // ПРИНУДИТЕЛЬНО ПРИМЕНИТЬ СЕРЫЙ ФОН В DARK THEME
+    function applyDarkThemeStyles() {
+        if (document.documentElement.getAttribute('data-theme') === 'dark' || 
+            document.body.getAttribute('data-theme') === 'dark') {
+            const filtersSection = document.querySelector('.payments-filters');
+            
+            if (filtersSection) {
+                filtersSection.style.setProperty('background', '#242831', 'important');
+                filtersSection.style.setProperty('background-color', '#242831', 'important');
+                filtersSection.style.setProperty('border', 'none', 'important');
+                filtersSection.style.setProperty('color', '#e4e6eb', 'important');
+            }
+
+            // Применить темный фон к карточке таблицы
+            const card = document.querySelector('.payments-page .card');
+            if (card) {
+                card.style.setProperty('background', 'rgba(36, 40, 49, 0.95)', 'important');
+                card.style.setProperty('background-color', 'rgba(36, 40, 49, 0.95)', 'important');
+                // card.style.setProperty('border', 'none', 'important');
+                card.style.setProperty('box-shadow', 'none', 'important');
+                card.style.setProperty('-webkit-box-shadow', 'none', 'important');
+            }
+
+            const cardBody = document.querySelector('.payments-page .card-body');
+            if (cardBody) {
+                cardBody.style.setProperty('background', 'transparent', 'important');
+                cardBody.style.setProperty('color', '#e4e6eb', 'important');
+            }
+
+            // Скрыть границу и фон у .content-wrapper.payments-page
+            const contentWrapper = document.querySelector('.content-wrapper.payments-page');
+            if (contentWrapper) {
+                contentWrapper.style.setProperty('border', 'none', 'important');
+                contentWrapper.style.setProperty('border-width', '0', 'important');
+                contentWrapper.style.setProperty('outline', 'none', 'important');
+                contentWrapper.style.setProperty('box-shadow', 'none', 'important');
+                contentWrapper.style.setProperty('background', 'transparent', 'important');
+                contentWrapper.style.setProperty('background-color', 'transparent', 'important');
+                contentWrapper.style.setProperty('backdrop-filter', 'none', 'important');
+                contentWrapper.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
+            }
+
+            // Применить серый фон к select и option элементам
+            const selectElements = document.querySelectorAll('.payments-filters-group select');
+            selectElements.forEach(select => {
+                select.style.setProperty('background', 'rgba(255, 255, 255, 0.05)', 'important');
+                select.style.setProperty('background-color', 'rgba(255, 255, 255, 0.05)', 'important');
+                select.style.setProperty('color', '#fefefe', 'important');
+                
+                // Применить стили к option элементам
+                const options = select.querySelectorAll('option');
+                options.forEach(option => {
+                    option.style.setProperty('background', '#242831', 'important');
+                    option.style.setProperty('background-color', '#242831', 'important');
+                    option.style.setProperty('color', '#f6f7ff', 'important');
+                });
+            });
+
+            // Инъекция CSS для белого плейсхолдера date input
+            const dateInputStyleId = 'payments-date-input-placeholder-white';
+            if (!document.getElementById(dateInputStyleId)) {
+                const style = document.createElement('style');
+                style.id = dateInputStyleId;
+                style.textContent = `
+                    [data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-text,
+                    [data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-month-field,
+                    [data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-day-field,
+                    [data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-year-field,
+                    body[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-text,
+                    body[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-month-field,
+                    body[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-day-field,
+                    body[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-year-field,
+                    html[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-text,
+                    html[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-month-field,
+                    html[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-day-field,
+                    html[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-year-field {
+                        color: #ffffff !important;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+    }
+    
+    // Функция для скрытия границы у content-wrapper
+    function hideContentWrapperBorder() {
+        const contentWrapper = document.querySelector('.content-wrapper.payments-page');
+        if (contentWrapper) {
+            contentWrapper.style.setProperty('border', 'none', 'important');
+            contentWrapper.style.setProperty('border-width', '0', 'important');
+            contentWrapper.style.setProperty('outline', 'none', 'important');
+            contentWrapper.style.setProperty('box-shadow', 'none', 'important');
+            contentWrapper.style.setProperty('background', 'transparent', 'important');
+            contentWrapper.style.setProperty('background-color', 'transparent', 'important');
+            contentWrapper.style.setProperty('background-image', 'none', 'important');
+            contentWrapper.style.setProperty('backdrop-filter', 'none', 'important');
+            contentWrapper.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
+        }
+    }
+    
+    // Применить сразу
+    applyDarkThemeStyles();
+    hideContentWrapperBorder();
+    
+    // Применить после загрузки DOM
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            applyDarkThemeStyles();
+            setTimeout(hideContentWrapperBorder, 100);
+            setTimeout(hideContentWrapperBorder, 500);
+            setTimeout(hideContentWrapperBorder, 1000);
+        });
+    }
+    
+    // Применить с задержкой на случай, если стили загружаются асинхронно
+    setTimeout(() => {
+        applyDarkThemeStyles();
+        hideContentWrapperBorder();
+    }, 100);
+    setTimeout(() => {
+        applyDarkThemeStyles();
+        hideContentWrapperBorder();
+    }, 500);
+    setTimeout(() => {
+        applyDarkThemeStyles();
+        hideContentWrapperBorder();
+    }, 1000);
+
+    // Повторно применять стили при открытии select (для выпадающих списков)
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectElements = document.querySelectorAll('.payments-filters-group select');
+        selectElements.forEach(select => {
+            select.addEventListener('mousedown', function() {
+                setTimeout(applyDarkThemeStyles, 10);
+            });
+            select.addEventListener('focus', function() {
+                setTimeout(applyDarkThemeStyles, 10);
+            });
+            select.addEventListener('change', function() {
+                setTimeout(applyDarkThemeStyles, 10);
+            });
+        });
+    });
+    
+    // Initialize on page load
+    function initPaymentsPage() {
+        if (!isPaymentsRoute() && !hasPaymentsDom()) return;
+        loadResidents().then(() => {
+            loadPayments();
+            initFilters();
+        });
+    }
+    
+    // Listen for SPA content loaded event
+    // Удаляем старый обработчик, если он существует
+    if (window._paymentsContentLoadedHandler) {
+        document.removeEventListener('spa:contentLoaded', window._paymentsContentLoadedHandler);
+    }
+    
+    window._paymentsContentLoadedHandler = function() {
+        if (!isPaymentsRoute()) return;
+        initPaymentsPage();
+    };
+    
+    if (window._paymentsLanguageChangedHandler) {
+        window.removeEventListener('languageChanged', window._paymentsLanguageChangedHandler);
+    }
+    window._paymentsLanguageChangedHandler = function() {
+        if (!isPaymentsRoute()) return;
+        updateServiceSummaryLabel();
+        renderTable();
+        loadResidents();
+    };
+    window.addEventListener('languageChanged', window._paymentsLanguageChangedHandler);
+    
+    document.addEventListener('spa:contentLoaded', window._paymentsContentLoadedHandler);
+    
+    // Initial load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPaymentsPage);
+    } else {
+        initPaymentsPage();
+    }
+})();
+</script>

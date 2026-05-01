@@ -1,0 +1,47 @@
+<div class="dashboard-content">
+    <div class="row g-4" id="buildingsList"></div>
+</div>
+
+<script>
+    (function () {
+        const container = document.getElementById('buildingsList');
+        if (container) {
+            container.innerHTML = TestData.buildings.map((b, i) => `
+            <div class="col-lg-4">
+                <div class="card animate__animated animate__fadeInUp" style="animation-delay: ${i * 0.1}s;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h4>${b.name}</h4>
+                                <p class="text-muted mb-0"><i class="bi bi-geo-alt"></i> ${b.address}</p>
+                            </div>
+                            <span class="badge bg-success">Активно</span>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <small class="text-muted">Этажей</small>
+                                <h5><i class="bi bi-building"></i> ${b.floors}</h5>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Квартир</small>
+                                <h5><i class="bi bi-door-closed"></i> ${b.apartments}</h5>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Жильцов</small>
+                                <h5><i class="bi bi-people"></i> ${b.residents}</h5>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Год постройки</small>
+                                <h5>${b.yearBuilt}</h5>
+                            </div>
+                        </div>
+                        <div class="alert alert-info py-2">
+                            <small><strong>Менеджер:</strong> ${b.manager}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        }
+    })();
+</script>

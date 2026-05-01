@@ -1,0 +1,1958 @@
+<link rel="stylesheet" href="/admin/content_css/tariffs.css">
+<div class="content-wrapper">
+    <h2 class="mb-4" data-i18n="tariffs_page_title">Тарифы по блокам</h2>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid" style="margin-bottom: 2rem;">
+        <!-- Электричество -->
+        <div class="stat-card solid-orange">
+            <div class="stat-icon orange">
+                <i class="bi bi-lightning-charge"></i>
+            </div>
+            <div class="stat-details">
+                <div class="stat-value" id="stat-electricity-tariffs">0.00</div>
+                <div class="stat-label" data-i18n="tariffs_stat_per_month">₼ за месяц</div>
+                <div class="stat-change" data-i18n="meter_electricity">Электричество</div>
+            </div>
+        </div>
+
+        <!-- Вода -->
+        <div class="stat-card solid-blue">
+            <div class="stat-icon blue">
+                <i class="bi bi-droplet"></i>
+            </div>
+            <div class="stat-details">
+                <div class="stat-value" id="stat-water-tariffs">0.00</div>
+                <div class="stat-label" data-i18n="tariffs_stat_per_month">₼ за месяц</div>
+                <div class="stat-change" data-i18n="meter_cold_water">Вода</div>
+            </div>
+        </div>
+
+        <!-- Газ -->
+        <div class="stat-card solid-red">
+            <div class="stat-icon red">
+                <i class="bi bi-fire"></i>
+            </div>
+            <div class="stat-details">
+                <div class="stat-value" id="stat-gas-tariffs">0.00</div>
+                <div class="stat-label" data-i18n="tariffs_stat_per_month">₼ за месяц</div>
+                <div class="stat-change" data-i18n="meter_gas">Газ</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-container">
+        <div class="filters-row">
+            <div class="filter-group">
+                <label data-i18n="tariffs_filter_purpose">Назначение</label>
+                <details id="filterPurposeDetails" class="purpose-filter-details">
+                    <summary><span id="filterPurposeSummary" data-i18n="all">Все</span></summary>
+                    <div class="purpose-filter-dropdown">
+                        <label><input type="checkbox" name="purposeFilter" value="all" checked> <span data-i18n="all">Все</span></label>
+                        <label><input type="checkbox" name="purposeFilter" value="electricity" checked> <span data-i18n="meter_electricity">Электричество</span></label>
+                        <label><input type="checkbox" name="purposeFilter" value="gas" checked> <span data-i18n="meter_gas">Газ</span></label>
+                        <label><input type="checkbox" name="purposeFilter" value="water" checked> <span data-i18n="meter_cold_water">Вода</span></label>
+                        <label><input type="checkbox" name="purposeFilter" value="service" checked> <span data-i18n="tariffs_purpose_service">Услуги</span></label>
+                        <label><input type="checkbox" name="purposeFilter" value="rent" checked> <span data-i18n="tariffs_purpose_rent">Аренда</span></label>
+                        <label><input type="checkbox" name="purposeFilter" value="construction" checked> <span data-i18n="tariffs_purpose_construction">Строительство</span></label>
+                    </div>
+                </details>
+            </div>
+
+            <div class="filter-group">
+                <label data-i18n="tariffs_filter_client_type">Тип клиента</label>
+                <select id="filterClientType">
+                    <option value="all" data-i18n="all">Все</option>
+                    <option value="individual" data-i18n="tariffs_client_individual_short">Индивидуальное</option>
+                    <option value="legal" data-i18n="tariffs_client_legal_short">Юр лицо</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label data-i18n="search">Поиск</label>
+                <input type="text" id="filterSearch" data-i18n-placeholder="tariffs_search_placeholder" placeholder="Название тарифа">
+            </div>
+        </div>
+
+        <div class="filters-actions">
+            <button class="btn btn-outline-secondary" onclick="applyFilters()">
+                <i class="bi bi-funnel"></i> <span data-i18n="user_resident_filter_btn">Фильтр</span>
+            </button>
+            <button class="btn btn-outline-warning" onclick="clearFilters()">
+                <i class="bi bi-x-circle"></i> <span data-i18n="user_resident_reset_btn">Очистить</span>
+            </button>
+            <select id="tariffExportFormat" class="form-select export-format-select" data-i18n-title="tariffs_export_format" aria-label="Формат экспорта тарифов">
+                <option value="excel">Excel</option>
+                <option value="pdf">PDF</option>
+            </select>
+            <button class="btn btn-success" onclick="exportTariffs()">
+                <i class="bi bi-box-arrow-down"></i> <span data-i18n="tariffs_export_button">Экспорт</span>
+            </button>
+            <button class="btn btn-primary" onclick="openCreateModal()">
+                <i class="bi bi-plus-lg"></i> <span data-i18n="tariffs_create_button">Создать</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Tariffs List -->
+    <div id="tariffsContainer">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 data-i18n="tariffs_list_title">Список тарифов</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover tariffs-table">
+                    <thead>
+                        <tr>
+                            <th data-i18n="id">ID</th>
+                            <th data-i18n="tariffs_col_name">Название</th>
+                            <th data-i18n="tariffs_filter_purpose">Назначение</th>
+                            <th data-i18n="tariffs_filter_client_type">Тип клиента</th>
+                            <th data-i18n="tariffs_col_vat">НДС, %</th>
+                            <th data-i18n="stable_tariff">Стабильный тариф</th>
+                            <th data-i18n="tariffs_col_steps">Ступени</th>
+                            <th class="text-center" data-i18n="tariffs_col_actions">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tariffsTableBody">
+                        <!-- rows rendered via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- <div class="blocks-tariffs-wrapper">
+                        <h3 class="mt-4">Тарифы по блокам</h3>
+                        <div id="tariffsBlocksWrapper"></div>
+                    </div> -->
+    </div>
+</div>
+</main>
+</div>
+
+<!-- Create Tariff Modal -->
+<div class="modal-overlay" id="createTariffModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 data-i18n="tariffs_modal_create_title">Создать тариф</h2>
+            <button class="modal-close" onclick="closeCreateModal()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <form id="createTariffForm" onsubmit="createTariff(event)">
+            <div class="form-group">
+                <label data-i18n="tariffs_name_label">Название тарифа</label>
+                <input type="text" id="tariffName" required>
+            </div>
+
+            <div class="form-group">
+                <label data-i18n="tariffs_purpose_label">Для чего</label>
+                <select id="tariffPurpose" required onchange="updateUnitsForPurpose(); updateStepFieldsType();">
+                    <option value="electricity" data-i18n="meter_electricity">Электричество</option>
+                    <option value="gas" data-i18n="meter_gas">Газ</option>
+                    <option value="water" data-i18n="meter_cold_water">Вода</option>
+                    <option value="service" data-i18n="tariffs_purpose_service">Услуги</option>
+                    <option value="rent" data-i18n="tariffs_purpose_rent">Аренда</option>
+                    <option value="construction" data-i18n="tariffs_purpose_construction">Строительство</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="consumptionMultiplierGroup" style="display:none;">
+                <label class="consumption-multiplier-toggle">
+                    <input type="checkbox" id="tariffUseConsumptionMultiplier" class="invoice-master-checkbox">
+                    <span data-i18n="tariffs_use_consumption_multiplier_label">Применять коэффициент к расходу</span>
+                </label>
+                <input type="number" id="tariffConsumptionMultiplier" value="1" placeholder="1" min="0.0001" step="0.0001" data-numeric-only data-allow-empty="1" style="display:none; margin-top:8px;">
+                <small style="display:block; opacity:0.75; margin-top:6px;" data-i18n="tariffs_consumption_multiplier_help">
+                    Если включено, расход будет умножаться на коэффициент перед расчётом суммы.
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label data-i18n="tariffs_type_label">Тип тарифа</label>
+                <select id="tariffType" required>
+                    <option value="individual" data-i18n="tariffs_client_individual">Индивидуальный</option>
+                    <option value="legal" data-i18n="tariffs_client_legal">Юридическое лицо</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label data-i18n="tariffs_col_vat">НДС, %</label>
+                <input type="number" id="tariffVAT" value="" placeholder="0" min="0" max="100" data-numeric-only data-allow-empty="1">
+            </div>
+
+            <div class="form-group" id="stableTariffGroup" style="display:none;">
+                <label data-i18n="stable_tariff">Стабильный тариф</label>
+                <input type="number" id="tariffStableTariff" value="" placeholder="0" min="0" step="0.01" data-numeric-only data-allow-empty="1">
+                <small style="display:block; opacity:0.75; margin-top:6px;">
+                    Фиксированная сумма в месяц (только Электричество/Газ). Добавляется независимо от расхода.
+                </small>
+            </div>
+
+            <div class="form-group" id="seweragePercentGroup" style="display:none;">
+                <label data-i18n="tariffs_sewerage_percent_label">Канализация, % от воды</label>
+                <input type="number" id="tariffSeweragePercent" value="" placeholder="0" min="0" max="100" step="0.01" data-numeric-only data-allow-empty="1">
+                <small style="display:block; opacity:0.75; margin-top:6px;">
+                    Будет добавлена отдельной строкой в счёт как процент от суммы воды.
+                </small>
+            </div>
+
+            <div class="tariff-steps">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 data-i18n="tariffs_col_steps">Ступени</h4>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="addTariffStep()">
+                        <i class="bi bi-plus-lg"></i> <span data-i18n="tariffs_add_step">Добавить ступень</span>
+                    </button>
+                </div>
+
+                <div id="tariffStepsContainer">
+                    <div class="step-row">
+                        <div class="step-input-group">
+                            <label data-i18n="tariffs_step_from">ОТ (вкл.)</label>
+                            <input type="number" value="0" min="0" step="0.01" data-numeric-only>
+                        </div>
+                        <div class="step-input-group">
+                            <label data-i18n="tariffs_step_to">ДО (искл.)</label>
+                            <input type="number" value="" min="0" step="0.01" data-numeric-only data-allow-empty="1" data-i18n-placeholder="tariffs_step_infinity_placeholder" placeholder="∞ для бесконечности">
+                        </div>
+                        <div class="step-input-group">
+                            <label data-i18n="tariffs_step_unit">Ед. изм.</label>
+                            <input type="text" value="кВт-ч" class="unit-chip" readonly>
+                        </div>
+                        <div class="step-input-group">
+                            <label data-i18n="amount">Цена</label>
+                            <input type="number" step="any" min="0" required data-numeric-only>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="removeStep(this)"
+                            style="height: 38px; white-space: nowrap;">
+                            <i class="bi bi-trash"></i> <span data-i18n="action_delete">Удалить</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeCreateModal()">
+                    <span data-i18n="cancel">Отмена</span>
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <span data-i18n="tariffs_create_button">Создать</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const API_BASE = window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BASE || 'http://localhost:8000');
+    const t = (key, fallback) => (window.i18n && typeof window.i18n.translate === 'function')
+        ? window.i18n.translate(key)
+        : fallback;
+    const tr = (key, fallback, vars = {}) => {
+        let text = t(key, fallback);
+        Object.keys(vars).forEach((k) => {
+            text = text.replace(`{${k}}`, vars[k]);
+        });
+        return text;
+    };
+
+    function sanitizeDecimalInput(rawValue, allowEmpty = false) {
+        let value = String(rawValue ?? '').replace(/,/g, '.');
+        value = value.replace(/[^0-9.]/g, '');
+        const firstDot = value.indexOf('.');
+        if (firstDot !== -1) {
+            value = value.slice(0, firstDot + 1) + value.slice(firstDot + 1).replace(/\./g, '');
+        }
+        if (value.startsWith('.')) value = `0${value}`;
+
+        // Не подставляем "0" в пустое поле:
+        // это ломало UX (после удаления следующая цифра превращалась в "03", "05", ...).
+        if (value === '') return '';
+
+        // Нормализуем ведущие нули.
+        if (value.includes('.')) {
+            const parts = value.split('.');
+            const intPart = (parts[0] || '').replace(/^0+(?=\d)/, '');
+            value = `${intPart === '' ? '0' : intPart}.${parts[1] ?? ''}`;
+        } else {
+            value = value.replace(/^0+(?=\d)/, '');
+        }
+
+        if (allowEmpty && value === '') return '';
+        return value;
+    }
+
+    function bindNumericOnly(input, allowEmpty = false) {
+        if (!input || input._numericOnlyBound) return;
+        input._numericOnlyBound = true;
+        input.setAttribute('inputmode', 'decimal');
+
+        const apply = () => {
+            const sanitized = sanitizeDecimalInput(input.value, allowEmpty);
+            if (input.value !== sanitized) input.value = sanitized;
+        };
+
+        const pasteHandler = () => setTimeout(apply, 0);
+        input._numericOnlyHandlers = { apply, pasteHandler };
+
+        input.addEventListener('input', apply);
+        input.addEventListener('blur', apply);
+        input.addEventListener('paste', pasteHandler);
+    }
+
+    function unbindNumericOnly(input) {
+        if (!input || !input._numericOnlyBound) return;
+        const handlers = input._numericOnlyHandlers;
+        if (handlers) {
+            input.removeEventListener('input', handlers.apply);
+            input.removeEventListener('blur', handlers.apply);
+            input.removeEventListener('paste', handlers.pasteHandler);
+        }
+        delete input._numericOnlyHandlers;
+        delete input._numericOnlyBound;
+        input.removeAttribute('inputmode');
+    }
+
+    function applyNumericOnlyBindings(root = document) {
+        root.querySelectorAll('input[data-numeric-only]').forEach((input) => {
+            bindNumericOnly(input, input.dataset.allowEmpty === '1');
+        });
+    }
+
+    let tariffsData = [];
+    let seweragePercentDirty = false;
+    let editingTariffId = null;
+
+    function isTariffsPageActive() {
+        const route = window.location.hash.split('?')[0].slice(1);
+        if (route && route !== '/tariffs' && !route.startsWith('/tariffs')) {
+            return false;
+        }
+        return !!document.getElementById('tariffsTableBody');
+    }
+
+    // Маппинг типов для отображения
+    const meterTypeMap = {
+        'ELECTRIC': { labelKey: 'meter_electricity', key: 'electricity', badge: 'bg-info' },
+        'GAS': { labelKey: 'meter_gas', key: 'gas', badge: 'bg-danger' },
+        'WATER': { labelKey: 'meter_cold_water', key: 'water', badge: 'bg-primary' },
+        'SEWERAGE': { labelKey: 'meter_sewerage', key: 'sewerage', badge: 'bg-secondary' },
+        'SERVICE': { labelKey: 'tariffs_purpose_service', key: 'service', badge: 'bg-warning text-dark' },
+        'RENT': { labelKey: 'tariffs_purpose_rent', key: 'rent', badge: 'bg-success' },
+        'CONSTRUCTION': { labelKey: 'tariffs_purpose_construction', key: 'construction', badge: 'bg-dark' }
+    };
+
+    const customerTypeMap = {
+        'INDIVIDUAL': { labelKey: 'tariffs_client_individual', key: 'individual', badge: 'bg-success' },
+        'LEGAL': { labelKey: 'tariffs_client_legal', key: 'legal', badge: 'bg-primary' }
+    };
+
+    const ALL_TARIFF_PURPOSE_KEYS = ['electricity', 'gas', 'water', 'service', 'rent', 'construction'];
+    const TARIFF_PURPOSE_QUERY_MAP = {
+        electricity: 'ELECTRIC',
+        gas: 'GAS',
+        water: 'WATER',
+        service: 'SERVICE',
+        rent: 'RENT',
+        construction: 'CONSTRUCTION'
+    };
+    const TARIFF_PURPOSE_LABELS = {
+        electricity: 'meter_electricity',
+        gas: 'meter_gas',
+        water: 'meter_cold_water',
+        service: 'tariffs_purpose_service',
+        rent: 'tariffs_purpose_rent',
+        construction: 'tariffs_purpose_construction'
+    };
+
+    function getSelectedTariffPurposesRaw() {
+        const inputs = Array.from(document.querySelectorAll('#filterPurposeDetails input[name="purposeFilter"]:checked'));
+        return inputs.map((input) => String(input.value || '').trim()).filter(Boolean);
+    }
+
+    function getSelectedTariffPurposeKeys() {
+        const raw = getSelectedTariffPurposesRaw().filter((v) => v !== 'all');
+        if (!raw.length) {
+            return [];
+        }
+        if (raw.length >= ALL_TARIFF_PURPOSE_KEYS.length) {
+            return [...ALL_TARIFF_PURPOSE_KEYS];
+        }
+        return raw.filter((v, idx, arr) => ALL_TARIFF_PURPOSE_KEYS.includes(v) && arr.indexOf(v) === idx);
+    }
+
+    function updateTariffPurposeSummary() {
+        const summaryEl = document.getElementById('filterPurposeSummary');
+        if (!summaryEl) return;
+        const selected = getSelectedTariffPurposeKeys();
+        if (!selected.length) {
+            summaryEl.textContent = t('invoices_export_nothing_selected', 'Ничего не выбрано');
+            return;
+        }
+        if (selected.length >= ALL_TARIFF_PURPOSE_KEYS.length) {
+            summaryEl.textContent = t('all', 'Все');
+            return;
+        }
+        if (selected.length === 1) {
+            const key = TARIFF_PURPOSE_LABELS[selected[0]];
+            summaryEl.textContent = key ? t(key, selected[0]) : selected[0];
+            return;
+        }
+        summaryEl.textContent = tr('tariffs_selected_count', '{count} выбрано', { count: selected.length });
+    }
+
+    function applyTariffPurposeRules(changedValue = null) {
+        const allCb = document.querySelector('#filterPurposeDetails input[name="purposeFilter"][value="all"]');
+        const purposeCbs = Array.from(document.querySelectorAll('#filterPurposeDetails input[name="purposeFilter"]'))
+            .filter((cb) => cb.value !== 'all');
+        if (!allCb || !purposeCbs.length) return;
+
+        if (changedValue === 'all') {
+            if (allCb.checked) {
+                purposeCbs.forEach((cb) => { cb.checked = true; });
+            } else {
+                purposeCbs.forEach((cb) => { cb.checked = false; });
+            }
+        } else {
+            const checkedCount = purposeCbs.filter((cb) => cb.checked).length;
+            allCb.checked = checkedCount === purposeCbs.length;
+        }
+
+        updateTariffPurposeSummary();
+    }
+
+    function bindTariffPurposeMultiSelect() {
+        const root = document.getElementById('filterPurposeDetails');
+        if (!root || root.dataset.bound === '1') return;
+
+        root.addEventListener('change', (event) => {
+            const target = event.target;
+            if (!(target instanceof HTMLInputElement) || target.name !== 'purposeFilter') return;
+            applyTariffPurposeRules(target.value);
+        });
+
+        root.dataset.bound = '1';
+        applyTariffPurposeRules('all');
+    }
+
+    // Загрузка тарифов из API
+    window.loadTariffs = async function () {
+        try {
+            console.log('Loading tariffs from API...');
+            let resp = await fetch(`${API_BASE}/api/tariffs`, { credentials: 'include' });
+
+            // Проверяем, что ответ успешный
+            if (!resp.ok) {
+                const errorText = await resp.text().catch(() => 'Unknown error');
+                console.error('Failed to load tariffs:', resp.status, errorText);
+                // Не показываем ошибку, если это просто проблема с авторизацией и публичный endpoint тоже не работает
+                // (возможно, backend не запущен или endpoint не существует)
+                if (resp.status === 401 || resp.status === 403) {
+                    console.warn('Both endpoints returned 401/403 - backend may need restart or endpoint may not exist');
+                }
+                throw new Error(`Failed to load tariffs: ${resp.status} ${errorText}`);
+            }
+
+            const tariffs = await resp.json();
+            console.log('Loaded tariffs:', tariffs);
+
+            if (!Array.isArray(tariffs)) {
+                console.error('Tariffs is not an array:', tariffs);
+                throw new Error('Invalid response format: expected array');
+            }
+
+            // Преобразуем данные для отображения
+            tariffsData = normalizeTariffsFromApi(tariffs);
+
+            console.log('Processed tariffs data:', tariffsData);
+            renderTariffsTable(tariffsData);
+        } catch (e) {
+            console.error('Load tariffs error:', e);
+            // Показываем ошибку только если оба endpoint не работают
+            // (если публичный endpoint работает, мы не должны попадать в этот catch)
+            if (typeof showError === 'function') {
+                showError(tr('tariffs_load_failed', 'Не удалось загрузить тарифы: {message}', { message: e.message }));
+            }
+            tariffsData = [];
+            renderTariffsTable([]);
+        }
+    }
+
+    function getUnitForMeterType(meterType) {
+        const units = {
+            'ELECTRIC': 'кВт-ч',
+            'GAS': 'м³',
+            'WATER': 'м³',
+            'SEWERAGE': 'м³',
+            'SERVICE': 'мес.',
+            'RENT': 'мес.',
+            'CONSTRUCTION': 'мес.'
+        };
+        return units[meterType] || '';
+    }
+
+    function normalizeTariffsFromApi(tariffs = []) {
+        return tariffs.map((tariffItem) => {
+            const isConstruction = tariffItem.meter_type === 'CONSTRUCTION';
+            return {
+                id: tariffItem.id,
+                name: tariffItem.name,
+                purpose: t(meterTypeMap[tariffItem.meter_type]?.labelKey, tariffItem.meter_type),
+                purposeLabelKey: meterTypeMap[tariffItem.meter_type]?.labelKey || '',
+                purposeKey: meterTypeMap[tariffItem.meter_type]?.key || tariffItem.meter_type.toLowerCase(),
+                clientType: customerTypeMap[tariffItem.customer_type]?.key || tariffItem.customer_type.toLowerCase(),
+                clientTypeLabel: t(customerTypeMap[tariffItem.customer_type]?.labelKey, tariffItem.customer_type),
+                clientTypeLabelKey: customerTypeMap[tariffItem.customer_type]?.labelKey || '',
+                vat: tariffItem.vat_percent,
+                stableTariff: tariffItem.stable_tariff ?? 0,
+                steps: (tariffItem.steps || []).map((s) => {
+                    if (isConstruction) {
+                        return {
+                            from_date: s.from_date,
+                            to_date: s.to_date,
+                            price: s.price,
+                            unit: getUnitForMeterType(tariffItem.meter_type)
+                        };
+                    }
+                    return {
+                        from: s.from_value || 0,
+                        to: s.to_value,
+                        price: s.price,
+                        unit: getUnitForMeterType(tariffItem.meter_type)
+                    };
+                })
+            };
+        });
+    }
+
+    function buildTariffApiFilterParams() {
+        const selectedPurposes = getSelectedTariffPurposeKeys();
+        const clientType = document.getElementById('filterClientType')?.value || 'all';
+        const searchTerm = String(document.getElementById('filterSearch')?.value || '').trim();
+
+        const clientTypeMap = {
+            'individual': 'INDIVIDUAL',
+            'legal': 'LEGAL'
+        };
+
+        const params = new URLSearchParams();
+        if (clientType !== 'all' && clientTypeMap[clientType]) {
+            params.append('ctype', clientTypeMap[clientType]);
+        }
+        if (searchTerm) {
+            params.append('q', searchTerm);
+        }
+        return { params, selectedPurposes };
+    }
+
+    async function fetchTariffsByCurrentFilters() {
+        const { params, selectedPurposes } = buildTariffApiFilterParams();
+        const isAllSelected = selectedPurposes.length >= ALL_TARIFF_PURPOSE_KEYS.length;
+
+        const fetchSingle = async (requestParams) => {
+            const resp = await fetch(`${API_BASE}/api/tariffs?${requestParams.toString()}`, { credentials: 'include' });
+            if (!resp.ok) throw new Error('Failed to load tariffs');
+            const tariffs = await resp.json();
+            if (!Array.isArray(tariffs)) throw new Error('Invalid response format: expected array');
+            return tariffs;
+        };
+
+        let rawTariffs = [];
+        if (isAllSelected) {
+            rawTariffs = await fetchSingle(params);
+        } else {
+            const responses = await Promise.all(selectedPurposes.map((purposeKey) => {
+                const meter = TARIFF_PURPOSE_QUERY_MAP[purposeKey];
+                const qp = new URLSearchParams(params.toString());
+                if (meter) qp.append('meter', meter);
+                return fetchSingle(qp);
+            }));
+            rawTariffs = responses.flat();
+        }
+
+        const byId = new Map();
+        rawTariffs.forEach((item) => {
+            const key = Number(item?.id);
+            if (Number.isFinite(key) && !byId.has(key)) {
+                byId.set(key, item);
+            }
+        });
+        return normalizeTariffsFromApi(Array.from(byId.values()));
+    }
+
+    // Инициализация будет выполнена в конце скрипта через IIFE
+    // renderBlockTariffs(blockTariffsData);
+
+    function renderTariffsTable(data) {
+        const tbody = document.getElementById('tariffsTableBody');
+        if (!tbody) {
+            // SPA may switch page while async request is still running.
+            // Skip silently when tariffs view is no longer mounted.
+            return;
+        }
+        console.log('Rendering tariffs table with', data.length, 'items');
+
+        if (!data.length) {
+            tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="empty-table">
+                            ${t('tariffs_empty_filtered', 'Нет тарифов по указанным параметрам')}
+                        </td>
+                    </tr>
+                `;
+            return;
+        }
+
+        tbody.innerHTML = data.map(tariff => {
+            const purposeText = tariff.purposeLabelKey
+                ? t(tariff.purposeLabelKey, tariff.purpose || tariff.purposeKey || '—')
+                : (tariff.purpose || tariff.purposeKey || '—');
+            const clientTypeText = tariff.clientTypeLabelKey
+                ? t(tariff.clientTypeLabelKey, tariff.clientTypeLabel || tariff.clientType || '—')
+                : (tariff.clientTypeLabel || tariff.clientType || '—');
+            return `
+                <tr>
+                    <td>${tariff.id}</td>
+                    <td>${tariff.name}</td>
+                    <td>
+                        <span class="badge ${getPurposeBadgeClass(tariff.purposeKey)}">
+                            ${purposeText}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge ${tariff.clientType === 'legal' ? 'bg-primary' : 'bg-success'}">
+                            ${clientTypeText}
+                        </span>
+                    </td>
+                    <td>${tariff.vat}%</td>
+                    <td>${formatValue(tariff.stableTariff ?? 0)} ₼</td>
+                    <td>${formatSteps(tariff.steps, tariff.purposeKey)}</td>
+                    <td>
+                        <div class="table-actions">
+                            <button class="btn btn-sm btn-outline-info" onclick="editTariff(${tariff.id})">${t('tariffs_edit_button', 'Редактировать')}</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteTariff(${tariff.id})">${t('action_delete', 'Удалить')}</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function getPurposeBadgeClass(purposeKey) {
+        switch (purposeKey) {
+            case 'gas': return 'bg-danger';
+            case 'electricity': return 'bg-info';
+            case 'water': return 'bg-primary';
+            case 'service': return 'bg-warning text-dark';
+            default: return 'bg-secondary';
+        }
+    }
+
+    function formatValue(val) {
+        if (val === null || val === undefined) return '';
+        const num = parseFloat(val);
+        return Number(num.toFixed(6)).toString();
+    }
+
+    function formatSteps(steps = [], purposeKey = '') {
+        return steps.map(step => {
+            const price = formatValue(step.price ?? 0);
+            const unit = step.unit || '';
+
+            // Для аренды и услуг - просто цена и единица
+            if (purposeKey === 'rent' || purposeKey === 'service') {
+                return `<span class="badge bg-secondary me-1">${price} ₼ / ${unit}</span>`;
+            }
+
+            // Для строительства - даты
+            if (step.from_date && step.to_date) {
+                try {
+                    const fromDate = new Date(step.from_date).toLocaleDateString('ru-RU');
+                    const toDate = new Date(step.to_date).toLocaleDateString('ru-RU');
+                    return `<span class="badge bg-secondary me-1">${fromDate} - ${toDate}: ${price} ₼ / ${unit}</span>`;
+                } catch (e) {
+                    return `<span class="badge bg-secondary me-1">${step.from_date} - ${step.to_date}: ${price} ₼ / ${unit}</span>`;
+                }
+            }
+
+            // Для остальных - числа
+            const from = formatValue(step.from ?? 0);
+            if (step.to === null || step.to === undefined) {
+                return `<span class="badge bg-secondary me-1">${from}+: ${price} ₼ / ${unit}</span>`;
+            }
+            const to = formatValue(step.to);
+            return `<span class="badge bg-secondary me-1">${from}–${to}: ${price} ₼ / ${unit}</span>`;
+        }).join(' ');
+    }
+
+    function buildTariffFiltersText() {
+        const clientTypeEl = document.getElementById('filterClientType');
+        const searchEl = document.getElementById('filterSearch');
+
+        const parts = [];
+        const selectedPurposes = getSelectedTariffPurposeKeys();
+        const clientTypeValue = clientTypeEl?.value || 'all';
+        const searchValue = String(searchEl?.value || '').trim();
+
+        if (!selectedPurposes.length) {
+            parts.push(`${t('tariffs_filter_purpose', 'Назначение')}: ${t('invoices_export_nothing_selected', 'Ничего не выбрано')}`);
+        } else if (selectedPurposes.length >= ALL_TARIFF_PURPOSE_KEYS.length) {
+            parts.push(`${t('tariffs_filter_purpose', 'Назначение')}: ${t('all', 'Все')}`);
+        } else {
+            const labels = selectedPurposes.map((key) => t(TARIFF_PURPOSE_LABELS[key], key));
+            parts.push(`${t('tariffs_filter_purpose', 'Назначение')}: ${labels.join(', ')}`);
+        }
+
+        if (clientTypeValue !== 'all' && clientTypeEl) {
+            parts.push(`${t('tariffs_filter_client_type', 'Тип клиента')}: ${clientTypeEl.options[clientTypeEl.selectedIndex]?.text || clientTypeValue}`);
+        } else {
+            parts.push(`${t('tariffs_filter_client_type', 'Тип клиента')}: ${t('all', 'Все')}`);
+        }
+
+        if (searchValue) {
+            parts.push(`${t('search', 'Поиск')}: ${searchValue}`);
+        }
+
+        return parts.join(' | ');
+    }
+
+    function buildTariffExportRows(rows = []) {
+        return rows.map((t) => {
+            const steps = Array.isArray(t?.steps) ? t.steps : [];
+            const formattedSteps = steps.map((step) => {
+                const price = formatValue(step?.price ?? 0);
+                const unit = step?.unit || '';
+                if (step?.from_date && step?.to_date) {
+                    return `${step.from_date} - ${step.to_date}: ${price} ₼ / ${unit}`;
+                }
+                if (t?.purposeKey === 'rent' || t?.purposeKey === 'service') {
+                    return `${price} ₼ / ${unit}`;
+                }
+                const from = formatValue(step?.from ?? 0);
+                if (step?.to === null || step?.to === undefined) {
+                    return `${from}+: ${price} ₼ / ${unit}`;
+                }
+                const to = formatValue(step?.to);
+                return `${from}-${to}: ${price} ₼ / ${unit}`;
+            }).filter(Boolean);
+
+            return {
+                id: t?.id ?? '—',
+                name: t?.name || '—',
+                purpose: (t?.purposeLabelKey ? window.i18n?.translate(t.purposeLabelKey) : '') || t?.purpose || '—',
+                clientType: (t?.clientTypeLabelKey ? window.i18n?.translate(t.clientTypeLabelKey) : '') || t?.clientTypeLabel || '—',
+                vat: Number(t?.vat ?? 0),
+                stableTariff: Number(t?.stableTariff ?? 0),
+                stepsList: formattedSteps.length ? formattedSteps : ['—']
+            };
+        });
+    }
+
+    function exportTariffsToStyledExcel(rows, filtersText) {
+        const esc = (v) => String(v === null || v === undefined ? '' : v)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        const bodyRows = rows.map((r) => `
+            <tr>
+                <td>${esc(r.name)}</td>
+                <td>${esc(r.purpose)}</td>
+                <td>${esc(r.clientType)}</td>
+                <td class="money-cell">${esc(Number(r.vat || 0).toFixed(2))}</td>
+                <td class="money-cell">${esc(Number(r.stableTariff || 0).toFixed(2))}</td>
+                <td class="steps-cell">${(Array.isArray(r.stepsList) ? r.stepsList : ['—']).map((step, idx) => `<div class="step-line">${esc(String(idx + 1) + ') ' + step)}</div>`).join('')}</td>
+            </tr>
+        `).join('');
+
+        const html = `
+            <html><head><meta charset="utf-8" />
+            <style>
+                body { font-family: Calibri, Arial, sans-serif; color: #111827; }
+                .title-table { border-collapse: collapse; width: 100%; margin-bottom: 10px; }
+                .title-cell { border: 2px solid #1f2937; padding: 12px; background: #f8fafc; }
+                .title-main { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+                .title-sub { font-size: 12px; color: #4b5563; }
+                table { border-collapse: collapse; width: 100%; }
+                .meta td { border: 1px solid #9ca3af; padding: 6px 8px; font-size: 12px; }
+                .meta td:first-child { width: 180px; background: #eef2ff; font-weight: 700; }
+                .data { margin-top: 12px; }
+                .data th, .data td { border: 1px solid #9ca3af; padding: 6px 8px; font-size: 12px; vertical-align: top; }
+                .data th { background: #dbeafe; font-weight: 700; text-align: center; }
+                .money-cell { text-align: right; mso-number-format: "\\@"; }
+                .steps-cell { white-space: normal; line-height: 1.25; }
+                .step-line { padding: 1px 0; border-bottom: 1px dashed #e5e7eb; }
+                .step-line:last-child { border-bottom: none; }
+            </style></head><body>
+                <table class="title-table">
+                    <tr><td class="title-cell"><div class="title-main">${t('tariffs_report_title', 'Отчет по тарифам')}</div><div class="title-sub">${t('tariffs_report_subtitle', 'Royal Park - Экспорт для учета')}</div></td></tr>
+                </table>
+                <table class="meta">
+                    <tr><td>${t('tariffs_generated_at', 'Сформировано')}</td><td>${esc(new Date().toLocaleString())}</td></tr>
+                    <tr><td>${t('tariffs_filters', 'Фильтры')}</td><td>${esc(filtersText)}</td></tr>
+                    <tr><td>${t('tariffs_count', 'Количество тарифов')}</td><td>${esc(rows.length)}</td></tr>
+                </table>
+                <table class="data">
+                    <thead><tr><th>${t('tariffs_col_name', 'Название')}</th><th>${t('tariffs_filter_purpose', 'Назначение')}</th><th>${t('tariffs_filter_client_type', 'Тип клиента')}</th><th>${t('tariffs_col_vat', 'НДС, %')}</th><th>${t('stable_tariff', 'Стабильный тариф')}</th><th>${t('tariffs_col_steps', 'Ступени')}</th></tr></thead>
+                    <tbody>${bodyRows || `<tr><td colspan="6">${t('tariffs_no_data', 'Нет данных')}</td></tr>`}</tbody>
+                </table>
+            </body></html>
+        `;
+
+        const blob = new Blob(['\ufeff' + html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `tariffs_export_${new Date().toISOString().slice(0, 10)}.xls`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    function exportTariffsToPdf(rows, filtersText) {
+        const esc = (v) => String(v === null || v === undefined ? '' : v)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        const tableRows = rows.map((r) => `
+            <tr>
+                <td>${esc(r.name)}</td>
+                <td>${esc(r.purpose)}</td>
+                <td>${esc(r.clientType)}</td>
+                <td>${esc(Number(r.vat || 0).toFixed(2))}</td>
+                <td>${esc(Number(r.stableTariff || 0).toFixed(2))}</td>
+                <td>${(Array.isArray(r.stepsList) ? r.stepsList : ['—']).map((step, idx) => `<div>${esc(String(idx + 1) + ') ' + step)}</div>`).join('')}</td>
+            </tr>
+        `).join('');
+
+        const html = `
+            <html><head><title>${t('tariffs_export_button', 'Экспорт')}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 24px; color: #111; }
+                table { width: 100%; border-collapse: collapse; font-size: 11px; }
+                th, td { border: 1px solid #ccc; padding: 6px; text-align: left; vertical-align: top; }
+                th { background: #f3f4f6; }
+            </style></head><body>
+                <h2>${t('tariffs_report_title', 'Отчет по тарифам')}</h2>
+                <p><strong>${t('tariffs_generated_at', 'Сформировано')}:</strong> ${esc(new Date().toLocaleString())}</p>
+                <p><strong>${t('tariffs_filters', 'Фильтры')}:</strong> ${esc(filtersText)}</p>
+                <p><strong>${t('tariffs_count_short', 'Количество')}:</strong> ${rows.length}</p>
+                <table>
+                    <thead><tr><th>${t('tariffs_col_name', 'Название')}</th><th>${t('tariffs_filter_purpose', 'Назначение')}</th><th>${t('tariffs_filter_client_type', 'Тип клиента')}</th><th>${t('tariffs_col_vat', 'НДС, %')}</th><th>${t('stable_tariff', 'Стабильный тариф')}</th><th>${t('tariffs_col_steps', 'Ступени')}</th></tr></thead>
+                    <tbody>${tableRows || `<tr><td colspan="6">${t('tariffs_no_data', 'Нет данных')}</td></tr>`}</tbody>
+                </table>
+            </body></html>
+        `;
+
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        iframe.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow?.document;
+        if (!doc || !iframe.contentWindow) {
+            iframe.remove();
+            throw new Error(t('tariffs_print_prepare_error', 'Не удалось подготовить печать.'));
+        }
+
+        doc.open();
+        doc.write(html);
+        doc.close();
+
+        setTimeout(() => {
+            try {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+            } finally {
+                setTimeout(() => iframe.remove(), 1000);
+            }
+        }, 250);
+    }
+
+    window.exportTariffs = async function () {
+        const formatEl = document.getElementById('tariffExportFormat');
+        const exportBtn = document.querySelector('.filters-actions button[onclick="exportTariffs()"]');
+        const format = formatEl?.value || 'excel';
+
+        if (exportBtn) {
+            exportBtn.disabled = true;
+            exportBtn.textContent = t('tariffs_export_in_progress', 'Экспорт...');
+        }
+
+        try {
+            const filteredTariffs = await fetchTariffsByCurrentFilters();
+            const rows = buildTariffExportRows(filteredTariffs);
+            if (!rows.length) {
+                if (typeof showWarning === 'function') showWarning(t('tariffs_export_no_data', 'Нет данных для экспорта по выбранным фильтрам.'));
+                return;
+            }
+            tariffsData = filteredTariffs;
+            const filtersText = buildTariffFiltersText();
+            if (format === 'pdf') {
+                exportTariffsToPdf(rows, filtersText);
+            } else {
+                exportTariffsToStyledExcel(rows, filtersText);
+            }
+            if (typeof showSuccess === 'function') showSuccess(t('export_completed', 'Экспорт выполнен.'));
+        } catch (error) {
+            console.error('Tariffs export error:', error);
+            if (typeof showError === 'function') showError(`${t('error_prefix', 'Ошибка')}: ${error.message}`);
+        } finally {
+            if (exportBtn) {
+                exportBtn.disabled = false;
+                exportBtn.innerHTML = `<i class="bi bi-box-arrow-down"></i> ${t('tariffs_export_button', 'Экспорт')}`;
+            }
+        }
+    };
+
+    // function renderBlockTariffs(blocks) {
+    //     ...
+    // }
+
+    // Filter Functions
+    window.applyFilters = async function () {
+        try {
+            tariffsData = await fetchTariffsByCurrentFilters();
+
+            renderTariffsTable(tariffsData);
+            if (typeof showSuccess === 'function') {
+                showSuccess(t('filters_applied', 'Фильтры применены успешно!'));
+            }
+        } catch (e) {
+            console.error('Filter error:', e);
+        }
+    }
+
+    window.clearFilters = function () {
+        const allCb = document.querySelector('#filterPurposeDetails input[name="purposeFilter"][value="all"]');
+        const purposeCbs = document.querySelectorAll('#filterPurposeDetails input[name="purposeFilter"]');
+        if (allCb) {
+            allCb.checked = true;
+        }
+        purposeCbs.forEach((cb) => {
+            if (cb instanceof HTMLInputElement) cb.checked = true;
+        });
+        const purposeDetails = document.getElementById('filterPurposeDetails');
+        if (purposeDetails) purposeDetails.open = false;
+        applyTariffPurposeRules('all');
+
+        document.getElementById('filterClientType').value = 'all';
+        document.getElementById('filterSearch').value = '';
+        loadTariffs();
+        if (typeof showSuccess === 'function') {
+            showSuccess(t('filters_reset', 'Фильтры сброшены'));
+        }
+    }
+
+    // Modal Functions
+    window.openCreateModal = function () {
+        document.getElementById('createTariffModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        seweragePercentDirty = false;
+        updateSeweragePercentVisibility();
+        updateStableTariffVisibility();
+
+        // Если не редактируем, очищаем контейнер и добавляем первую ступень по умолчанию
+        if (!editingTariffId) {
+            const stepsContainer = document.getElementById('tariffStepsContainer');
+            // Очищаем контейнер от статических элементов из HTML
+            if (stepsContainer) {
+                stepsContainer.innerHTML = '';
+            }
+            // Небольшая задержка, чтобы форма успела отрендериться
+            setTimeout(() => {
+                addTariffStep();
+                // Обновляем единицы измерения и тип полей для первой ступени
+                updateUnitsForPurpose();
+                updateStepFieldsType();
+                applyNumericOnlyBindings(document.getElementById('createTariffModal'));
+            }, 50);
+        } else {
+            // При редактировании обновляем тип полей
+            setTimeout(() => {
+                updateStepFieldsType();
+                applyNumericOnlyBindings(document.getElementById('createTariffModal'));
+            }, 50);
+        }
+    }
+
+    function closeCreateModal() {
+        document.getElementById('createTariffModal').classList.remove('active');
+        document.body.style.overflow = 'auto';
+        document.getElementById('createTariffForm').reset();
+        const multiplierInput = document.getElementById('tariffConsumptionMultiplier');
+        if (multiplierInput) multiplierInput.value = '1';
+        seweragePercentDirty = false;
+
+        // Очищаем контейнер ступеней
+        const stepsContainer = document.getElementById('tariffStepsContainer');
+        if (stepsContainer) {
+            stepsContainer.innerHTML = '';
+        }
+
+        // Сбрасываем режим редактирования
+        editingTariffId = null;
+
+        // Возвращаем заголовок и кнопку
+        const modalTitle = document.querySelector('#createTariffModal .modal-header h2');
+        if (modalTitle) {
+            modalTitle.textContent = t('tariffs_modal_create_title', 'Создать тариф');
+        }
+        const submitBtn = document.querySelector('#createTariffForm button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.textContent = t('tariffs_create_button', 'Создать');
+        }
+        updateConsumptionMultiplierVisibility();
+    }
+
+    // Экспортируем функцию в глобальную область видимости
+    window.closeCreateModal = closeCreateModal;
+
+    // Do not close modal on overlay click
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeCreateModal();
+        }
+    });
+
+    // Функция для получения единицы измерения по типу тарифа
+    function getUnitForPurpose(purpose) {
+        const unitMap = {
+            'electricity': 'кВт-ч',
+            'gas': 'м³',
+            'water': 'м³',
+            'sewerage': 'м³',
+            'service': 'мес.',
+            'rent': 'мес.',
+            'construction': 'мес.'
+        };
+        return unitMap[purpose] || 'ед.';
+    }
+
+    // Обновление единиц измерения при изменении типа тарифа
+    window.updateUnitsForPurpose = function () {
+        const purpose = document.getElementById('tariffPurpose');
+        if (!purpose) return;
+        const unit = getUnitForPurpose(purpose.value);
+        const unitInputs = document.querySelectorAll('#tariffStepsContainer .unit-chip');
+        unitInputs.forEach(input => {
+            input.value = unit;
+        });
+        updateSeweragePercentVisibility();
+        updateStableTariffVisibility();
+        updateConsumptionMultiplierVisibility();
+    };
+
+    function updateConsumptionMultiplierVisibility() {
+        const purpose = document.getElementById('tariffPurpose')?.value;
+        const group = document.getElementById('consumptionMultiplierGroup');
+        const useCb = document.getElementById('tariffUseConsumptionMultiplier');
+        const input = document.getElementById('tariffConsumptionMultiplier');
+        if (!group || !useCb || !input) return;
+
+        const supported = (purpose === 'electricity');
+        group.style.display = supported ? '' : 'none';
+        if (!supported) {
+            useCb.checked = false;
+            input.value = '1';
+            input.style.display = 'none';
+            return;
+        }
+        input.style.display = useCb.checked ? '' : 'none';
+        if (!String(input.value || '').trim()) input.value = '1';
+    }
+
+    function updateStableTariffVisibility() {
+        const purpose = document.getElementById('tariffPurpose')?.value;
+        const group = document.getElementById('stableTariffGroup');
+        if (!group) return;
+        const supported = (purpose === 'electricity' || purpose === 'gas');
+        group.style.display = supported ? '' : 'none';
+        if (!supported) {
+            const input = document.getElementById('tariffStableTariff');
+            if (input) input.value = '0';
+        }
+    }
+
+    function updateSeweragePercentVisibility() {
+        const purpose = document.getElementById('tariffPurpose')?.value;
+        const group = document.getElementById('seweragePercentGroup');
+        if (!group) return;
+        group.style.display = (purpose === 'water') ? '' : 'none';
+        if (purpose !== 'water') {
+            const input = document.getElementById('tariffSeweragePercent');
+            if (input) input.value = '0';
+        }
+        // Авторасчёт только для индивидуальных тарифов (если не редактировали вручную)
+        maybeAutoComputeSeweragePercent();
+    }
+
+    function getFirstStepPriceFromForm() {
+        const firstRow = document.querySelector('#tariffStepsContainer .step-row');
+        if (!firstRow) return null;
+        const inputs = firstRow.querySelectorAll('input');
+        const priceInput = inputs[inputs.length - 1];
+        const v = parseFloat(priceInput?.value);
+        if (!isFinite(v) || v <= 0) return null;
+        return v;
+    }
+
+    function findSewerageTariffFirstPrice(customerTypeKey) {
+        // Используем уже загруженный список тарифов: ищем Канализацию того же типа клиента
+        const t = (tariffsData || []).find(x => x.purposeKey === 'sewerage' && x.clientType === customerTypeKey);
+        const p = t?.steps?.[0]?.price;
+        const v = parseFloat(p);
+        if (!isFinite(v) || v <= 0) return null;
+        return v;
+    }
+
+    function maybeAutoComputeSeweragePercent() {
+        const purpose = document.getElementById('tariffPurpose')?.value;
+        if (purpose !== 'water') return;
+
+        const type = document.getElementById('tariffType')?.value; // individual|legal
+        if (type !== 'individual') return;
+
+        const input = document.getElementById('tariffSeweragePercent');
+        if (!input) return;
+        if (editingTariffId) return;
+        if (seweragePercentDirty) return;
+
+        const waterPrice = getFirstStepPriceFromForm();
+        const sewerPrice = findSewerageTariffFirstPrice('individual');
+        if (!waterPrice || !sewerPrice) return;
+
+        const percent = Math.max(0, Math.min(100, (sewerPrice / waterPrice) * 100));
+        input.value = (Math.round(percent * 100) / 100).toString();
+    }
+
+    // Обработчик изменения типа тарифа (добавляем после загрузки DOM)
+    (function () {
+        function setupPurposeHandler() {
+            const purposeSelect = document.getElementById('tariffPurpose');
+            if (purposeSelect) {
+                // Удаляем старый обработчик, если есть (используем копию функции)
+                const oldHandler = purposeSelect._updateUnitsHandler;
+                if (oldHandler) {
+                    purposeSelect.removeEventListener('change', oldHandler);
+                }
+                // Создаем новый обработчик
+                const newHandler = function () {
+                    updateUnitsForPurpose();
+                };
+                purposeSelect._updateUnitsHandler = newHandler;
+                purposeSelect.addEventListener('change', newHandler);
+            } else {
+                // Если элемент еще не существует, пробуем снова через 100ms
+                setTimeout(setupPurposeHandler, 100);
+            }
+        }
+        // Пробуем сразу и через небольшую задержку
+        setupPurposeHandler();
+        setTimeout(setupPurposeHandler, 200);
+    })();
+
+    // Функция для проверки, является ли тип тарифа строительством
+    function isConstructionType() {
+        const purpose = document.getElementById('tariffPurpose');
+        return purpose && purpose.value === 'construction';
+    }
+
+    // Функция для проверки, является ли тип тарифа арендой или услугами
+    function isRentOrServiceType() {
+        const purpose = document.getElementById('tariffPurpose');
+        return purpose && (purpose.value === 'rent' || purpose.value === 'service');
+    }
+
+    // Функция для обновления типа полей в ступенях (числа или даты)
+    window.updateStepFieldsType = function () {
+        const isConstruction = isConstructionType();
+        const isRentOrService = isRentOrServiceType();
+        const stepRows = document.querySelectorAll('#tariffStepsContainer .step-row');
+
+        stepRows.forEach(row => {
+            const fromGroup = row.querySelector('.step-input-group:first-child');
+            const toGroup = row.querySelector('.step-input-group:nth-child(2)');
+            const unitGroup = row.querySelector('.step-input-group:nth-child(3)');
+
+            if (!fromGroup || !toGroup) return;
+
+            if (isRentOrService) {
+                // Для аренды и услуг - убираем От и До, оставляем только Ед. изм. и Цену
+                fromGroup.style.display = 'none';
+                toGroup.style.display = 'none';
+                if (unitGroup) unitGroup.style.display = '';
+                row.classList.add('rent-row');
+            } else {
+                fromGroup.style.display = '';
+                toGroup.style.display = '';
+                row.classList.remove('rent-row');
+
+                if (isConstruction) {
+                    // Для строительства - даты
+                    const fromInput = fromGroup.querySelector('input');
+                    const toInput = toGroup.querySelector('input');
+
+                    unbindNumericOnly(fromInput);
+                    unbindNumericOnly(toInput);
+
+                    const fromValue = fromInput.value || '';
+                    const toValue = toInput.value || '';
+
+                    fromGroup.querySelector('label').textContent = t('tariffs_date_from', 'Дата от');
+                    fromInput.type = 'date';
+                    fromInput.removeAttribute('data-numeric-only');
+                    fromInput.value = fromValue;
+                    fromInput.placeholder = '';
+
+                    toGroup.querySelector('label').textContent = t('tariffs_date_to', 'Дата до');
+                    toInput.type = 'date';
+                    toInput.removeAttribute('data-numeric-only');
+                    toInput.removeAttribute('data-allow-empty');
+                    toInput.value = toValue;
+                    toInput.placeholder = '';
+
+                    if (unitGroup) {
+                        unitGroup.style.display = '';
+                    }
+                } else {
+                    // Для остальных - числа
+                    const fromInput = fromGroup.querySelector('input');
+                    const toInput = toGroup.querySelector('input');
+
+                    const fromValue = fromInput.value || '0';
+                    const toValue = toInput.value === '∞' ? '' : (toInput.value || '');
+
+                    fromGroup.querySelector('label').textContent = t('tariffs_step_from', 'ОТ (вкл.)');
+                    fromInput.type = 'number';
+                    fromInput.min = '0';
+                    fromInput.step = '0.01';
+                    fromInput.setAttribute('data-numeric-only', '');
+                    fromInput.removeAttribute('data-allow-empty');
+                    fromInput.value = fromValue;
+
+                    toGroup.querySelector('label').textContent = t('tariffs_step_to', 'ДО (искл.)');
+                    toInput.type = 'number';
+                    toInput.min = '0';
+                    toInput.step = '0.01';
+                    toInput.setAttribute('data-numeric-only', '');
+                    toInput.setAttribute('data-allow-empty', '1');
+                    toInput.value = toValue;
+                    toInput.placeholder = t('tariffs_step_infinity_placeholder', '∞ для бесконечности');
+
+                    if (unitGroup) {
+                        unitGroup.style.display = '';
+                    }
+                }
+            }
+            applyNumericOnlyBindings(row);
+        });
+    }
+
+    // Обновляем updateUnitsForPurpose, чтобы также обновлять тип полей
+    const originalUpdateUnits = window.updateUnitsForPurpose;
+    window.updateUnitsForPurpose = function () {
+        if (originalUpdateUnits) originalUpdateUnits();
+        if (window.updateStepFieldsType) {
+            window.updateStepFieldsType();
+        }
+    };
+
+    // Tariff Step Functions
+    window.addTariffStep = function () {
+        const container = document.getElementById('tariffStepsContainer');
+        const steps = container.querySelectorAll('.step-row');
+        const isConstruction = isConstructionType();
+        const isRentOrService = isRentOrServiceType();
+
+        let defaultFrom = isConstruction ? '' : '0';
+
+        if (!isConstruction && !isRentOrService && steps.length > 0) {
+            const lastStepInputs = steps[steps.length - 1].querySelectorAll('input');
+            const lastToValue = lastStepInputs[1].value.trim();
+
+            if (!lastToValue) {
+                if (typeof showWarning === 'function') {
+                showWarning(t('tariffs_step_to_required', 'Укажите граничное значение "ДО (искл.)" для предыдущей ступени.'));
+                } else {
+                alert(t('tariffs_step_to_required', 'Укажите граничное значение "ДО (искл.)" для предыдущей ступени.'));
+                }
+                return;
+            }
+
+            defaultFrom = lastToValue;
+        }
+
+        // Получаем текущую единицу измерения из типа тарифа
+        const purpose = document.getElementById('tariffPurpose').value;
+        const unit = getUnitForPurpose(purpose);
+
+        const newStep = document.createElement('div');
+        newStep.className = 'step-row';
+        if (isRentOrService) newStep.classList.add('rent-row');
+
+        if (isRentOrService) {
+            // Для аренды и услуг - без От и До
+            newStep.innerHTML = `
+                <div class="step-input-group" style="display: none;">
+                    <label>${t('tariffs_step_from', 'ОТ (вкл.)')}</label>
+                    <input type="number" value="0" min="0" step="0.01" data-numeric-only>
+                </div>
+                <div class="step-input-group" style="display: none;">
+                    <label>${t('tariffs_step_to', 'ДО (искл.)')}</label>
+                    <input type="number" value="" min="0" step="0.01" data-numeric-only data-allow-empty="1" placeholder="${t('tariffs_step_infinity_placeholder', '∞ для бесконечности')}">
+                </div>
+                <div class="step-input-group">
+                    <label>${t('tariffs_step_unit', 'Ед. изм.')}</label>
+                    <input type="text" value="${unit}" class="unit-chip" readonly>
+                </div>
+                <div class="step-input-group">
+                    <label>${t('amount', 'Цена')}</label>
+                    <input type="number" step="any" min="0" required data-numeric-only>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeStep(this)" style="height: 38px; white-space: nowrap;">
+                    <i class="bi bi-trash"></i> ${t('action_delete', 'Удалить')}
+                </button>
+            `;
+        } else if (isConstruction) {
+            // Для строительства - поля с датами
+            newStep.innerHTML = `
+                    <div class="step-input-group">
+                        <label>${t('tariffs_date_from', 'Дата от')}</label>
+                        <input type="date" value="" required>
+                    </div>
+                    <div class="step-input-group">
+                        <label>${t('tariffs_date_to', 'Дата до')}</label>
+                        <input type="date" value="" required>
+                    </div>
+                    <div class="step-input-group">
+                        <label>${t('tariffs_step_unit', 'Ед. изм.')}</label>
+                        <input type="text" value="${unit}" class="unit-chip" readonly>
+                    </div>
+                    <div class="step-input-group">
+                        <label>${t('amount', 'Цена')}</label>
+                        <input type="number" step="any" min="0" required data-numeric-only>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeStep(this)" style="height: 38px; white-space: nowrap;">
+                        <i class="bi bi-trash"></i> ${t('action_delete', 'Удалить')}
+                    </button>
+                `;
+        } else {
+            // Для остальных - числовые поля
+            newStep.innerHTML = `
+                <div class="step-input-group">
+                    <label>${t('tariffs_step_from', 'ОТ (вкл.)')}</label>
+                    <input type="number" value="${defaultFrom}" min="0" step="0.01" data-numeric-only>
+                </div>
+                <div class="step-input-group">
+                    <label>${t('tariffs_step_to', 'ДО (искл.)')}</label>
+                        <input type="number" value="" min="0" step="0.01" data-numeric-only data-allow-empty="1" placeholder="${t('tariffs_step_infinity_placeholder', '∞ для бесконечности')}">
+                </div>
+                <div class="step-input-group">
+                    <label>${t('tariffs_step_unit', 'Ед. изм.')}</label>
+                        <input type="text" value="${unit}" class="unit-chip" readonly>
+                </div>
+                <div class="step-input-group">
+                    <label>${t('amount', 'Цена')}</label>
+                    <input type="number" step="any" min="0" required data-numeric-only>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeStep(this)" style="height: 38px; white-space: nowrap;">
+                    <i class="bi bi-trash"></i> ${t('action_delete', 'Удалить')}
+                </button>
+            `;
+        }
+
+        container.appendChild(newStep);
+        applyNumericOnlyBindings(newStep);
+
+        // после добавления/изменения ступеней попробуем авторасчитать % канализации (если нужно)
+        setTimeout(() => {
+            maybeAutoComputeSeweragePercent();
+        }, 0);
+    }
+
+    window.removeStep = function (button) {
+        const stepsContainer = document.getElementById('tariffStepsContainer');
+        const steps = stepsContainer.querySelectorAll('.step-row');
+
+        if (steps.length > 1) {
+            button.closest('.step-row').remove();
+        } else {
+            showWarning(t('tariffs_min_one_step', 'Должна быть хотя бы одна ступень!'));
+        }
+    }
+
+    // Create Tariff Function
+    window.createTariff = async function (event) {
+        event.preventDefault();
+
+        const name = document.getElementById('tariffName').value.trim();
+        const purpose = document.getElementById('tariffPurpose').value;
+        const type = document.getElementById('tariffType').value;
+        const vat = parseInt(document.getElementById('tariffVAT').value) || 0;
+        const seweragePercent = parseFloat(document.getElementById('tariffSeweragePercent')?.value) || 0;
+        const useConsumptionMultiplier = !!document.getElementById('tariffUseConsumptionMultiplier')?.checked;
+        const consumptionMultiplierRaw = parseFloat(document.getElementById('tariffConsumptionMultiplier')?.value);
+        const consumptionMultiplier = (useConsumptionMultiplier && isFinite(consumptionMultiplierRaw) && consumptionMultiplierRaw > 0)
+            ? consumptionMultiplierRaw
+            : 1;
+        const stableTariffRaw = parseFloat(document.getElementById('tariffStableTariff')?.value);
+        const stableTariff = (purpose === 'electricity' || purpose === 'gas')
+            ? (isFinite(stableTariffRaw) ? stableTariffRaw : 0)
+            : 0;
+
+        if (!name) {
+            if (typeof showWarning === 'function') {
+                showWarning(t('tariffs_enter_name', 'Введите название тарифа'));
+            } else {
+                alert(t('tariffs_enter_name', 'Введите название тарифа'));
+            }
+            return;
+        }
+
+        // Маппинг значений для API
+        const meterTypeMap = {
+            'electricity': 'ELECTRIC',
+            'gas': 'GAS',
+            'water': 'WATER',
+            'service': 'SERVICE',
+            'rent': 'RENT',
+            'construction': 'CONSTRUCTION'
+        };
+
+        const customerTypeMap = {
+            'individual': 'INDIVIDUAL',
+            'legal': 'LEGAL'
+        };
+
+        // Collect steps data
+        const steps = [];
+        const stepRows = document.querySelectorAll('#tariffStepsContainer .step-row');
+        const isConstruction = purpose === 'construction';
+
+        try {
+            stepRows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input');
+                // Для строительства: inputs[0] = дата от, inputs[1] = дата до, inputs[2] = единица (скрыта), inputs[3] = цена
+                // Для остальных: inputs[0] = от, inputs[1] = до, inputs[2] = единица, inputs[3] = цена
+                // В обоих случаях цена - это последний input (inputs[inputs.length - 1])
+                const priceInput = inputs[inputs.length - 1];
+                const price = parseFloat(priceInput?.value) || 0;
+
+                if (isConstruction) {
+                    // Для строительства - даты
+                    const fromDate = inputs[0].value; // Дата от
+                    const toDate = inputs[1].value;   // Дата до
+
+                    if (!fromDate || !toDate) {
+                        throw new Error(tr('tariffs_fill_dates_for_step', 'Заполните обе даты для ступени {step}', { step: index + 1 }));
+                    }
+
+                    steps.push({
+                        from_date: fromDate,
+                        to_date: toDate,
+                        price: price
+                    });
+                } else {
+                    // Для остальных - числа
+                    const fromValue = parseFloat(inputs[0].value) || 0;
+                    let toValue = inputs[1].value.trim();
+
+                    // Если поле "ДО (искл.)" пустое, автоматически подставляем null (бесконечность)
+                    if (toValue === '') {
+                        toValue = null;
+                    } else {
+                        toValue = parseFloat(toValue);
+                    }
+
+                    steps.push({
+                        from_value: fromValue,
+                        to_value: toValue,
+                        price: price
+                    });
+                }
+            });
+        } catch (stepError) {
+            if (typeof showError === 'function') {
+                showError(`❌ ${stepError.message}`);
+            } else {
+                alert(stepError.message);
+            }
+            return;
+        }
+
+        if (steps.length === 0) {
+            if (typeof showWarning === 'function') {
+                showWarning(t('tariffs_add_at_least_one_step', 'Добавьте хотя бы одну ступень тарифа'));
+            } else {
+                alert(t('tariffs_add_at_least_one_step', 'Добавьте хотя бы одну ступень тарифа'));
+            }
+            return;
+        }
+
+        const tariffData = {
+            name: name,
+            meter_type: meterTypeMap[purpose] || purpose.toUpperCase(),
+            customer_type: customerTypeMap[type] || type.toUpperCase(),
+            vat_percent: vat,
+            use_multiplier: useConsumptionMultiplier,
+            consumption_multiplier: consumptionMultiplier,
+            stable_tariff: stableTariff,
+            sewerage_percent: (purpose === 'water') ? seweragePercent : 0,
+            steps: steps
+        };
+
+        try {
+            let resp;
+            if (editingTariffId) {
+                // Обновление существующего тарифа
+                resp = await fetch(`${API_BASE}/api/tariffs/${editingTariffId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(tariffData)
+                });
+            } else {
+                // Создание нового тарифа
+                resp = await fetch(`${API_BASE}/api/tariffs`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(tariffData)
+                });
+            }
+
+            if (!resp.ok) {
+                const errorData = await resp.json().catch(() => ({ detail: t('tariffs_save_error', 'Ошибка сохранения тарифа') }));
+                throw new Error(errorData.detail || 'Failed to save tariff');
+            }
+
+            // Перезагружаем список тарифов
+            await loadTariffs();
+
+            // Закрываем модальное окно
+            closeCreateModal();
+
+            // Показываем сообщение об успехе
+            if (typeof showSuccess === 'function') {
+                showSuccess(editingTariffId
+                    ? tr('tariffs_updated_success', 'Тариф "{name}" успешно обновлён!', { name })
+                    : tr('tariffs_created_success', 'Тариф "{name}" успешно создан!', { name }));
+            } else {
+                alert(editingTariffId
+                    ? tr('tariffs_updated_success', 'Тариф "{name}" успешно обновлён!', { name })
+                    : tr('tariffs_created_success', 'Тариф "{name}" успешно создан!', { name }));
+            }
+        } catch (e) {
+            console.error('Save tariff error:', e);
+            if (typeof showError === 'function') {
+                showError(tr('tariffs_save_failed', 'Не удалось сохранить тариф: {message}', { message: e.message }));
+            } else {
+                alert(tr('tariffs_save_failed', 'Не удалось сохранить тариф: {message}', { message: e.message }));
+            }
+        }
+    }
+
+    window.deleteTariff = async function (tariffId) {
+        const tariff = tariffsData.find(t => t.id === tariffId);
+        if (!tariff) return;
+
+        // Сохраняем состояние редактирования перед удалением
+        const wasEditing = editingTariffId === tariffId;
+
+        // Используем модальное окно приложения вместо браузерного confirm
+        if (typeof showConfirm === 'function') {
+            showConfirm(
+                tr('tariffs_delete_confirm', 'Вы уверены, что хотите удалить тариф "{name}"?', { name: tariff.name }),
+                async (confirmed) => {
+                    // Удаление происходит ТОЛЬКО если confirmed === true (нажата кнопка OK)
+                    if (confirmed === true) {
+                        await performDeleteTariff(tariffId, wasEditing);
+                    }
+                    // Если confirmed === false, ничего не делаем (отмена)
+                },
+                () => {
+                    // Явный обработчик отмены - ничего не делаем
+                    // Это гарантирует, что при нажатии "Отмена" удаление не произойдет
+                }
+            );
+        } else {
+            // Fallback на браузерный confirm, если showConfirm недоступен
+            if (confirm(tr('tariffs_delete_confirm', 'Вы уверены, что хотите удалить тариф "{name}"?', { name: tariff.name }))) {
+                await performDeleteTariff(tariffId, wasEditing);
+            }
+        }
+    };
+
+    async function performDeleteTariff(tariffId, wasEditing) {
+        try {
+            let resp = await fetch(`${API_BASE}/api/tariffs/${tariffId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+            if (!resp.ok) throw new Error('Failed to delete tariff');
+
+            // Если удаляли редактируемый тариф, сбрасываем режим редактирования
+            // но НЕ закрываем модальное окно (как требует пользователь)
+            if (wasEditing && editingTariffId === tariffId) {
+                editingTariffId = null;
+                // Очищаем форму, но НЕ закрываем модальное окно
+                document.getElementById('createTariffForm').reset();
+                const stepsContainer = document.getElementById('tariffStepsContainer');
+                if (stepsContainer) {
+                    stepsContainer.innerHTML = '';
+                }
+            }
+
+            // Обновляем список тарифов
+            await loadTariffs();
+
+            if (typeof showSuccess === 'function') {
+                showSuccess(t('tariffs_deleted_success', 'Тариф успешно удален!'));
+            } else {
+                alert(t('tariffs_deleted_success', 'Тариф успешно удален!'));
+            }
+        } catch (e) {
+            console.error('Delete tariff error:', e);
+            if (typeof showError === 'function') {
+                showError(t('tariffs_delete_failed', 'Не удалось удалить тариф'));
+            } else {
+                alert(t('tariffs_delete_failed', 'Не удалось удалить тариф'));
+            }
+        }
+    }
+
+    window.editTariff = async function (tariffId) {
+        editingTariffId = tariffId;
+        const tariff = tariffsData.find(t => t.id === tariffId);
+        if (!tariff) return;
+
+        // Загружаем полные данные тарифа из API
+        try {
+            let resp = await fetch(`${API_BASE}/api/tariffs/${tariffId}`, { credentials: 'include' });
+            if (!resp.ok) throw new Error(t('tariffs_load_single_failed', 'Не удалось загрузить тариф'));
+            const fullTariff = await resp.json();
+
+            // Заполняем форму данными тарифа
+            document.getElementById('tariffName').value = fullTariff.name;
+
+            // Маппинг обратный для select
+            const purposeMap = {
+                'ELECTRIC': 'electricity',
+                'GAS': 'gas',
+                'WATER': 'water',
+                'SEWERAGE': 'sewerage',
+                'SERVICE': 'service',
+                'RENT': 'rent',
+                'CONSTRUCTION': 'construction'
+            };
+
+            const clientTypeMap = {
+                'INDIVIDUAL': 'individual',
+                'LEGAL': 'legal'
+            };
+
+            const purposeValue = purposeMap[fullTariff.meter_type] || fullTariff.meter_type.toLowerCase();
+            document.getElementById('tariffPurpose').value = purposeValue;
+            document.getElementById('tariffType').value = clientTypeMap[fullTariff.customer_type] || fullTariff.customer_type.toLowerCase();
+            document.getElementById('tariffVAT').value = fullTariff.vat_percent;
+
+            const stableInput = document.getElementById('tariffStableTariff');
+            if (stableInput) {
+                stableInput.value = (fullTariff.stable_tariff ?? 0);
+            }
+
+            const sewerageInput = document.getElementById('tariffSeweragePercent');
+            if (sewerageInput) {
+                sewerageInput.value = (fullTariff.sewerage_percent ?? 0);
+            }
+            const useMultiplierInput = document.getElementById('tariffUseConsumptionMultiplier');
+            const multiplierInput = document.getElementById('tariffConsumptionMultiplier');
+            if (useMultiplierInput) {
+                useMultiplierInput.checked = !!fullTariff.use_multiplier;
+            }
+            if (multiplierInput) {
+                const m = Number(fullTariff.consumption_multiplier || 1);
+                multiplierInput.value = (Number.isFinite(m) && m > 0) ? String(m) : '1';
+            }
+            seweragePercentDirty = false;
+            updateSeweragePercentVisibility();
+            updateStableTariffVisibility();
+            updateConsumptionMultiplierVisibility();
+
+            // Очищаем контейнер ступеней
+            const stepsContainer = document.getElementById('tariffStepsContainer');
+            stepsContainer.innerHTML = '';
+
+            // Добавляем ступени
+            const isConstruction = fullTariff.meter_type === 'CONSTRUCTION';
+            const isRentOrService = fullTariff.meter_type === 'RENT' || fullTariff.meter_type === 'SERVICE';
+            fullTariff.steps.forEach(step => {
+                const stepRow = document.createElement('div');
+                stepRow.className = 'step-row';
+                const unit = getUnitForPurpose(purposeMap[fullTariff.meter_type] || '');
+
+                if (isRentOrService) {
+                    // Для аренды и услуг - без От и До
+                    stepRow.classList.add('rent-row');
+                    stepRow.innerHTML = `
+                            <div class="step-input-group" style="display: none;">
+                                <label>${t('tariffs_step_from', 'ОТ (вкл.)')}</label>
+                                <input type="number" value="${step.from_value || 0}" min="0" step="0.01" data-numeric-only>
+                            </div>
+                            <div class="step-input-group" style="display: none;">
+                                <label>${t('tariffs_step_to', 'ДО (искл.)')}</label>
+                                <input type="number" value="${step.to_value === null ? '' : step.to_value}" min="0" step="0.01" data-numeric-only data-allow-empty="1" placeholder="${t('tariffs_step_infinity_placeholder', '∞ для бесконечности')}">
+                            </div>
+                            <div class="step-input-group">
+                                <label>${t('tariffs_step_unit', 'Ед. изм.')}</label>
+                                <input type="text" value="${unit}" class="unit-chip" readonly>
+                            </div>
+                            <div class="step-input-group">
+                                <label>${t('amount', 'Цена')}</label>
+                                <input type="number" value="${step.price || 0}" step="any" min="0" required data-numeric-only>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removeStep(this)" style="height: 38px; white-space: nowrap;">
+                                <i class="bi bi-trash"></i> ${t('action_delete', 'Удалить')}
+                            </button>
+                        `;
+                } else if (isConstruction) {
+                    // Для строительства - даты
+                    const fromDate = step.from_date ? step.from_date.split('T')[0] : '';
+                    const toDate = step.to_date ? step.to_date.split('T')[0] : '';
+                    stepRow.innerHTML = `
+                            <div class="step-input-group">
+                                <label>${t('tariffs_date_from', 'Дата от')}</label>
+                                <input type="date" value="${fromDate}" required>
+                            </div>
+                            <div class="step-input-group">
+                                <label>${t('tariffs_date_to', 'Дата до')}</label>
+                                <input type="date" value="${toDate}" required>
+                            </div>
+                            <div class="step-input-group">
+                                <label>${t('tariffs_step_unit', 'Ед. изм.')}</label>
+                                <input type="text" value="${unit}" class="unit-chip" readonly>
+                            </div>
+                            <div class="step-input-group">
+                                <label>${t('amount', 'Цена')}</label>
+                                <input type="number" value="${step.price || 0}" step="any" min="0" required data-numeric-only>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removeStep(this)" style="height: 38px; white-space: nowrap;">
+                                <i class="bi bi-trash"></i> ${t('action_delete', 'Удалить')}
+                            </button>
+                        `;
+                } else {
+                    // Для остальных - числа
+                    stepRow.innerHTML = `
+                            <div class="step-input-group">
+                                <label>${t('tariffs_step_from', 'ОТ (вкл.)')}</label>
+                                <input type="number" value="${step.from_value || 0}" min="0" step="0.01" data-numeric-only>
+                            </div>
+                            <div class="step-input-group">
+                                <label>${t('tariffs_step_to', 'ДО (искл.)')}</label>
+                                <input type="number" value="${step.to_value === null ? '' : step.to_value}" min="0" step="0.01" data-numeric-only data-allow-empty="1" placeholder="${t('tariffs_step_infinity_placeholder', '∞ для бесконечности')}">
+                            </div>
+                            <div class="step-input-group">
+                                <label>${t('tariffs_step_unit', 'Ед. изм.')}</label>
+                                <input type="text" value="${unit}" class="unit-chip" readonly>
+                            </div>
+                            <div class="step-input-group">
+                                <label>${t('amount', 'Цена')}</label>
+                                <input type="number" value="${step.price || 0}" step="any" min="0" required data-numeric-only>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removeStep(this)" style="height: 38px; white-space: nowrap;">
+                                <i class="bi bi-trash"></i> ${t('action_delete', 'Удалить')}
+                            </button>
+                        `;
+                }
+                stepsContainer.appendChild(stepRow);
+                applyNumericOnlyBindings(stepRow);
+            });
+
+            // Обновляем единицы измерения и тип полей ПОСЛЕ добавления всех ступеней
+            // (с небольшой задержкой, чтобы DOM успел обновиться)
+            setTimeout(() => {
+                updateUnitsForPurpose();
+                updateStepFieldsType();
+            }, 100);
+
+            // Меняем заголовок модального окна
+            const modalTitle = document.querySelector('#createTariffModal .modal-header h2');
+            if (modalTitle) {
+                modalTitle.textContent = t('tariffs_modal_edit_title', 'Редактировать тариф');
+            }
+
+            // Меняем текст кнопки
+            const submitBtn = document.querySelector('#createTariffForm button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.textContent = t('save', 'Сохранить');
+            }
+
+            // Открываем модальное окно
+            openCreateModal();
+        } catch (e) {
+            console.error('Load tariff error:', e);
+            if (typeof showError === 'function') {
+                showError(t('tariffs_load_single_failed', 'Не удалось загрузить тариф'));
+            } else {
+                alert(t('tariffs_load_single_failed', 'Не удалось загрузить тариф'));
+            }
+        }
+    };
+
+    // Dirty-flag для ручного изменения процента канализации
+    (function initSeweragePercentHandlers() {
+        const input = document.getElementById('tariffSeweragePercent');
+        if (input && !input._initialized) {
+            input._initialized = true;
+            input.addEventListener('input', () => {
+                seweragePercentDirty = true;
+            });
+        }
+
+        const typeSelect = document.getElementById('tariffType');
+        if (typeSelect && !typeSelect._initializedSewerage) {
+            typeSelect._initializedSewerage = true;
+            typeSelect.addEventListener('change', () => {
+                seweragePercentDirty = false;
+                updateSeweragePercentVisibility();
+            });
+        }
+    })();
+
+    (function initConsumptionMultiplierHandlers() {
+        const useCb = document.getElementById('tariffUseConsumptionMultiplier');
+        if (useCb && !useCb._initialized) {
+            useCb._initialized = true;
+            useCb.addEventListener('change', () => {
+                updateConsumptionMultiplierVisibility();
+            });
+        }
+    })();
+
+    // Инициализация при загрузке страницы (для SPA роутера)
+    // Вызываем сразу, так как скрипт выполняется после вставки контента в DOM
+    async function initTariffsPage() {
+        // Небольшая задержка, чтобы убедиться, что DOM готов
+        await new Promise(resolve => setTimeout(resolve, 100));
+        if (!isTariffsPageActive()) return;
+        console.log('Initializing tariffs page...');
+        applyNumericOnlyBindings(document.getElementById('createTariffModal') || document);
+        bindTariffPurposeMultiSelect();
+        if (typeof window.loadTariffs === 'function') {
+            await window.loadTariffs();
+        } else if (typeof loadTariffs === 'function') {
+            await loadTariffs();
+        } else {
+            console.error('loadTariffs function not found!');
+        }
+    }
+
+    // Вызываем инициализацию
+    initTariffsPage().then(() => {
+        if (isTariffsPageActive()) {
+            loadUtilityStats();
+        }
+    });
+
+    // Также слушаем событие от роутера (на случай повторной загрузки)
+    // Удаляем старый обработчик, если он существует
+    if (window._tariffsContentLoadedHandler) {
+        window.removeEventListener('spa:contentLoaded', window._tariffsContentLoadedHandler);
+    }
+
+    window._tariffsContentLoadedHandler = (e) => {
+        console.log('SPA content loaded event:', e.detail);
+        const route = e.detail?.route || window.location.hash.split('?')[0].slice(1);
+        console.log('Current route:', route);
+        if (!route || route === '/tariffs' || route.startsWith('/tariffs')) {
+            console.log('Loading tariffs from spa:contentLoaded');
+            setTimeout(() => {
+                if (typeof loadTariffs === 'function') {
+                    loadTariffs();
+                } else if (typeof window.loadTariffs === 'function') {
+                    window.loadTariffs();
+                } else {
+                    console.error('loadTariffs function not found!');
+                }
+            }, 100);
+        }
+    };
+
+    window.addEventListener('spa:contentLoaded', window._tariffsContentLoadedHandler);
+
+    // Load utility statistics for widgets
+    async function loadUtilityStats() {
+        try {
+            const response = await fetch(`${API_BASE}/api/dashboard/stats`, { credentials: 'include' });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const stats = await response.json();
+            console.log('Utility stats loaded:', stats);
+
+            // Update electricity widget (amount in currency)
+            const electricityEl = document.getElementById('stat-electricity-tariffs');
+            if (electricityEl) {
+                electricityEl.textContent = (stats.monthly_electricity_amount || 0).toFixed(2);
+            }
+
+            // Update water widget (amount in currency)
+            const waterEl = document.getElementById('stat-water-tariffs');
+            if (waterEl) {
+                waterEl.textContent = (stats.monthly_water_amount || 0).toFixed(2);
+            }
+
+            // Update gas widget (amount in currency)
+            const gasEl = document.getElementById('stat-gas-tariffs');
+            if (gasEl) {
+                gasEl.textContent = (stats.monthly_gas_amount || 0).toFixed(2);
+            }
+        } catch (error) {
+            console.error('Error loading utility stats:', error);
+            // Set default values on error
+            const electricityEl = document.getElementById('stat-electricity-tariffs');
+            const waterEl = document.getElementById('stat-water-tariffs');
+            const gasEl = document.getElementById('stat-gas-tariffs');
+            if (electricityEl) electricityEl.textContent = '0.00';
+            if (waterEl) waterEl.textContent = '0.00';
+            if (gasEl) gasEl.textContent = '0.00';
+        }
+    }
+
+    // Also load stats when content is loaded via SPA router
+    const originalContentLoadedHandler = window._tariffsContentLoadedHandler;
+    if (originalContentLoadedHandler) {
+        window._tariffsContentLoadedHandler = (e) => {
+            originalContentLoadedHandler(e);
+            setTimeout(() => {
+                loadUtilityStats();
+            }, 200);
+        };
+    }
+
+    window.refreshPageTranslations = function () {
+        if (!window.location.hash.includes('/tariffs')) return;
+        updateTariffPurposeSummary();
+        renderTariffsTable(tariffsData || []);
+        const modalTitle = document.querySelector('#createTariffModal .modal-header h2');
+        const submitBtn = document.querySelector('#createTariffForm button[type="submit"]');
+        if (modalTitle) {
+            modalTitle.textContent = editingTariffId
+                ? t('tariffs_modal_edit_title', 'Редактировать тариф')
+                : t('tariffs_modal_create_title', 'Создать тариф');
+        }
+        if (submitBtn) {
+            submitBtn.textContent = editingTariffId ? t('save', 'Сохранить') : t('tariffs_create_button', 'Создать');
+        }
+    };
+</script>

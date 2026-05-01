@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ru" data-i18n-scope="local">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="user_invoice_print_title">Счёт на оплату</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/admin/content_css/invoice-print.css">
+    <script src="/js/config.js"></script>
+    <script src="/js/i18n.js"></script>
+</head>
+
+<body>
+    <div class="print-actions">
+        <button class="btn-print" onclick="window.print()">
+            <i class="bi bi-printer"></i> <span data-i18n="print">Печать</span>
+        </button>
+    </div>
+
+    <div class="print-container invoice-template">
+        <div class="invoice-title-row">
+            <div class="invoice-title"><span data-i18n="user_invoice_print_title">Счёт на оплату</span> № <span id="invoiceNumber">—</span></div>
+            <div class="invoice-date" id="invoiceDate">—</div>
+        </div>
+
+        <div class="invoice-parties">
+            <div class="party-block">
+                <div class="party-name" id="invoiceResident">—</div>
+                <div class="party-line" id="invoiceResidentUser">—</div>
+            </div>
+            <div class="party-block">
+                <div class="party-line"><span data-i18n="user_invoice_period_label">Период</span>: <span id="invoicePeriod">—</span></div>
+                <div class="party-line"><span data-i18n="user_invoice_due_date_label">Срок оплаты</span>: <span id="invoiceDueDate">—</span></div>
+                <div class="party-line"><span data-i18n="status">Статус</span>: <span id="invoiceStatus">—</span></div>
+            </div>
+        </div>
+
+        <table class="invoice-table invoice-lines">
+            <thead>
+                <tr>
+                    <th data-i18n="invoices_description">Описание</th>
+                    <th data-i18n="user_invoice_items_th_consumed">Израсходовано</th>
+                    <th data-i18n="invoices_charged">Начислено</th>
+                    <th data-i18n="invoices_vat">НДС</th>
+                    <th data-i18n="user_invoice_total_label">Итого</th>
+                </tr>
+            </thead>
+            <tbody id="lineItemsTable">
+                <tr><td colspan="5">Загрузка...</td></tr>
+            </tbody>
+        </table>
+
+        <div class="invoice-totals">
+            <div class="totals-row">
+                <span><span data-i18n="invoices_charged">Начислено</span>:</span>
+                <span id="invoiceTotalNet">0.00</span>
+            </div>
+            <div class="totals-row">
+                <span><span data-i18n="invoices_vat">НДС</span>:</span>
+                <span id="invoiceTotalVat">0.00</span>
+            </div>
+            <div class="totals-row totals-strong">
+                <span><span data-i18n="invoices_total_to_pay">Итого к оплате</span>:</span>
+                <span id="invoiceTotal">0.00</span>
+            </div>
+        </div>
+
+        <div class="invoice-footer">
+            <p><span data-i18n="user_invoice_print_generated_prefix">Квитанция сгенерирована:</span> <span id="generatedDate"></span></p>
+            <p data-i18n="user_invoice_print_footer_note">Для печати нажмите кнопку сверху или используйте «Печать в PDF».</p>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const API_BASE = window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BASE || 'http://localhost:8000');
+            const t = (key, fallback = '') => (window.i18n && window.i18n.translate && window.i18n.translate(key)) || fallback || key;
+            const resolveLang = () => String((window.i18n && window.i18n.currentLanguage) || localStorage.getItem('language') || 'az').toLowerCase();
+            const localeFromLang = (lang) => (lang === 'az' ? 'az-AZ' : (lang === 'en' ? 'en-US' : 'ru-RU'));
+            let currentInvoice = null;
+
+            // Get invoice ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            let invoiceId = urlParams.get('id');
+
+            // If not in query params, try to extract from path
+            if (!invoiceId) {
+                const pathParts = window.location.pathname.split('/');
+                invoiceId = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2];
+            }
+
+            // Clean up invoiceId
+            if (invoiceId) {
+                invoiceId = invoiceId.toString().trim();
+                if (isNaN(invoiceId) || invoiceId === '') {
+                    invoiceId = null;
+                }
+            }
+
+            console.log('📄 Print page - invoice ID:', invoiceId);
+
+            function resetPrintPlaceholders() {
+                const set = (id, value) => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = value;
+                };
+                set('invoiceNumber', '—');
+                set('invoiceDate', '—');
+                set('invoiceResident', '—');
+                set('invoiceResidentUser', '—');
+                set('invoicePeriod', '—');
+                set('invoiceDueDate', '—');
+                set('invoiceStatus', '—');
+                set('invoiceTotal', '0.00');
+                set('invoiceTotalNet', '0.00');
+                set('invoiceTotalVat', '0.00');
+                const tbody = document.getElementById('lineItemsTable');
+                if (tbody) tbody.innerHTML = '<tr><td colspan="5">' + t('loading', 'Загрузка...') + '</td></tr>';
+            }
+
+            // Load invoice data
+            async function loadInvoice(id) {
+                resetPrintPlaceholders();
+                if (!id) {
+                    console.error('No invoice ID provided for print');
+                    document.body.innerHTML = '<div style="padding: 40px; text-align: center;"><h2>' + t('error_prefix', 'Ошибка') + '</h2><p>' + t('invoices_no_id', 'Не указан ID счета') + '</p></div>';
+                    return;
+                }
+
+                try {
+                    let url = `${API_BASE}/api/invoices/${id}`;
+                    let response = await fetch(url, { credentials: 'include' });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    let residentOwnerFullName = null;
+                    try {
+                        if (data && data.resident_id) {
+                            const residentResp = await fetch(`${API_BASE}/api/residents/${data.resident_id}`, { credentials: 'include' });
+                            if (residentResp.ok) {
+                                const residentData = await residentResp.json();
+                                residentOwnerFullName = (residentData?.owner_full_name || '').toString().trim() || null;
+                            }
+                        }
+                    } catch (e) {
+                        // ignore: fallback to resident_user_full_name
+                    }
+
+                    console.log('📄 API response for print:', {
+                        amount_total: data.amount_total,
+                        paid_amount: data.paid_amount,
+                        remaining_amount: data.remaining_amount,
+                        lines_count: data.lines?.length || 0,
+                        lines_sum: data.lines?.reduce((sum, line) => sum + (line.amount_total || 0), 0) || 0
+                    });
+
+                    // Transform API data to frontend format
+                    const invoice = {
+                        id: data.id,
+                        invoiceNumber: data.number || `INV-${data.resident_id}/0/${data.period_year}-${String(data.period_month).padStart(2, '0')}`,
+                        resident: data.resident_code,
+                        residentUser: residentOwnerFullName || data.resident_user_full_name || null,
+                        period: formatPeriod(data),
+                        status: data.status,
+                        dueDate: data.due_date || null,
+                        total: Number(data.amount_total || 0),
+                        netTotal: Number(data.amount_net || 0),
+                        vatTotal: Number(data.amount_vat || 0),
+                        lineItems: data.lines || []
+                    };
+
+                    currentInvoice = invoice;
+                    renderInvoice(invoice);
+                } catch (error) {
+                    console.error('Error loading invoice for print:', error);
+                    document.body.innerHTML = '<div style="padding: 40px; text-align: center;"><h2>' + t('error_prefix', 'Ошибка') + '</h2><p>' + t('invoices_load_error', 'Не удалось загрузить данные счета') + ': ' + (error.message || '') + '</p></div>';
+                }
+            }
+
+            function formatPeriod(data) {
+                if (data?.period_dates?.from && data?.period_dates?.to) {
+                    return data.period_dates.from === data.period_dates.to
+                        ? data.period_dates.to
+                        : `${data.period_dates.from} - ${data.period_dates.to}`;
+                }
+                return `${data.period_year}-${String(data.period_month).padStart(2, '0')}`;
+            }
+
+            function extractConsumption(description) {
+                if (!description) return { label: '—', consumed: '—' };
+                const source = String(description).trim();
+                const openingDebtMatch = source.match(/^(?:Начальный\s+долг|İlkin\s+borc|Opening\s+debt)\s*(?:\(([^)]+)\))?$/i);
+                if (openingDebtMatch) {
+                    const openingLabel = t('invoice_opening_debt', 'Opening debt');
+                    const rawCategory = String(openingDebtMatch[1] || '').trim().toLowerCase();
+                    let categoryKey = '';
+                    if (/(utility|коммун|kommunal)/i.test(rawCategory)) categoryKey = 'payments_service_utility';
+                    else if (/(service|сервис|xidmət|xidmet)/i.test(rawCategory)) categoryKey = 'tariffs_purpose_service';
+                    else if (/(rent|аренд|icar)/i.test(rawCategory)) categoryKey = 'tariffs_purpose_rent';
+                    const categoryLabel = categoryKey ? t(categoryKey, rawCategory) : '';
+                    return { label: categoryLabel ? `${openingLabel} (${categoryLabel})` : openingLabel, consumed: '—' };
+                }
+                const isSewerageLine = /^(?:meter_sewerage\b|канализац|kanaliz|sewerage)/i.test(source);
+                const keyMatch = source.match(/^(meter_[a-z_]+)\s+([\d.]+)\s*(.*)$/i);
+                if (keyMatch) {
+                    const key = keyMatch[1];
+                    const qty = keyMatch[2];
+                    const unit = (keyMatch[3] || '').trim();
+                    const translatedLabel = t(key, key);
+                    if (key === 'meter_sewerage') return { label: translatedLabel, consumed: '—' };
+                    return { label: translatedLabel, consumed: `${qty}${unit ? ' ' + unit : ''}`.trim() };
+                }
+
+                const patterns = [
+                    { regex: /^(?:Электричество|Elektrik|Electricity)\s+([\d.]+)\s*(?:кВт·ч|kWh)$/i, key: 'meter_electricity', unit: 'kWh' },
+                    { regex: /^(?:Вода|Su|Water)\s+([\d.]+)\s*(?:м³|m³|m3)$/i, key: 'meter_cold_water', unit: 'm³' },
+                    { regex: /^(?:Горячая\s+вода|İsti\s+su|Hot\s+water)\s+([\d.]+)\s*(?:м³|m³|m3)$/i, key: 'meter_hot_water', unit: 'm³' },
+                    { regex: /^(?:Канализация(?:\s*\(авто\))?|Kanalizasiya(?:\s*\(auto\))?|Sewerage(?:\s*\(auto\))?)\s+([\d.]+)\s*(?:м³|m³|m3)$/i, key: 'meter_sewerage', unit: 'm³' },
+                    { regex: /^(?:Газ|Qaz|Gas)\s+([\d.]+)\s*(?:м³|m³|m3)$/i, key: 'meter_gas', unit: 'm³' },
+                ];
+                for (const p of patterns) {
+                    const m = source.match(p.regex);
+                    if (m) {
+                        const translatedLabel = t(p.key, p.key);
+                        if (p.key === 'meter_sewerage' || isSewerageLine) return { label: translatedLabel, consumed: '—' };
+                        return { label: translatedLabel, consumed: `${m[1]} ${p.unit}` };
+                    }
+                }
+                if (isSewerageLine) return { label: t('meter_sewerage', 'Sewerage'), consumed: '—' };
+
+                const monthlyPurposePatterns = [
+                    { regex: /^(?:Аренда|İcarə|Rent)\s+([\d.]+)\s*(?:мес\.?|ay|month)$/i, key: 'tariffs_purpose_rent' },
+                    { regex: /^(?:Сервис|Услуги|Xidmət|Xidmətlər|Service|Services)\s+([\d.]+)\s*(?:мес\.?|ay|month)$/i, key: 'tariffs_purpose_service' },
+                    { regex: /^(?:Строительство|Tikinti|Construction)\s+([\d.]+)\s*(?:мес\.?|ay|month)$/i, key: 'tariffs_purpose_construction' },
+                ];
+                for (const p of monthlyPurposePatterns) {
+                    const m = source.match(p.regex);
+                    if (m) {
+                        const qty = m[1];
+                        const unit = t('readings_unit_month_short', 'month');
+                        return { label: `${t(p.key, p.key)} ${qty} ${unit}`, consumed: '—' };
+                    }
+                }
+
+                if (/(стабильн(?:ый|ая)? тариф|sabit tarif|stable tariff)/i.test(source)) {
+                    let serviceKey = null;
+                    if (/(газ|qaz|gas)/i.test(source)) serviceKey = 'meter_gas';
+                    else if (/(горячая\s+вода|isti\s+su|hot\s+water)/i.test(source)) serviceKey = 'meter_hot_water';
+                    else if (/(вода|su|water)/i.test(source)) serviceKey = 'meter_cold_water';
+                    else if (/(электрич|elektrik|electric)/i.test(source)) serviceKey = 'meter_electricity';
+                    else if (/(канализац|kanaliz|sewerage)/i.test(source)) serviceKey = 'meter_sewerage';
+
+                    const stableTariffLabel = t('stable_tariff', 'Stable tariff');
+                    if (serviceKey) return { label: `${stableTariffLabel} (${t(serviceKey, serviceKey)})`, consumed: '—' };
+                    return { label: stableTariffLabel, consumed: '—' };
+                }
+                return { label: source, consumed: '—' };
+            }
+
+            function renderInvoice(invoice) {
+                const lang = resolveLang();
+                const locale = localeFromLang(lang);
+                document.getElementById('invoiceNumber').textContent = invoice.invoiceNumber;
+                document.getElementById('invoiceResident').textContent = invoice.resident;
+                const userEl = document.getElementById('invoiceResidentUser');
+                if (userEl) userEl.textContent = invoice.residentUser || '—';
+                document.getElementById('invoicePeriod').textContent = invoice.period;
+                const statusMap = { DRAFT: t('invoices_status_draft', 'Черновик'), ISSUED: t('invoices_status_issued', 'Выставлен'), PARTIAL: t('invoices_status_partial', 'Частично оплачен'), PAID: t('invoices_status_paid', 'Оплачен'), CANCELED: t('invoices_status_canceled', 'Отменён') };
+                document.getElementById('invoiceStatus').textContent = statusMap[invoice.status] || invoice.status;
+
+                // Format due date for display
+                let dueDateDisplay = '—';
+                if (invoice.dueDate) {
+                    const date = new Date(invoice.dueDate);
+                    dueDateDisplay = date.toLocaleDateString(locale);
+                }
+                document.getElementById('invoiceDueDate').textContent = dueDateDisplay;
+                document.getElementById('invoiceTotal').textContent = invoice.total.toFixed(2);
+                document.getElementById('invoiceTotalNet').textContent = invoice.netTotal.toFixed(2);
+                document.getElementById('invoiceTotalVat').textContent = invoice.vatTotal.toFixed(2);
+                const dateEl = document.getElementById('invoiceDate');
+                if (dateEl) dateEl.textContent = dueDateDisplay;
+
+                console.log('📄 Print invoice data:', {
+                    total: invoice.total,
+                    paidAmount: invoice.paidAmount,
+                    remainingAmount: invoice.remainingAmount,
+                    lineItemsCount: invoice.lineItems.length
+                });
+
+                // Render line items
+                const tbody = document.getElementById('lineItemsTable');
+                if (invoice.lineItems && invoice.lineItems.length > 0) {
+                    let html = invoice.lineItems.map(item => {
+                        const parsed = extractConsumption(item.description || '');
+                        return `
+                        <tr>
+                            <td>${parsed.label}</td>
+                            <td>${parsed.consumed}</td>
+                            <td>${(item.amount_net || 0).toFixed(2)}</td>
+                            <td>${(item.amount_vat || 0).toFixed(2)}</td>
+                            <td>${(item.amount_total || 0).toFixed(2)}</td>
+                        </tr>
+                    `;
+                    }).join('');
+
+                    tbody.innerHTML = html;
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5">' + t('readings_no_records', 'Нет данных') + '</td></tr>';
+                }
+
+                // Set generated date
+                const now = new Date();
+                document.getElementById('generatedDate').textContent = now.toLocaleString(locale);
+            }
+
+            // Load invoice on page load
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => loadInvoice(invoiceId));
+            } else {
+                loadInvoice(invoiceId);
+            }
+
+            window.addEventListener('languageChanged', function () {
+                if (currentInvoice) renderInvoice(currentInvoice);
+            });
+            window.addEventListener('storage', function (e) {
+                if (e.key === 'language' && currentInvoice) renderInvoice(currentInvoice);
+            });
+        })();
+    </script>
+</body>
+
+</html>

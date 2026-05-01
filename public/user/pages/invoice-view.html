@@ -1,0 +1,1150 @@
+<link rel="stylesheet" href="/admin/content_css/invoice-view.css">
+<style>
+    .invoice-selection-summary {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border: 1px solid rgba(177, 186, 136, 0.4);
+        border-radius: 10px;
+        background: rgba(177, 186, 136, 0.12);
+        color: var(--text-primary, #56565c);
+        font-size: 1rem;
+        line-height: 1.45;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        white-space: normal;
+        word-break: break-word;
+    }
+    .invoice-selection-summary.is-empty {
+        border-color: rgba(148, 163, 184, 0.25);
+        background: rgba(148, 163, 184, 0.06);
+        color: var(--text-secondary, #7a7a82);
+    }
+    @media (max-width: 900px) {
+        .invoice-selection-summary {
+            font-size: 0.94rem;
+            padding: 10px 12px;
+        }
+    }
+    tr.category-locked {
+        opacity: 0.4;
+        pointer-events: none;
+    }
+    tr.category-locked td {
+        background: rgba(100, 116, 139, 0.08);
+    }
+</style>
+
+<div class="content-wrapper invoice-view-page">
+    <div class="invoice-header">
+        <button class="btn-back" type="button" onclick="window.userSpaRouter ? window.userSpaRouter.navigate('bills', true) : history.back()">
+            <span data-i18n="user_invoice_back_to_list">К списку счетов</span>
+        </button>
+        <h1>
+            <span data-i18n="user_invoice_title_prefix">Счёт:</span>
+            <span id="invoiceNumber">—</span>
+        </h1>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn-outline-secondary invoice-pdf-btn" type="button" id="pdfBtn">
+                PDF
+            </button>
+            <button class="btn btn-primary invoice-pay-btn" type="button" id="payBtn" data-i18n="user_invoice_pay_btn">
+                Оплатить
+            </button>
+        </div>
+    </div>
+
+    <!-- Краткая информация по счёту -->
+    <div class="invoice-summary user-invoice-summary">
+        <div class="invoice-summary-item">
+            <label data-i18n="user_invoice_house_label">Дом</label>
+            <div class="value" id="invoiceHouse">—</div>
+        </div>
+        <div class="invoice-summary-item">
+            <label data-i18n="user_invoice_period_label">Период</label>
+            <div class="value" id="invoicePeriod">—</div>
+        </div>
+        <div class="invoice-summary-item">
+            <label data-i18n="user_invoice_status_label">Статус</label>
+            <div class="value" id="invoiceStatus">
+                <span class="user-bill-status">—</span>
+            </div>
+        </div>
+        <div class="invoice-summary-item">
+            <label data-i18n="user_invoice_due_date_label">Срок оплаты</label>
+            <div class="value" id="invoiceDueDate">—</div>
+        </div>
+        <div class="invoice-summary-item">
+            <label data-i18n="user_invoice_total_label">Итого</label>
+            <div class="value total" id="invoiceTotal">0.00</div>
+        </div>
+    </div>
+
+    <!-- Как оплатить по счёту (тот же размер заголовка, что на дашборде; текст со сдвигом) -->
+    <div class="invoice-howto-block" aria-labelledby="invoice-howto-heading">
+        <h3 class="user-section-heading invoice-howto-title" id="invoice-howto-heading" data-i18n="user_invoice_howto_title">Как оплатить по счёту</h3>
+        <p class="invoice-howto-lead" data-i18n="user_invoice_howto_lead">Нажмите «Оплатить» вверху или отметьте позиции в таблице «Описание». На странице оплаты выберите способ и подтвердите сумму.</p>
+    </div>
+
+    <!-- Оплаты по счёту -->
+    <div class="payments-section user-invoice-payments">
+        <h3 class="user-section-heading" data-i18n="user_invoice_payments_title">Оплаты по счёту</h3>
+        <table class="line-items-table">
+            <thead>
+                <tr>
+                    <th data-i18n="user_invoice_payments_th_date">Дата</th>
+                    <th data-i18n="user_invoice_payments_th_method">Метод</th>
+                    <th data-i18n="user_invoice_payments_th_amount">Сумма</th>
+                    <th data-i18n="user_invoice_payments_th_comment">Комментарий</th>
+                </tr>
+            </thead>
+            <tbody id="paymentsTableBody">
+                <tr><td colspan="4" class="text-center text-muted">Загрузка...</td></tr>
+            </tbody>
+        </table>
+        <div class="payments-summary" id="paymentsSummary">
+            <span>Оплачено: <strong>0.00</strong> · Остаток: <strong>0.00</strong> из <strong>0.00</strong></span>
+        </div>
+    </div>
+
+    <!-- Позиции счёта -->
+    <div class="user-invoice-items">
+        <h3 class="user-section-heading" data-i18n="user_invoice_items_title">Описание</h3>
+        <div class="invoice-items-table-wrap">
+            <table class="line-items-table">
+                <thead>
+                    <tr>
+                        <th style="width:42px;">
+                            <input type="checkbox" id="masterCheckbox" class="invoice-master-checkbox" title="Выбрать все">
+                        </th>
+                        <th data-i18n="user_invoice_items_th_description">Описание</th>
+                        <th data-i18n="user_invoice_items_th_consumed">Израсходовано</th>
+                        <th data-i18n="user_invoice_items_th_charged">Начислено</th>
+                        <th data-i18n="user_invoice_items_th_vat">НДС</th>
+                        <th data-i18n="user_invoice_items_th_total">Итого</th>
+                        <th data-i18n="user_invoice_status_label">Статус</th>
+                    </tr>
+                </thead>
+                <tbody id="invoiceItemsBody">
+                    <tr><td colspan="7" class="text-center text-muted">Загрузка...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="selectedLinesPaySummary" class="invoice-selection-summary is-empty"></div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        'use strict';
+        const API_BASE_URL = window.getApiBase ? window.getApiBase() : (window.API_BASE_URL || window.BACKEND_API_BASE || 'http://localhost:8000');
+        
+        // Get invoice ID from sessionStorage or URL
+        let currentInvoiceId = null;
+        let currentInvoicePayload = null;
+        let selectedPayableLineIds = new Set();
+        const storedId = sessionStorage.getItem('currentInvoiceId');
+        if (storedId) {
+            currentInvoiceId = parseInt(storedId);
+        }
+        
+        if (!currentInvoiceId) {
+            // Try to get from URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            const invoiceId = urlParams.get('id') || urlParams.get('invoice_id');
+            if (invoiceId) {
+                currentInvoiceId = parseInt(invoiceId);
+            }
+        }
+        
+        if (!currentInvoiceId) {
+            document.querySelector('.content-wrapper').innerHTML = 
+                '<div class="text-center text-danger p-4">Ошибка: не найден ID счета. Пожалуйста, вернитесь к списку счетов.</div>';
+            return;
+        }
+        
+        // Store invoice ID globally for print page access
+        window.currentInvoiceId = currentInvoiceId;
+        
+        // Load invoice data from backend
+        async function loadInvoiceData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/resident/invoice/${currentInvoiceId}`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/';
+                        return;
+                    }
+                    if (response.status === 403 || response.status === 404) {
+                        throw new Error('Счёт не найден или у вас нет доступа');
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                renderInvoice(data);
+            } catch (error) {
+                console.error('Error loading invoice:', error);
+                document.querySelector('.content-wrapper').innerHTML = 
+                    `<div class="text-center text-danger p-4">Не удалось загрузить данные: ${error.message}</div>`;
+            }
+        }
+
+        // Render invoice data
+        function renderInvoice(invoice) {
+            currentInvoicePayload = invoice;
+            // Update header
+            const invoiceNumberEl = document.getElementById('invoiceNumber');
+            if (invoiceNumberEl) {
+                invoiceNumberEl.textContent = invoice.number || `#${invoice.id}`;
+            }
+            
+            // Update PDF button
+            const pdfBtn = document.getElementById('pdfBtn');
+            if (pdfBtn) {
+                pdfBtn.onclick = () => {
+                    // Store invoice ID in multiple ways for print page
+                    sessionStorage.setItem('printInvoiceId', invoice.id.toString());
+                    sessionStorage.setItem('currentInvoiceId', invoice.id.toString());
+                    // Also pass as URL parameter for reliability
+                    window.open(`/user/invoice-print.html?id=${invoice.id}`, '_blank', 'noopener');
+                };
+            }
+
+            // Update Pay button
+            const payBtn = document.getElementById('payBtn');
+            if (payBtn) {
+                payBtn.onclick = async () => {
+                    let selectedIds = getExpandedSelectedLineIds(invoice);
+                    let amountToPay = getSelectedSelectedLinesAmount(invoice);
+                    if (!selectedIds.length || amountToPay <= 0) {
+                        return;
+                    }
+                    // Перед оплатой берём свежие данные по счёту, чтобы избежать рассинхрона
+                    // между UI и backend (например, если часть суммы уже была погашена).
+                    try {
+                        const resp = await fetch(`${API_BASE_URL}/api/resident/invoice/${invoice.id}`, {
+                            method: 'GET',
+                            credentials: 'include',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        if (resp.ok) {
+                            const fresh = await resp.json();
+                            if (fresh && Array.isArray(fresh.lines)) {
+                                const currentBundle = getWaterSewerBundle(invoice?.lines || []);
+                                const freshBundle = getWaterSewerBundle(fresh?.lines || []);
+                                const selectedSet = new Set(selectedIds);
+                                const selectedIncludesCurrentBundle = !!(
+                                    currentBundle &&
+                                    (currentBundle.waterIds || []).some(id => selectedSet.has(Number(id)))
+                                );
+                                if (selectedIncludesCurrentBundle && freshBundle) {
+                                    for (const id of (freshBundle.sewerIds || [])) {
+                                        const n = Number(id || 0);
+                                        if (n > 0) selectedSet.add(n);
+                                    }
+                                    selectedIds = Array.from(selectedSet);
+                                }
+
+                                const freshAmount = fresh.lines.reduce((sum, line) => {
+                                    const lid = Number(line?.id || 0);
+                                    if (!lid || !selectedIds.includes(lid)) return sum;
+                                    const rem = Math.max(0, Number(line?.remaining_amount ?? line?.amount_total ?? 0));
+                                    return sum + rem;
+                                }, 0);
+                                if (freshAmount > 0) {
+                                    amountToPay = Number(freshAmount.toFixed(2));
+                                }
+
+                                // Синхронизируем summary по свежему инвойсу, чтобы сумма и список услуг всегда совпадали.
+                                invoice = {
+                                    ...invoice,
+                                    lines: fresh.lines
+                                };
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Failed to refresh invoice before payment, using cached amount', e);
+                    }
+                    try {
+                        sessionStorage.setItem('paymentScope', 'invoice');
+                        sessionStorage.setItem('paymentAmount', String(amountToPay));
+                        sessionStorage.setItem('paymentScopeLabel', window.i18n?.translate?.('payment_invoice_payment', localStorage.getItem('language') || 'ru') || 'Оплата выбранных услуг');
+                        sessionStorage.setItem('paymentTimestamp', String(Date.now()));
+                        if (invoice.resident_code) {
+                            sessionStorage.setItem('paymentResidentCode', invoice.resident_code);
+                        }
+                        if (invoice.resident_id) {
+                            sessionStorage.setItem('paymentResidentId', String(invoice.resident_id));
+                        }
+                        sessionStorage.setItem('paymentInvoiceId', String(invoice.id));
+                        sessionStorage.setItem('paymentSelectedLineIds', JSON.stringify(selectedIds));
+                        const selectedSummary = (invoice.lines || [])
+                            .filter(line => selectedIds.includes(Number(line?.id || 0)))
+                            .map(line => ({
+                                id: Number(line.id || 0),
+                                description: String(line.description || ''),
+                                remaining_amount: Number(line.remaining_amount ?? line.amount_total ?? 0),
+                            }));
+                        sessionStorage.setItem('paymentSelectedLinesSummary', JSON.stringify(selectedSummary));
+                        if (activeTerminalCategory) {
+                            sessionStorage.setItem('paymentTerminalCategory', activeTerminalCategory);
+                        } else {
+                            sessionStorage.removeItem('paymentTerminalCategory');
+                        }
+                    } catch (e) {
+                        console.warn('Failed to store payment session data', e);
+                    }
+
+                    if (window.userSpaRouter && typeof window.userSpaRouter.navigate === 'function') {
+                        window.userSpaRouter.navigate('report', true);
+                    } else {
+                        window.location.href = '/user/dashboard.html#report';
+                    }
+                };
+                const selectedAmount = getSelectedSelectedLinesAmount(invoice);
+                if (selectedAmount <= 0) {
+                    payBtn.disabled = true;
+                    payBtn.style.opacity = '0.6';
+                    payBtn.style.cursor = 'not-allowed';
+                } else {
+                    payBtn.disabled = false;
+                    payBtn.style.opacity = '';
+                    payBtn.style.cursor = '';
+                }
+            }
+            
+            // Update summary
+            const houseEl = document.getElementById('invoiceHouse');
+            if (houseEl) houseEl.textContent = invoice.resident_code || '—';
+            
+            const periodEl = document.getElementById('invoicePeriod');
+            if (periodEl) {
+                const lang = localStorage.getItem('language') || 'ru';
+                const locale = lang === 'az' ? 'az-AZ' : lang === 'en' ? 'en-US' : 'ru-RU';
+                const monthKeys = [
+                    'month_january', 'month_february', 'month_march', 'month_april',
+                    'month_may', 'month_june', 'month_july', 'month_august',
+                    'month_september', 'month_october', 'month_november', 'month_december'
+                ];
+                const monthName = window.i18n?.translate?.(monthKeys[invoice.period_month - 1], lang) ||
+                    ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                     'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'][invoice.period_month - 1];
+                let periodText = `${monthName} ${invoice.period_year}`;
+                if (invoice.period_dates && invoice.period_dates.from && invoice.period_dates.to) {
+                    try {
+                        const fromDate = new Date(invoice.period_dates.from);
+                        const toDate = new Date(invoice.period_dates.to);
+                        // Проверяем, что даты валидны
+                        if (!isNaN(fromDate.getTime()) && !isNaN(toDate.getTime())) {
+                            const fromText = fromDate.toLocaleDateString(locale);
+                            const toText = toDate.toLocaleDateString(locale);
+                            periodText = fromText === toText ? toText : `${fromText} - ${toText}`;
+                        } else {
+                            // Если даты невалидны, используем исходные строки или fallback
+                            periodText = invoice.period_dates.from === invoice.period_dates.to
+                                ? invoice.period_dates.to
+                                : `${invoice.period_dates.from} - ${invoice.period_dates.to}`;
+                        }
+                    } catch (e) {
+                        // В случае ошибки используем исходные строки или fallback
+                    periodText = invoice.period_dates.from === invoice.period_dates.to
+                        ? invoice.period_dates.to
+                        : `${invoice.period_dates.from} - ${invoice.period_dates.to}`;
+                    }
+                } else if (invoice.period_dates && invoice.period_dates.to) {
+                    try {
+                        const toDate = new Date(invoice.period_dates.to);
+                        if (!isNaN(toDate.getTime())) {
+                            periodText = toDate.toLocaleDateString(locale);
+                        } else {
+                            periodText = invoice.period_dates.to;
+                        }
+                    } catch (e) {
+                    periodText = invoice.period_dates.to;
+                    }
+                }
+                periodEl.textContent = periodText;
+                periodEl.dataset.periodMonth = invoice.period_month;
+                periodEl.dataset.periodYear = invoice.period_year;
+            }
+            
+            const statusEl = document.getElementById('invoiceStatus');
+            if (statusEl) {
+                const lang = localStorage.getItem('language') || 'ru';
+                const statusClass = getStatusClass(invoice.status);
+                const statusKey = `status_${invoice.status.toLowerCase()}`;
+                const statusText = window.i18n?.translate?.(statusKey, lang) || invoice.status;
+                statusEl.innerHTML = `<span class="user-bill-status ${statusClass}" data-status="${invoice.status}">${statusText}</span>`;
+            }
+            
+            const dueDateEl = document.getElementById('invoiceDueDate');
+            if (dueDateEl) {
+                const lang = localStorage.getItem('language') || 'ru';
+                const locale = lang === 'az' ? 'az-AZ' : lang === 'en' ? 'en-US' : 'ru-RU';
+                dueDateEl.textContent = invoice.due_date 
+                    ? new Date(invoice.due_date).toLocaleDateString(locale)
+                    : '—';
+                if (invoice.due_date) {
+                    dueDateEl.dataset.dueDate = invoice.due_date;
+                }
+            }
+            
+            const totalEl = document.getElementById('invoiceTotal');
+            if (totalEl) {
+                totalEl.textContent = formatCurrency(invoice.amount_total);
+            }
+            
+            // Render payments
+            renderPayments(invoice.payments || [], invoice);
+            
+            // Render invoice lines
+            renderInvoiceLines(invoice.lines || [], invoice.amount_total);
+            refreshSelectionControls(invoice);
+        }
+
+        // Translate payment comment (make it globally available)
+        window.translatePaymentComment = function translatePaymentComment(comment, lang) {
+            if (!comment || comment === '—') return comment;
+            
+            // Проверяем, что язык передан корректно
+            if (!lang) {
+                lang = localStorage.getItem('language') || 'ru';
+            }
+            
+            // Паттерны для распознавания комментариев (распознаем на любом языке, но переводим на текущий)
+            const patterns = [
+                {
+                    // "Оплата новой картой ****4567" или "Payment with new card ****4567" или "Yeni kartla ödəniş ****4567"
+                    regex: /^(?:Оплата новой картой|Payment with new card|Yeni kartla ödəniş)\s+\*\*\*\*(\d+)$/i,
+                    format: (match, last4) => {
+                        const template = window.translations?.[lang]?.payment_comment_new_card || 
+                                       window.translations?.ru?.payment_comment_new_card || 
+                                       'Оплата новой картой ****{last4}';
+                        return template.replace('{last4}', last4);
+                    }
+                },
+                {
+                    // "Списание из аванса Royal Park Pass" или "Deduction from Royal Park Pass advance" или "Royal Park Pass avansından çıxarış"
+                    regex: /^(?:Списание из аванса|Deduction from|Royal Park Pass avansından çıxarış).*Royal Park Pass/i,
+                    format: () => {
+                        return window.translations?.[lang]?.payment_comment_advance || 
+                               window.translations?.ru?.payment_comment_advance || 
+                               'Списание из аванса Royal Park Pass';
+                    }
+                },
+                {
+                    // "Оплата картой MasterCard ****4567" или "Payment with MasterCard ****4567 card" или "MasterCard ****4567 kartı ilə ödəniş"
+                    regex: /^(?:Оплата картой|Payment with|kartı ilə ödəniş)\s+([A-Za-z\s]+?)\s+\*\*\*\*(\d+)/i,
+                    format: (match, brand, last4) => {
+                        const suffix = `****${last4}`;
+                        const template = window.translations?.[lang]?.payment_comment_saved_card || 
+                                       window.translations?.ru?.payment_comment_saved_card || 
+                                       'Оплата картой {brand} {suffix}';
+                        return template.replace('{brand}', brand.trim()).replace('{suffix}', suffix);
+                    }
+                },
+                {
+                    // "Онлайн-оплата" или "Online payment" или "Onlayn ödəniş"
+                    regex: /^(?:Онлайн-оплата|Online payment|Onlayn ödəniş)$/i,
+                    format: () => {
+                        return window.translations?.[lang]?.payment_comment_online || 
+                               window.translations?.ru?.payment_comment_online || 
+                               'Онлайн-оплата';
+                    }
+                }
+            ];
+            
+            // Пробуем найти подходящий паттерн
+            for (const pattern of patterns) {
+                const match = comment.match(pattern.regex);
+                if (match) {
+                    const translated = pattern.format(match, ...match.slice(1));
+                    return translated;
+                }
+            }
+            
+            // Если паттерн не найден, возвращаем оригинал
+            return comment;
+        }
+
+        // Render payments table
+        function renderPayments(payments, invoice) {
+            const tbody = document.getElementById('paymentsTableBody');
+            if (!tbody) return;
+            
+            const lang = localStorage.getItem('language') || 'ru';
+            
+            if (payments.length === 0) {
+                let emptyText = 'Оплаты по этому счёту отсутствуют.';
+                if (window.i18n && window.i18n.translate) {
+                    emptyText = window.i18n.translate('invoice_payments_empty', lang);
+                    // Если вернулся сам ключ, значит перевод не найден - используем fallback
+                    if (emptyText === 'invoice_payments_empty') {
+                        emptyText = 'Оплаты по этому счёту отсутствуют.';
+                    }
+                }
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted" data-i18n-empty="invoice_payments_empty">${emptyText}</td></tr>`;
+            } else {
+                tbody.innerHTML = payments.map(p => {
+                    // Определяем метод оплаты
+                    let methodDisplay = p.method || '—';
+                    let commentDisplay = p.comment || '—';
+                    
+                    // Проверка 1: Если метод явно "ADVANCE"
+                    if (p.method === 'ADVANCE') {
+                        methodDisplay = window.i18n ? window.i18n.translate('user_invoice_payment_method_advance', lang) : 'Аванс';
+                        if (commentDisplay === '—' || !commentDisplay) {
+                            commentDisplay = 'Royal Park Pass';
+                        } else {
+                            // Переводим комментарий
+                            commentDisplay = translatePaymentComment(commentDisplay, lang);
+                        }
+                    }
+                    // Проверка 2: Если в reference есть "ADVANCE" (дополнительная защита)
+                    else if (p.reference && p.reference.includes('ADVANCE')) {
+                        methodDisplay = window.i18n ? window.i18n.translate('user_invoice_payment_method_advance', lang) : 'Аванс';
+                        commentDisplay = translatePaymentComment(commentDisplay, lang) || 'Royal Park Pass';
+                    } else {
+                        // Переводим комментарий для обычных платежей
+                        commentDisplay = translatePaymentComment(commentDisplay, lang);
+                    }
+                    
+                    // Сохраняем оригинальный комментарий для последующего перевода
+                    const originalComment = p.comment || '—';
+                    
+                    return `
+                        <tr>
+                            <td>${formatDateTime(p.date || p.received_at)}</td>
+                            <td>${methodDisplay}</td>
+                            <td>${formatCurrency(p.amount)}</td>
+                            <td data-original-comment="${originalComment.replace(/"/g, '&quot;')}">${commentDisplay}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+            
+            // Update payments summary
+            const summaryEl = document.getElementById('paymentsSummary');
+            if (summaryEl) {
+                const lang = localStorage.getItem('language') || 'ru';
+                const summaryTemplate = window.i18n?.translate?.('user_invoice_payments_summary', lang) || 'Оплачено: {paid} · Остаток: {remaining} из {total}';
+                const paidFormatted = formatCurrency(invoice.paid_amount);
+                const remainingFormatted = formatCurrency(invoice.remaining_amount);
+                const totalFormatted = formatCurrency(invoice.amount_total);
+                const summaryText = summaryTemplate
+                    .replace('{paid}', `<strong>${paidFormatted}</strong>`)
+                    .replace('{remaining}', `<strong>${remainingFormatted}</strong>`)
+                    .replace('{total}', `<strong>${totalFormatted}</strong>`);
+                summaryEl.innerHTML = `<span data-paid-amount="${invoice.paid_amount}" data-remaining-amount="${invoice.remaining_amount}" data-total-amount="${invoice.amount_total}">${summaryText}</span>`;
+            }
+        }
+
+        // Translate service description
+        function translateServiceDescription(description, lang) {
+            if (!description) return '—';
+            
+            // Паттерны для распознавания типов услуг
+            const patterns = [
+                {
+                    regex: /^Электричество\s+([\d.]+)\s*кВт·ч$/i,
+                    serviceKey: 'meter_electricity',
+                    unitKey: 'user_unit_kwh',
+                    format: (amount, service, unit) => `${service} ${amount} ${unit}`
+                },
+                {
+                    regex: /^Вода\s+([\d.]+)\s*м³$/i,
+                    serviceKey: 'meter_cold_water',
+                    unitKey: 'user_unit_m3',
+                    format: (amount, service, unit) => {
+                        // Для "Вода" используем простой перевод
+                        let waterText = 'Вода';
+                        if (lang === 'az') waterText = 'Su';
+                        else if (lang === 'en') waterText = 'Water';
+                        return `${waterText} ${amount} ${unit}`;
+                    }
+                },
+                {
+                    regex: /^Канализация(?:\s*\(авто\))?\s+([\d.]+)\s*м³$/i,
+                    serviceKey: 'meter_sewerage',
+                    unitKey: 'user_unit_m3',
+                    format: (amount, service, unit) => {
+                        // Перевод, если ключа нет — fallback на RU
+                        let text = service || 'Канализация';
+                        if (!service) {
+                            if (lang === 'az') text = 'Kanalizasiya';
+                            else if (lang === 'en') text = 'Sewerage';
+                        }
+                        return `${text} ${amount} ${unit}`;
+                    }
+                },
+                {
+                    regex: /^Газ\s+([\d.]+)\s*м³$/i,
+                    serviceKey: 'meter_gas',
+                    unitKey: 'user_unit_m3',
+                    format: (amount, service, unit) => `${service} ${amount} ${unit}`
+                },
+                {
+                    regex: /^Горячая\s+вода\s+([\d.]+)\s*м³$/i,
+                    serviceKey: 'meter_cold_water',
+                    unitKey: 'user_unit_m3',
+                    format: (amount, service, unit) => `${service} ${amount} ${unit}`
+                }
+            ];
+            
+            for (const pattern of patterns) {
+                const match = description.match(pattern.regex);
+                if (match) {
+                    const amount = match[1];
+                    const service = window.i18n?.translate?.(pattern.serviceKey, lang) || description.split(' ')[0];
+                    const unit = window.i18n?.translate?.(pattern.unitKey, lang) || match[0].split(amount)[1].trim();
+                    return pattern.format(amount, service, unit);
+            }
+            }
+            
+            // Если не найден паттерн, возвращаем оригинал
+            return description;
+        }
+
+        function extractConsumption(description, lang) {
+            if (!description) {
+                return { label: '—', consumed: '—', serviceKey: '', qty: '', unitKey: '' };
+            }
+
+            const source = String(description).trim();
+            const openingDebtMatch = source.match(/^(?:Начальный\s+долг|İlkin\s+borc|Opening\s+debt)\s*(?:\(([^)]+)\))?$/i);
+            if (openingDebtMatch) {
+                const openingLabel = window.i18n?.translate?.('invoice_opening_debt', lang) || 'Opening debt';
+                const rawCategory = String(openingDebtMatch[1] || '').trim().toLowerCase();
+                let categoryKey = '';
+                if (/(utility|коммун|kommunal)/i.test(rawCategory)) categoryKey = 'payments_service_utility';
+                else if (/(service|сервис|xidmət|xidmet)/i.test(rawCategory)) categoryKey = 'tariffs_purpose_service';
+                else if (/(rent|аренд|icar)/i.test(rawCategory)) categoryKey = 'tariffs_purpose_rent';
+                const categoryLabel = categoryKey
+                    ? (window.i18n?.translate?.(categoryKey, lang) || rawCategory)
+                    : '';
+                const label = categoryLabel ? `${openingLabel} (${categoryLabel})` : openingLabel;
+                return { label, consumed: '—', serviceKey: categoryKey, qty: '', unitKey: '' };
+            }
+            const isSewerageLine = /^(?:meter_sewerage\b|канализац|kanaliz|sewerage)/i.test(source);
+
+            const keyPattern = /^(meter_[a-z_]+)\s+([\d.]+)\s*(.*)$/i;
+            const keyMatch = source.match(keyPattern);
+            if (keyMatch) {
+                const key = keyMatch[1];
+                const qty = keyMatch[2];
+                const unitRaw = keyMatch[3] ? keyMatch[3].trim() : '';
+                const label = window.i18n?.translate?.(key, lang) || key;
+                if (key === 'meter_sewerage') {
+                    return { label, consumed: '—', serviceKey: key, qty: '', unitKey: '' };
+                }
+                const unit = unitRaw || '';
+                let unitKey = '';
+                if (/квт|kwh|kvt/i.test(unitRaw)) unitKey = 'user_unit_kwh';
+                else if (/м³|m3|m³/i.test(unitRaw)) unitKey = 'user_unit_m3';
+                return { label, consumed: `${qty} ${unit}`.trim(), serviceKey: key, qty, unitKey };
+            }
+
+            const patterns = [
+                {
+                    regex: /^(?:Электричество|Elektrik|Electricity)\s+([\d.]+)\s*(?:кВт·ч|kWh|kVt·s)$/i,
+                    serviceKey: 'meter_electricity',
+                    unitKey: 'user_unit_kwh'
+                },
+                {
+                    regex: /^(?:Вода|Su|Water)\s+([\d.]+)\s*(?:м³|m³|m3)$/i,
+                    serviceKey: 'meter_cold_water',
+                    unitKey: 'user_unit_m3'
+                },
+                {
+                    regex: /^(?:Канализация(?:\s*\(авто\))?|Kanalizasiya(?:\s*\(auto\))?|Sewerage(?:\s*\(auto\))?)\s+([\d.]+)\s*(?:м³|m³|m3)$/i,
+                    serviceKey: 'meter_sewerage',
+                    unitKey: 'user_unit_m3'
+                },
+                {
+                    regex: /^(?:Газ|Qaz|Gas)\s+([\d.]+)\s*(?:м³|m³|m3)$/i,
+                    serviceKey: 'meter_gas',
+                    unitKey: 'user_unit_m3'
+                },
+                {
+                    regex: /^(?:Горячая\s+вода|İsti\s+su|Hot\s+water)\s+([\d.]+)\s*(?:м³|m³|m3)$/i,
+                    serviceKey: 'meter_hot_water',
+                    unitKey: 'user_unit_m3'
+                }
+            ];
+
+            for (const pattern of patterns) {
+                const match = description.match(pattern.regex);
+                if (match) {
+                    const amount = match[1];
+                    const label = window.i18n?.translate?.(pattern.serviceKey, lang) || description.split(' ')[0];
+                    if (pattern.serviceKey === 'meter_sewerage' || isSewerageLine) {
+                        return { label, consumed: '—', serviceKey: pattern.serviceKey, qty: '', unitKey: '' };
+                    }
+                    const unit = window.i18n?.translate?.(pattern.unitKey, lang) || match[0].split(amount)[1].trim();
+                    return { label, consumed: `${amount} ${unit}`.trim(), serviceKey: pattern.serviceKey, qty: amount, unitKey: pattern.unitKey };
+                }
+            }
+
+            if (isSewerageLine) {
+                const label = window.i18n?.translate?.('meter_sewerage', lang) || 'Канализация';
+                return { label, consumed: '—', serviceKey: 'meter_sewerage', qty: '', unitKey: '' };
+            }
+
+            const monthlyPurposePatterns = [
+                { regex: /^(?:Аренда|İcarə|Rent)\s+([\d.]+)\s*(?:мес\.?|ay|month)$/i, key: 'tariffs_purpose_rent' },
+                { regex: /^(?:Сервис|Услуги|Xidmət|Xidmətlər|Service|Services)\s+([\d.]+)\s*(?:мес\.?|ay|month)$/i, key: 'tariffs_purpose_service' },
+                { regex: /^(?:Строительство|Tikinti|Construction)\s+([\d.]+)\s*(?:мес\.?|ay|month)$/i, key: 'tariffs_purpose_construction' },
+            ];
+            for (const p of monthlyPurposePatterns) {
+                const m = source.match(p.regex);
+                if (m) {
+                    const qty = m[1];
+                    const label = window.i18n?.translate?.(p.key, lang) || p.key;
+                    const unit = window.i18n?.translate?.('readings_unit_month_short', lang) || 'month';
+                    return { label, consumed: `${qty} ${unit}`.trim(), serviceKey: p.key, qty, unitKey: 'readings_unit_month_short' };
+                }
+            }
+
+            if (/(стабильн(?:ый|ая)? тариф|sabit tarif|stable tariff)/i.test(source)) {
+                let serviceKey = null;
+                if (/(газ|qaz|gas)/i.test(source)) serviceKey = 'meter_gas';
+                else if (/(горячая\s+вода|isti\s+su|hot\s+water)/i.test(source)) serviceKey = 'meter_hot_water';
+                else if (/(вода|su|water)/i.test(source)) serviceKey = 'meter_cold_water';
+                else if (/(электрич|elektrik|electric)/i.test(source)) serviceKey = 'meter_electricity';
+                else if (/(канализац|kanaliz|sewerage)/i.test(source)) serviceKey = 'meter_sewerage';
+                const stableLabel = window.i18n?.translate?.('stable_tariff', lang) || 'Stable tariff';
+                const svcLabel = serviceKey ? (window.i18n?.translate?.(serviceKey, lang) || serviceKey) : '';
+                const label = serviceKey ? `${stableLabel} (${svcLabel})` : stableLabel;
+                return { label, consumed: '—', serviceKey: '', qty: '', unitKey: '' };
+            }
+
+            const fallbackSplit = source.match(/^(.+?)\s+([\d.]+)\s*(.*)$/);
+            if (fallbackSplit) {
+                const label = fallbackSplit[1].trim();
+                const qty = fallbackSplit[2].trim();
+                const unit = fallbackSplit[3].trim();
+                return { label, consumed: `${qty} ${unit}`.trim(), serviceKey: '', qty, unitKey: '' };
+            }
+
+            return { label: source, consumed: '—', serviceKey: '', qty: '', unitKey: '' };
+        }
+
+        function getSelectedLineIds() {
+            return Array.from(selectedPayableLineIds).map(Number).filter(x => Number.isFinite(x) && x > 0);
+        }
+
+        // ---------------------------------------------------------------------------
+        // Terminal-category logic: utility vs maintenance
+        // ---------------------------------------------------------------------------
+        var UTILITY_KEYS = new Set([
+            'meter_electricity', 'meter_cold_water', 'meter_hot_water',
+            'meter_gas', 'meter_sewerage'
+        ]);
+        var MAINTENANCE_KEYS = new Set([
+            'tariffs_purpose_rent', 'tariffs_purpose_service', 'tariffs_purpose_construction'
+        ]);
+
+        function getTerminalCategory(serviceKey, description) {
+            if (UTILITY_KEYS.has(serviceKey)) return 'utility';
+            if (MAINTENANCE_KEYS.has(serviceKey)) return 'maintenance';
+            var low = String(description || '').toLowerCase();
+            if (/(электр|electr|газ|qaz|gas|вода|su|water|канализ|kanaliz|sewerage|стабильн|sabit|stable)/i.test(low)) return 'utility';
+            if (/(аренд|icar|rent|серв|xidm|service|строител|tikinti|construction)/i.test(low)) return 'maintenance';
+            return 'utility';
+        }
+
+        var activeTerminalCategory = null;
+
+        function enforceCategoryLock() {
+            var checkboxes = document.querySelectorAll('.invoice-line-pay-checkbox');
+            var selectedCats = new Set();
+            checkboxes.forEach(function(cb) {
+                if (cb.checked) {
+                    var cat = cb.closest('tr')?.dataset.terminalCategory;
+                    if (cat) selectedCats.add(cat);
+                }
+            });
+
+            if (selectedCats.size === 0) {
+                activeTerminalCategory = null;
+                checkboxes.forEach(function(cb) {
+                    var lineId = Number(cb.dataset.lineId || 0);
+                    var remaining = Number(cb.dataset.remaining || 0);
+                    cb.disabled = !(lineId > 0 && remaining > 0);
+                    cb.closest('tr')?.classList.remove('category-locked');
+                });
+            } else {
+                activeTerminalCategory = selectedCats.values().next().value;
+                checkboxes.forEach(function(cb) {
+                    var tr = cb.closest('tr');
+                    var cat = tr?.dataset.terminalCategory;
+                    var lineId = Number(cb.dataset.lineId || 0);
+                    var remaining = Number(cb.dataset.remaining || 0);
+                    if (cat && cat !== activeTerminalCategory) {
+                        cb.disabled = true;
+                        cb.checked = false;
+                        var lid = Number(cb.dataset.lineId || 0);
+                        if (lid) selectedPayableLineIds.delete(lid);
+                        tr?.classList.add('category-locked');
+                    } else {
+                        cb.disabled = !(lineId > 0 && remaining > 0);
+                        tr?.classList.remove('category-locked');
+                    }
+                });
+            }
+            updateMasterCheckboxState();
+        }
+
+        function isWaterDescription(description) {
+            const low = String(description || '').toLowerCase();
+            return low.includes('вода') || low.includes('water') || low.includes('meter_cold_water');
+        }
+
+        function isSewerageDescription(description) {
+            const low = String(description || '').toLowerCase();
+            return low.includes('канализац') || low.includes('kanaliz') || low.includes('sewerage') || low.includes('meter_sewerage');
+        }
+
+        function getWaterSewerBundle(lines) {
+            const rows = Array.isArray(lines) ? lines : [];
+            const waterIds = [];
+            const sewerIds = [];
+            for (const row of rows) {
+                const id = Number(row?.id || 0);
+                if (!id) continue;
+                const desc = String(row?.description || '');
+                if (isSewerageDescription(desc)) sewerIds.push(id);
+                else if (isWaterDescription(desc)) waterIds.push(id);
+            }
+            if (!waterIds.length || !sewerIds.length) return null;
+            return {
+                waterIds: Array.from(new Set(waterIds)),
+                sewerIds: Array.from(new Set(sewerIds)),
+            };
+        }
+
+        function getExpandedSelectedLineIds(invoice) {
+            const selected = getSelectedLineIds();
+            const bundle = getWaterSewerBundle(invoice?.lines || []);
+            if (!bundle || !selected.length) return selected;
+
+            const out = new Set(selected);
+            const hasSelectedWater = selected.some(id => bundle.waterIds.includes(id));
+            if (hasSelectedWater) {
+                bundle.sewerIds.forEach(id => out.add(id));
+            }
+            return Array.from(out);
+        }
+
+        function getSelectedSelectedLinesAmount(invoice) {
+            const rows = (invoice?.lines || []);
+            const selected = new Set(getExpandedSelectedLineIds(invoice));
+            let total = 0;
+            for (const row of rows) {
+                const lineId = Number(row?.id || 0);
+                if (!lineId || !selected.has(lineId)) continue;
+                const rem = Math.max(0, Number(row?.remaining_amount ?? row?.amount_total ?? 0));
+                total += rem;
+            }
+            return Number(total.toFixed(2));
+        }
+
+        function updateMasterCheckboxState() {
+            const masterCheckbox = document.getElementById('masterCheckbox');
+            if (!masterCheckbox) return;
+            const allCheckboxes = Array.from(document.querySelectorAll('.invoice-line-pay-checkbox:not([disabled])'));
+            if (allCheckboxes.length === 0) {
+                masterCheckbox.checked = false;
+                masterCheckbox.indeterminate = false;
+                return;
+            }
+            const checkedCount = allCheckboxes.filter(cb => cb.checked).length;
+            if (checkedCount === 0) {
+                masterCheckbox.checked = false;
+                masterCheckbox.indeterminate = false;
+            } else if (checkedCount === allCheckboxes.length) {
+                masterCheckbox.checked = true;
+                masterCheckbox.indeterminate = false;
+            } else {
+                masterCheckbox.checked = false;
+                masterCheckbox.indeterminate = true;
+            }
+        }
+
+        function refreshSelectionControls(invoice) {
+            const payBtn = document.getElementById('payBtn');
+            const selectedIds = getSelectedLineIds();
+            const selectedAmount = getSelectedSelectedLinesAmount(invoice);
+            const summaryEl = document.getElementById('selectedLinesPaySummary');
+            if (summaryEl) {
+                const lang = localStorage.getItem('language') || 'ru';
+                const hasSelected = selectedIds.length > 0;
+                summaryEl.classList.toggle('is-empty', !hasSelected);
+                if (hasSelected) {
+                    const template = window.i18n?.translate?.('user_invoice_selected_lines_summary', lang)
+                        || 'Выбрано услуг: {count} · К оплате: {amount}';
+                    summaryEl.textContent = template
+                        .replace('{count}', String(selectedIds.length))
+                        .replace('{amount}', formatCurrency(selectedAmount));
+                } else {
+                    summaryEl.textContent = window.i18n?.translate?.('user_invoice_selected_lines_empty', lang)
+                        || 'Не выбрано ни одной услуги для оплаты';
+                }
+            }
+            if (payBtn) {
+                if (selectedAmount <= 0 || selectedIds.length === 0) {
+                    payBtn.disabled = true;
+                    payBtn.style.opacity = '0.6';
+                    payBtn.style.cursor = 'not-allowed';
+                } else {
+                    payBtn.disabled = false;
+                    payBtn.style.opacity = '';
+                    payBtn.style.cursor = '';
+                }
+            }
+            updateMasterCheckboxState();
+        }
+
+        function normalizeLinePaymentStatus(rawStatus) {
+            const s = String(rawStatus || '').toLowerCase();
+            if (
+                s.includes('не оплач') ||
+                s.includes('неоплач') ||
+                s.includes('ödənilm') ||
+                s.includes('odenilm') ||
+                s.includes('unpaid') ||
+                s.includes('not paid')
+            ) return 'unpaid';
+            if (s.includes('част') || s.includes('qism') || s.includes('partial')) return 'partial';
+            if (s.includes('оплач') || s.includes('ödənilib') || s.includes('odenilib') || s.includes('paid')) return 'paid';
+            return 'unpaid';
+        }
+
+        // Render invoice lines
+        function renderInvoiceLines(lines, total) {
+            const tbody = document.getElementById('invoiceItemsBody');
+            if (!tbody) return;
+            
+            if (lines.length === 0) {
+                const lang = localStorage.getItem('language') || 'ru';
+                const emptyText = window.i18n?.translate?.('user_invoice_items_empty', lang) || 'Позиции отсутствуют';
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">${emptyText}</td></tr>`;
+                return;
+            }
+            
+            const lang = localStorage.getItem('language') || 'ru';
+            const waterSewerBundle = getWaterSewerBundle(lines);
+            const sewerIds = new Set((waterSewerBundle?.sewerIds || []).map(Number));
+            const idsFromData = new Set(
+                lines
+                    .filter(line => {
+                        const lineId = Number(line?.id || 0);
+                        if (lineId <= 0) return false;
+                        if (sewerIds.has(lineId)) return false;
+                        return Number(line?.remaining_amount ?? line?.amount_total ?? 0) > 0;
+                    })
+                    .map(line => Number(line.id))
+            );
+            const firstOccurrenceById = new Set();
+            if (selectedPayableLineIds.size === 0) {
+                idsFromData.forEach(id => selectedPayableLineIds.add(id));
+            } else {
+                // держим в selection только актуальные и непогашенные
+                selectedPayableLineIds = new Set(Array.from(selectedPayableLineIds).filter(id => idsFromData.has(id)));
+            }
+
+            tbody.innerHTML = lines.map(line => {
+                const parsed = extractConsumption(line.description, lang);
+                const translatedDescription = parsed.label;
+                const totalAmount = Number(line.amount_total || 0);
+                const paidAmount = Math.max(0, Number(line.paid_amount || 0));
+                const lineId = Number(line.id || 0);
+                const remainingAmount = Math.max(0, Number(line.remaining_amount ?? totalAmount));
+                const isFirstForId = lineId > 0 && !firstOccurrenceById.has(lineId);
+                if (lineId > 0 && isFirstForId) {
+                    firstOccurrenceById.add(lineId);
+                }
+                const isSewerageLine = parsed.serviceKey === 'meter_sewerage' || isSewerageDescription(line.description);
+                let checkboxLineId = lineId;
+                let showCheckbox = isFirstForId;
+                let selectable = lineId > 0 && remainingAmount > 0;
+
+                if (isSewerageLine || sewerIds.has(lineId)) {
+                    // Подстраховка: у канализации отдельного чекбокса быть не должно.
+                    showCheckbox = false;
+                    selectable = false;
+                }
+
+                const checked = selectable && selectedPayableLineIds.has(checkboxLineId);
+                const rawPaymentStatus = line.payment_status || '';
+                let statusCode = normalizeLinePaymentStatus(rawPaymentStatus);
+                if (totalAmount > 0) {
+                    if (paidAmount <= 0.000001) statusCode = 'unpaid';
+                    else if (paidAmount >= totalAmount - 0.000001) statusCode = 'paid';
+                    else statusCode = 'partial';
+                }
+                const ratio = totalAmount > 0 ? Math.min(100, Math.max(0, (paidAmount / totalAmount) * 100)) : 0;
+                let statusClass = 'payment-status-unpaid';
+                let statusText = window.i18n?.translate?.('invoice_line_status_unpaid', lang) || 'Не оплачена';
+                if (statusCode === 'paid') {
+                    statusClass = 'payment-status-paid';
+                    statusText = window.i18n?.translate?.('invoice_line_status_paid', lang) || 'Оплачена';
+                } else if (statusCode === 'partial') {
+                    statusClass = 'payment-status-partial';
+                    statusText = window.i18n?.translate?.('invoice_line_status_partial', lang) || 'Частично';
+                }
+                const paidMetaTemplate = window.i18n?.translate?.('invoice_line_paid_of', lang) || 'Оплачено {paid} из {total}';
+                const paidMeta = paidMetaTemplate
+                    .replace('{paid}', formatCurrency(paidAmount))
+                    .replace('{total}', formatCurrency(totalAmount));
+                const terminalCategory = getTerminalCategory(parsed.serviceKey, line.description);
+
+                return `
+                <tr data-terminal-category="${terminalCategory}" data-line-id="${lineId}">
+                    <td class="pay-select-cell">
+                        ${showCheckbox ? `
+                            <input type="checkbox"
+                                   class="invoice-line-pay-checkbox"
+                                   data-line-id="${checkboxLineId || ''}"
+                                   data-remaining="${remainingAmount}"
+                                   ${checked ? 'checked' : ''}
+                                   ${selectable ? '' : 'disabled'}>
+                        ` : ''}
+                    </td>
+                    <td data-original-description="${line.description || ''}" data-service-key="${parsed.serviceKey || ''}">${translatedDescription}</td>
+                    <td data-consumed-qty="${parsed.qty || ''}" data-consumed-unit-key="${parsed.unitKey || ''}">${parsed.consumed}</td>
+                    <td>${formatCurrency(line.amount_net)}</td>
+                    <td>${formatCurrency(line.amount_vat)}</td>
+                    <td class="total-value">${formatCurrency(line.amount_total)}</td>
+                    <td>
+                        <div class="payment-status-card ${statusClass}">
+                            <div class="payment-status-head">${statusText}</div>
+                            <div class="payment-status-meta">${paidMeta}</div>
+                            <div class="payment-status-track"><span style="width:${ratio.toFixed(2)}%"></span></div>
+                        </div>
+                    </td>
+                </tr>
+                `;
+            }).join('') + `
+                <tr class="total-row">
+                    <td colspan="5" data-i18n="user_invoice_items_total_row">Итого к оплате</td>
+                    <td class="total-value">${formatCurrency(total)}</td>
+                    <td></td>
+                </tr>
+            `;
+
+            tbody.querySelectorAll('.invoice-line-pay-checkbox').forEach(cb => {
+                cb.addEventListener('change', () => {
+                    const lineId = Number(cb.dataset.lineId || 0);
+                    if (!lineId) return;
+                    if (cb.checked) selectedPayableLineIds.add(lineId);
+                    else selectedPayableLineIds.delete(lineId);
+                    enforceCategoryLock();
+                    refreshSelectionControls(currentInvoicePayload);
+                });
+            });
+
+            // Master checkbox handler (respects category lock)
+            const masterCheckbox = document.getElementById('masterCheckbox');
+            if (masterCheckbox) {
+                masterCheckbox.addEventListener('change', () => {
+                    const isChecked = masterCheckbox.checked;
+                    if (isChecked && !activeTerminalCategory) {
+                        // When checking "all" and no category locked yet, pick the first available
+                        const firstAvailable = document.querySelector('.invoice-line-pay-checkbox:not([disabled])');
+                        if (firstAvailable) {
+                            const cat = firstAvailable.closest('tr')?.dataset.terminalCategory;
+                            if (cat) activeTerminalCategory = cat;
+                        }
+                    }
+                    const allowedCheckboxes = Array.from(document.querySelectorAll('.invoice-line-pay-checkbox')).filter(cb => {
+                        if (cb.disabled && !cb.checked) return false;
+                        if (activeTerminalCategory) {
+                            const cat = cb.closest('tr')?.dataset.terminalCategory;
+                            return cat === activeTerminalCategory;
+                        }
+                        return Number(cb.dataset.remaining || 0) > 0;
+                    });
+                    allowedCheckboxes.forEach(cb => {
+                        if (cb.checked !== isChecked) {
+                            cb.checked = isChecked;
+                            const lineId = Number(cb.dataset.lineId || 0);
+                            if (lineId) {
+                                if (isChecked) selectedPayableLineIds.add(lineId);
+                                else selectedPayableLineIds.delete(lineId);
+                            }
+                        }
+                    });
+                    enforceCategoryLock();
+                    refreshSelectionControls(currentInvoicePayload);
+                });
+            }
+            enforceCategoryLock();
+            updateMasterCheckboxState();
+        }
+
+        // Get CSS class for status
+        function getStatusClass(status) {
+            const statusMap = {
+                'PAID': 'paid',
+                'ISSUED': 'issued',
+                'PARTIAL': 'partial',
+                'DRAFT': 'draft',
+                'OVERPAID': 'overpaid',
+                'CANCELED': 'canceled'
+            };
+            return statusMap[status] || '';
+        }
+
+        // Format currency
+        function formatCurrency(amount) {
+            const lang = localStorage.getItem('language') || 'ru';
+            const locale = lang === 'az' ? 'az-AZ' : lang === 'en' ? 'en-US' : 'ru-RU';
+            return new Intl.NumberFormat(locale, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+
+        function formatDateTime(value) {
+            if (!value) return '—';
+            try {
+                const lang = localStorage.getItem('language') || 'ru';
+                const locale = lang === 'az' ? 'az-AZ' : lang === 'en' ? 'en-US' : 'ru-RU';
+                const dt = new Date(value);
+                return dt.toLocaleString(locale, {
+                    timeZone: 'Asia/Baku',
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                return '—';
+            }
+        }
+
+        // Load data when page is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadInvoiceData);
+        } else {
+            setTimeout(loadInvoiceData, 100);
+        }
+
+        window.addEventListener('languageChanged', () => {
+            if (currentInvoicePayload) {
+                renderInvoice(currentInvoicePayload);
+                refreshSelectionControls(currentInvoicePayload);
+            }
+        });
+    })();
+</script>

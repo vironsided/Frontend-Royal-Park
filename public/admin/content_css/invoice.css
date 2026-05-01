@@ -1,0 +1,1161 @@
+    /* Invoices page readability */
+    /* High specificity to override globals */
+    #spa-content .invoices-page .table thead th,
+    .invoices-page .table thead th {
+        color: #1a1d2e !important;
+        background: rgba(102, 126, 234, 0.04);
+        border-bottom: 2px solid rgba(0, 0, 0, 0.1) !important;
+        padding: 12px 16px !important;
+        text-align: left !important;
+        vertical-align: middle !important;
+        font-weight: 600 !important;
+    }
+
+    #spa-content .invoices-page .table tbody td,
+    .invoices-page .table tbody td {
+        color: #212529 !important;
+        padding: 12px 16px !important;
+        text-align: left !important;
+        vertical-align: middle !important;
+    }
+
+    [data-theme="dark"] #spa-content .invoices-page .table thead th,
+    [data-theme="dark"] .invoices-page .table thead th {
+        color: rgba(255, 255, 255, 0.9) !important;
+        background: rgba(102, 126, 234, 0.1);
+        border-bottom-color: rgba(255, 255, 255, 0.12) !important;
+        padding: 12px 16px !important;
+        text-align: left !important;
+        vertical-align: middle !important;
+        font-weight: 600 !important;
+    }
+
+    [data-theme="dark"] #spa-content .invoices-page .table tbody td,
+    [data-theme="dark"] .invoices-page .table tbody td {
+        color: #ffffff !important;
+        padding: 12px 16px !important;
+        text-align: left !important;
+        vertical-align: middle !important;
+    }
+
+    /* Симметричное выравнивание заголовков и ячеек таблицы */
+    .invoices-page .table thead th,
+    .invoices-page .table tbody td {
+        padding: 12px 16px !important;
+        text-align: left !important;
+        vertical-align: middle !important;
+    }
+
+    /* Выравнивание для последней колонки "Действия" */
+    .invoices-page .table thead th:last-child,
+    .invoices-page .table tbody td:last-child {
+        text-align: left !important;
+    }
+
+    /* Стили для блока информации об оплате под статусом */
+    .invoices-page .table tbody td .payment-info {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.6);
+        background: rgba(255, 255, 255, 0.05);
+        padding: 4px 8px;
+        border-radius: 4px;
+        margin-top: 4px;
+        display: inline-block;
+    }
+
+    [data-theme="dark"] .invoices-page .table tbody td .payment-info {
+        color: rgba(255, 255, 255, 0.6);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Invoices Page */
+    .invoices-page {
+        padding: 0 !important;
+    }
+
+    /* Убрать верхний отступ у content-wrapper для invoices-page */
+    #spa-content .content-wrapper.invoices-page,
+    body[data-theme="dark"] #spa-content .content-wrapper.invoices-page,
+    html[data-theme="dark"] #spa-content .content-wrapper.invoices-page,
+    [data-theme="dark"] #spa-content .content-wrapper.invoices-page,
+    body #spa-content .content-wrapper.invoices-page,
+    html #spa-content .content-wrapper.invoices-page,
+    body:not([data-theme="dark"]) #spa-content .content-wrapper.invoices-page,
+    .content-wrapper.invoices-page {
+        padding-top: 0 !important;
+    }
+
+    /* Invoices Actions Section */
+    .invoices-actions {
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        margin-top: 0 !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .invoices-actions-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        align-items: end;
+        margin-bottom: 20px;
+    }
+
+    .invoices-actions-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .invoices-actions-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .invoices-actions-group label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: rgba(255, 255, 255, 0.8) !important;
+        font-size: 0.9rem;
+    }
+
+    .invoices-actions-group label .required-mark {
+        color: #ff6b6b;
+        margin-left: 4px;
+    }
+
+    .invoices-actions-group input,
+    .invoices-actions-group select {
+        padding: 10px 15px;
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: #fefefe !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+    }
+
+    .invoices-actions-group input:focus,
+    .invoices-actions-group select:focus {
+        outline: none;
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        background: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    .invoices-actions-group input::placeholder {
+        color: rgba(255, 255, 255, 0.35);
+    }
+
+    .invoices-actions-group select option {
+        background: #1f2432;
+        color: #f6f7ff;
+    }
+
+    /* Dark theme for select options - максимальная специфичность */
+    [data-theme="dark"] .invoices-actions-group select option,
+    [data-theme="dark"] .invoices-filters-group select option,
+    body[data-theme="dark"] .invoices-actions-group select option,
+    body[data-theme="dark"] .invoices-filters-group select option,
+    html[data-theme="dark"] .invoices-actions-group select option,
+    html[data-theme="dark"] .invoices-filters-group select option {
+        background: #242831 !important;
+        background-color: #242831 !important;
+        color: #f6f7ff !important;
+    }
+
+    .date-input-wrapper {
+        position: relative;
+        display: flex;
+        gap: 0;
+        align-items: center;
+        border-radius: 12px;
+        overflow: hidden;
+        background: transparent;
+    }
+
+    .date-input-wrapper input[type="date"] {
+        flex: 1;
+        padding: 12px 50px 12px 16px;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 2px solid rgba(255, 255, 255, 0.12) !important;
+        border-radius: 12px 0 0 12px !important;
+        color: #fefefe !important;
+        font-size: 0.95rem;
+        font-weight: 500;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: text;
+    }
+
+    .date-input-wrapper input[type="date"]:focus {
+        outline: none !important;
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), 0 4px 12px rgba(102, 126, 234, 0.2) !important;
+        background: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    .date-input-wrapper input[type="date"]::-webkit-calendar-picker-indicator {
+        opacity: 0;
+        position: absolute;
+        right: 50px;
+        width: 0;
+        height: 0;
+        cursor: pointer;
+        z-index: 1;
+    }
+
+    .date-input-wrapper input[type="date"]::-webkit-datetime-edit-text {
+        color: rgba(255, 255, 255, 0.7);
+        padding: 0 4px;
+    }
+
+    .date-input-wrapper input[type="date"]::-webkit-datetime-edit-month-field,
+    .date-input-wrapper input[type="date"]::-webkit-datetime-edit-day-field,
+    .date-input-wrapper input[type="date"]::-webkit-datetime-edit-year-field {
+        color: rgba(255, 255, 255, 0.9);
+        padding: 0 2px;
+    }
+
+    /* Белый цвет для плейсхолдера "ДД.ММ.ГГГГ" в темной теме */
+    [data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-text,
+    body[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-text,
+    html[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-text {
+        color: rgba(255, 255, 255, 0.8) !important;
+    }
+
+    [data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-month-field,
+    [data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-day-field,
+    [data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-year-field,
+    body[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-month-field,
+    body[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-day-field,
+    body[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-year-field,
+    html[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-month-field,
+    html[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-day-field,
+    html[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-year-field {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    /* Белый цвет для пустого поля (плейсхолдер) */
+    [data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-text,
+    [data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-month-field,
+    [data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-day-field,
+    [data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-year-field,
+    body[data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-text,
+    body[data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-month-field,
+    body[data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-day-field,
+    body[data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-year-field,
+    html[data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-text,
+    html[data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-month-field,
+    html[data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-day-field,
+    html[data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-year-field {
+        color: #ffffff !important;
+    }
+
+    .date-input-wrapper input[type="date"]::-webkit-datetime-edit-month-field:focus,
+    .date-input-wrapper input[type="date"]::-webkit-datetime-edit-day-field:focus,
+    .date-input-wrapper input[type="date"]::-webkit-datetime-edit-year-field:focus {
+        background: rgba(102, 126, 234, 0.2);
+        color: #ffffff;
+        border-radius: 4px;
+    }
+
+    .date-input-wrapper .btn-calendar {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 48px;
+        padding: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: 2px solid transparent;
+        border-left: none;
+        border-radius: 0 12px 12px 0;
+        color: #ffffff;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .date-input-wrapper .btn-calendar:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4), 0 0 0 4px rgba(102, 126, 234, 0.1);
+        transform: scale(1.02);
+    }
+
+    .date-input-wrapper .btn-calendar:active {
+        transform: scale(0.98);
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .date-input-wrapper .btn-calendar i {
+        font-size: 1.2rem;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .date-input-wrapper .btn-calendar:hover i {
+        transform: scale(1.1) rotate(-5deg);
+    }
+
+    /* Light theme for date input */
+    body:not([data-theme="dark"]) .invoices-page .date-input-wrapper input[type="date"] {
+        background: #ffffff !important;
+        border: 2px solid #dee2e6 !important;
+        color: #212529 !important;
+    }
+
+    body:not([data-theme="dark"]) .invoices-page .date-input-wrapper input[type="date"]:focus {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 4px 12px rgba(102, 126, 234, 0.15) !important;
+    }
+
+    body:not([data-theme="dark"]) .invoices-page .date-input-wrapper input[type="date"]::-webkit-datetime-edit-text {
+        color: #6c757d;
+    }
+
+    body:not([data-theme="dark"]) .invoices-page .date-input-wrapper input[type="date"]::-webkit-datetime-edit-month-field,
+    body:not([data-theme="dark"]) .invoices-page .date-input-wrapper input[type="date"]::-webkit-datetime-edit-day-field,
+    body:not([data-theme="dark"]) .invoices-page .date-input-wrapper input[type="date"]::-webkit-datetime-edit-year-field {
+        color: #212529;
+    }
+
+    body:not([data-theme="dark"]) .invoices-page .date-input-wrapper .btn-calendar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+    }
+
+    body:not([data-theme="dark"]) .invoices-page .date-input-wrapper .btn-calendar:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.35), 0 0 0 4px rgba(102, 126, 234, 0.08);
+    }
+
+    .invoices-actions-buttons {
+        display: flex;
+        gap: 15px;
+        align-items: end;
+    }
+
+    .invoices-actions-buttons .btn {
+        padding: 10px 20px;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+
+    /* Filters Section */
+    .invoices-filters {
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        margin-top: 0 !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .invoices-filters-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 20px;
+        align-items: end;
+        margin-bottom: 20px;
+    }
+
+    .invoices-filters-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .invoices-filters-group label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: rgba(255, 255, 255, 0.8) !important;
+        font-size: 0.9rem;
+    }
+
+    .invoices-filters-group input,
+    .invoices-filters-group select {
+        padding: 10px 15px;
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: #fefefe !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+    }
+
+    .invoices-filters-group input:focus,
+    .invoices-filters-group select:focus {
+        outline: none;
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        background: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    .invoices-filters-group input::placeholder {
+        color: rgba(255, 255, 255, 0.35);
+    }
+
+    /* Number input styling with spinners */
+    .invoices-filters-group input[type="number"],
+    .invoices-actions-group input[type="number"] {
+        -webkit-appearance: none;
+        -moz-appearance: textfield;
+        appearance: textfield;
+        padding-right: 12.5px !important;
+    }
+
+    .invoices-filters-group input[type="number"]::-webkit-inner-spin-button,
+    .invoices-filters-group input[type="number"]::-webkit-outer-spin-button,
+    .invoices-actions-group input[type="number"]::-webkit-inner-spin-button,
+    .invoices-actions-group input[type="number"]::-webkit-outer-spin-button {
+        opacity: 1 !important;
+        height: 30px;
+        cursor: pointer;
+        margin: 0 !important;
+        margin-right: 0 !important;
+        margin-left: 0 !important;
+        width: 15px !important;
+    }
+
+    /* Style for number input spinners in dark theme*/
+    .invoices-filters-group input[type="number"]::-webkit-inner-spin-button,
+    .invoices-actions-group input[type="number"]::-webkit-inner-spin-button {
+        background: rgba(255, 255, 255, 0.1);
+        border-left: 1px solid rgba(255, 255, 255, 0.12);
+        width: 15px !important;
+        border-radius: 0 8px 8px 0;
+        margin: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    /* Gray spinner icons in dark theme */
+    [data-theme="dark"] .invoices-filters-group input[type="number"]::-webkit-inner-spin-button,
+    [data-theme="dark"] .invoices-actions-group input[type="number"]::-webkit-inner-spin-button,
+    body[data-theme="dark"] .invoices-filters-group input[type="number"]::-webkit-inner-spin-button,
+    body[data-theme="dark"] .invoices-actions-group input[type="number"]::-webkit-inner-spin-button,
+    html[data-theme="dark"] .invoices-filters-group input[type="number"]::-webkit-inner-spin-button,
+    html[data-theme="dark"] .invoices-actions-group input[type="number"]::-webkit-inner-spin-button {
+        filter: brightness(0.4) opacity(0.6) !important;
+        -webkit-filter: brightness(0.4) opacity(0.6) !important;
+        opacity: 0.6 !important;
+    }
+
+    [data-theme="dark"] .invoices-filters-group input[type="number"]::-webkit-outer-spin-button,
+    [data-theme="dark"] .invoices-actions-group input[type="number"]::-webkit-outer-spin-button,
+    body[data-theme="dark"] .invoices-filters-group input[type="number"]::-webkit-outer-spin-button,
+    body[data-theme="dark"] .invoices-actions-group input[type="number"]::-webkit-outer-spin-button,
+    html[data-theme="dark"] .invoices-filters-group input[type="number"]::-webkit-outer-spin-button,
+    html[data-theme="dark"] .invoices-actions-group input[type="number"]::-webkit-outer-spin-button {
+        filter: brightness(0.4) opacity(0.6) !important;
+        -webkit-filter: brightness(0.4) opacity(0.6) !important;
+        opacity: 0.6 !important;
+    }
+
+    /* Show spinners on hover */
+    .invoices-filters-group input[type="number"]:hover::-webkit-inner-spin-button {
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Gray spinner icons on hover in dark theme */
+    [data-theme="dark"] .invoices-filters-group input[type="number"]:hover::-webkit-inner-spin-button,
+    [data-theme="dark"] .invoices-actions-group input[type="number"]:hover::-webkit-inner-spin-button,
+    body[data-theme="dark"] .invoices-filters-group input[type="number"]:hover::-webkit-inner-spin-button,
+    body[data-theme="dark"] .invoices-actions-group input[type="number"]:hover::-webkit-inner-spin-button,
+    html[data-theme="dark"] .invoices-filters-group input[type="number"]:hover::-webkit-inner-spin-button,
+    html[data-theme="dark"] .invoices-actions-group input[type="number"]:hover::-webkit-inner-spin-button {
+        filter: brightness(0.5) opacity(0.7) !important;
+        -webkit-filter: brightness(0.5) opacity(0.7) !important;
+        opacity: 0.7 !important;
+    }
+
+    .invoices-filters-group select option {
+        background: #1f2432;
+        color: #f6f7ff;
+    }
+
+    .invoices-filters-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    .invoices-export-toolbar {
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: flex-start;
+    }
+
+    .invoices-export-panel {
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        position: relative;
+        z-index: 10;
+    }
+
+    .invoices-export-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .invoices-export-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .invoices-export-panel .service-filter-details {
+        position: relative;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px !important;
+        padding: 0;
+        overflow: visible;
+        z-index: 25;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+
+    .invoices-export-panel .service-filter-details summary {
+        position: relative;
+        display: block;
+        width: 100%;
+        padding: 10px 34px 10px 12px;
+        cursor: pointer;
+        color: #fefefe;
+        font-size: 0.92rem;
+        list-style: none;
+        min-height: 42px;
+        border: none !important;
+        margin: 0;
+        border-radius: 12px !important;
+        background: transparent !important;
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .invoices-export-panel .service-filter-details summary::after {
+        content: "▾";
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.78rem;
+        transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    .invoices-export-panel .service-filter-details summary:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .invoices-export-panel .service-filter-details:focus-within {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    }
+
+    .invoices-export-panel .service-filter-details[open] summary::after {
+        transform: translateY(-50%) rotate(180deg);
+    }
+
+    .invoices-export-panel .service-filter-details summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .invoices-export-panel .service-filter-dropdown {
+        display: none;
+    }
+
+    .invoices-export-panel .service-filter-details[open] .service-filter-dropdown {
+        display: block;
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        min-width: 320px;
+        max-width: 460px;
+        width: max-content;
+        background: #1f2432;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 12px;
+        padding: 10px;
+        z-index: 10050;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+        opacity: 1;
+    }
+
+    .invoices-export-panel .service-filter-options {
+        margin-top: 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(140px, 1fr));
+        gap: 8px;
+    }
+
+    .invoices-export-panel .service-filter-options label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+        margin: 0;
+        padding: 6px 6px;
+        border-radius: 6px;
+    }
+
+    .invoices-export-panel .service-filter-options label:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .invoices-export-panel .service-filter-actions {
+        margin-top: 10px;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    .invoices-export-panel .btn-filter-mini {
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 0.82rem;
+        cursor: pointer;
+    }
+
+    .invoices-export-panel .btn-filter-mini:hover {
+        background: rgba(255, 255, 255, 0.14);
+    }
+
+    [data-theme="dark"] .invoices-export-panel {
+        background: #242831 !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        color: #e4e6eb !important;
+    }
+
+    [data-theme="dark"] .invoices-export-panel .service-filter-details summary,
+    [data-theme="dark"] .invoices-export-panel .service-filter-dropdown {
+        background: #2c3140 !important;
+        background-color: #2c3140 !important;
+        background-image: none !important;
+        border-color: rgba(255, 255, 255, 0.12) !important;
+        color: #fefefe !important;
+        opacity: 1 !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    [data-theme="dark"] .invoices-export-panel #exportInvoiceMeterTypeSummary {
+        border-radius: 12px !important;
+    }
+
+    [data-theme="dark"] .invoices-export-panel .service-filter-options label:hover {
+        background: rgba(255, 255, 255, 0.08) !important;
+    }
+
+
+    /* Light theme styles - override dark styles when NOT dark theme */
+    body:not([data-theme="dark"]) .invoices-actions,
+    body:not([data-theme="dark"]) #spa-content .invoices-actions,
+    body:not([data-theme="dark"]) .content-wrapper .invoices-actions {
+        background: rgba(255, 255, 255, 0.9) !important;
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        color: #212529 !important;
+    }
+
+    body:not([data-theme="dark"]) .invoices-filters,
+    body:not([data-theme="dark"]) #spa-content .invoices-filters,
+    body:not([data-theme="dark"]) .content-wrapper .invoices-filters {
+        background: rgba(255, 255, 255, 0.9) !important;
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        color: #212529 !important;
+    }
+
+    body:not([data-theme="dark"]) .invoices-actions-group label,
+    body:not([data-theme="dark"]) .invoices-filters-group label {
+        color: #495057 !important;
+    }
+
+    body:not([data-theme="dark"]) .invoices-actions-group input,
+    body:not([data-theme="dark"]) .invoices-actions-group select,
+    body:not([data-theme="dark"]) .invoices-filters-group input,
+    body:not([data-theme="dark"]) .invoices-filters-group select {
+        background: #ffffff !important;
+        color: #212529 !important;
+        border: 1px solid #dee2e6 !important;
+    }
+
+    body:not([data-theme="dark"]) .invoices-actions-group input:focus,
+    body:not([data-theme="dark"]) .invoices-actions-group select:focus,
+    body:not([data-theme="dark"]) .invoices-filters-group input:focus,
+    body:not([data-theme="dark"]) .invoices-filters-group select:focus {
+        border-color: #667eea !important;
+        background: #ffffff !important;
+    }
+
+    body:not([data-theme="dark"]) .invoices-actions-group select option,
+    body:not([data-theme="dark"]) .invoices-filters-group select option {
+        background: #ffffff !important;
+        color: #212529 !important;
+    }
+
+    /* Pagination Styles */
+    .table-pagination {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 0 0 15px 15px;
+        overflow: visible !important;
+        position: relative;
+    }
+
+    .pagination-controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .btn-pagination {
+        min-width: 36px;
+        height: 36px;
+        padding: 0 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        color: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+
+    .btn-pagination:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+    }
+
+    .btn-pagination:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    .btn-pagination.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: #667eea;
+        color: #ffffff;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .pagination-info {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+    }
+
+    .pagination-per-page {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        overflow: visible !important;
+        position: relative;
+    }
+
+    /* Custom dropdown for pagination per page selector */
+    .custom-pag-select {
+        position: relative;
+        display: inline-block;
+        min-width: 60px;
+    }
+
+    .custom-pag-select .select-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 6px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        min-width: 60px;
+        user-select: none;
+    }
+
+    .custom-pag-select .select-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .custom-pag-select .select-btn .arrow {
+        margin-left: 8px;
+        font-size: 0.7rem;
+        transition: transform 0.3s;
+        opacity: 0.7;
+    }
+
+    .custom-pag-select.open .select-btn .arrow {
+        transform: rotate(180deg);
+    }
+
+    .custom-pag-select .select-options {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        background: #1f2432 !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-radius: 8px !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+        overflow: hidden;
+        display: none;
+        z-index: 10001 !important;
+        min-width: 100%;
+        width: auto;
+    }
+
+    .custom-pag-select.open .select-options {
+        display: block;
+    }
+
+    .custom-pag-select .select-option {
+        padding: 8px 12px;
+        cursor: pointer;
+        color: #f6f7ff !important;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        background: #1f2432 !important;
+        display: block;
+        white-space: nowrap;
+    }
+
+    .custom-pag-select .select-option:hover {
+        background: #3b4261 !important;
+        color: #ffffff !important;
+    }
+
+    .custom-pag-select .select-option.selected {
+        background: #667eea !important;
+        color: #ffffff !important;
+        font-weight: 600;
+    }
+
+    .custom-pag-select .select-option:not(:last-child) {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* ФИНАЛЬНЫЙ ПРИОРИТЕТ - ГАРАНТИРОВАННО СЕРЫЙ ФОН В DARK THEME */
+    /* Этот блок должен быть в самом конце, чтобы перекрыть ВСЕ остальные стили */
+    [data-theme="dark"] .invoices-actions,
+    [data-theme="dark"] .invoices-filters {
+        background: #242831 !important;
+        background-color: #242831 !important;
+        background-image: none !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        color: #e4e6eb !important;
+    }
+
+    body[data-theme="dark"] .invoices-actions,
+    body[data-theme="dark"] .invoices-filters {
+        background: #242831 !important;
+        background-color: #242831 !important;
+        background-image: none !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        color: #e4e6eb !important;
+    }
+
+    html[data-theme="dark"] .invoices-actions,
+    html[data-theme="dark"] .invoices-filters {
+        background: #242831 !important;
+        background-color: #242831 !important;
+        background-image: none !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        color: #e4e6eb !important;
+    }
+
+    /* ФИНАЛЬНЫЙ ПРИОРИТЕТ - СЕРЫЕ СПИННЕРЫ В DARK THEME */
+    /* Этот блок должен быть в самом конце, чтобы перекрыть ВСЕ остальные стили */
+    [data-theme="dark"] .invoices-filters-group input[type="number"]::-webkit-inner-spin-button,
+    [data-theme="dark"] .invoices-actions-group input[type="number"]::-webkit-inner-spin-button,
+    body[data-theme="dark"] .invoices-filters-group input[type="number"]::-webkit-inner-spin-button,
+    body[data-theme="dark"] .invoices-actions-group input[type="number"]::-webkit-inner-spin-button,
+    html[data-theme="dark"] .invoices-filters-group input[type="number"]::-webkit-inner-spin-button,
+    html[data-theme="dark"] .invoices-actions-group input[type="number"]::-webkit-inner-spin-button,
+    [data-theme="dark"] .invoices-filters-group input[type="number"]::-webkit-outer-spin-button,
+    [data-theme="dark"] .invoices-actions-group input[type="number"]::-webkit-outer-spin-button,
+    body[data-theme="dark"] .invoices-filters-group input[type="number"]::-webkit-outer-spin-button,
+    body[data-theme="dark"] .invoices-actions-group input[type="number"]::-webkit-outer-spin-button,
+    html[data-theme="dark"] .invoices-filters-group input[type="number"]::-webkit-outer-spin-button,
+    html[data-theme="dark"] .invoices-actions-group input[type="number"]::-webkit-outer-spin-button {
+        filter: brightness(0.4) opacity(0.6) !important;
+        -webkit-filter: brightness(0.4) opacity(0.6) !important;
+        opacity: 0.6 !important;
+    }
+
+    [data-theme="dark"] .invoices-filters-group input[type="number"]:hover::-webkit-inner-spin-button,
+    [data-theme="dark"] .invoices-actions-group input[type="number"]:hover::-webkit-inner-spin-button,
+    body[data-theme="dark"] .invoices-filters-group input[type="number"]:hover::-webkit-inner-spin-button,
+    body[data-theme="dark"] .invoices-actions-group input[type="number"]:hover::-webkit-inner-spin-button,
+    html[data-theme="dark"] .invoices-filters-group input[type="number"]:hover::-webkit-inner-spin-button,
+    html[data-theme="dark"] .invoices-actions-group input[type="number"]:hover::-webkit-inner-spin-button {
+        filter: brightness(0.5) opacity(0.7) !important;
+        -webkit-filter: brightness(0.5) opacity(0.7) !important;
+        opacity: 0.7 !important;
+    }
+
+    /* ФИНАЛЬНЫЙ ПРИОРИТЕТ - СЕРЫЙ ФОН ДЛЯ SELECT OPTION В DARK THEME */
+    /* Этот блок должен быть в самом конце, чтобы перекрыть ВСЕ остальные стили */
+    [data-theme="dark"] .invoices-actions-group select,
+    [data-theme="dark"] .invoices-filters-group select,
+    body[data-theme="dark"] .invoices-actions-group select,
+    body[data-theme="dark"] .invoices-filters-group select,
+    html[data-theme="dark"] .invoices-actions-group select,
+    html[data-theme="dark"] .invoices-filters-group select {
+        background: rgba(255, 255, 255, 0.05) !important;
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        color: #fefefe !important;
+    }
+
+    [data-theme="dark"] .invoices-actions-group select option,
+    [data-theme="dark"] .invoices-filters-group select option,
+    body[data-theme="dark"] .invoices-actions-group select option,
+    body[data-theme="dark"] .invoices-filters-group select option,
+    html[data-theme="dark"] .invoices-actions-group select option,
+    html[data-theme="dark"] .invoices-filters-group select option,
+    [data-theme="dark"] #spa-content .invoices-actions-group select option,
+    [data-theme="dark"] #spa-content .invoices-filters-group select option,
+    body[data-theme="dark"] #spa-content .invoices-actions-group select option,
+    body[data-theme="dark"] #spa-content .invoices-filters-group select option,
+    html[data-theme="dark"] #spa-content .invoices-actions-group select option,
+    html[data-theme="dark"] #spa-content .invoices-filters-group select option {
+        background: #242831 !important;
+        background-color: #242831 !important;
+        color: #f6f7ff !important;
+    }
+
+    [data-theme="dark"] .invoices-actions-group select option:hover,
+    [data-theme="dark"] .invoices-filters-group select option:hover,
+    body[data-theme="dark"] .invoices-actions-group select option:hover,
+    body[data-theme="dark"] .invoices-filters-group select option:hover,
+    html[data-theme="dark"] .invoices-actions-group select option:hover,
+    html[data-theme="dark"] .invoices-filters-group select option:hover {
+        background: #3b4261 !important;
+        background-color: #3b4261 !important;
+        color: #ffffff !important;
+    }
+
+    [data-theme="dark"] .invoices-actions-group select option:checked,
+    [data-theme="dark"] .invoices-filters-group select option:checked,
+    body[data-theme="dark"] .invoices-actions-group select option:checked,
+    body[data-theme="dark"] .invoices-filters-group select option:checked,
+    html[data-theme="dark"] .invoices-actions-group select option:checked,
+    html[data-theme="dark"] .invoices-filters-group select option:checked {
+        background: #667eea !important;
+        background-color: #667eea !important;
+        color: #ffffff !important;
+    }
+
+    /* ФИНАЛЬНЫЙ ПРИОРИТЕТ - БЕЛЫЙ ЦВЕТ ДЛЯ ПЛЕЙСХОЛДЕРА DATE INPUT "ДД.ММ.ГГГГ" В DARK THEME */
+    /* Этот блок должен быть в самом конце, чтобы перекрыть ВСЕ остальные стили */
+    [data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-text,
+    [data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-month-field,
+    [data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-day-field,
+    [data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-year-field,
+    body[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-text,
+    body[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-month-field,
+    body[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-day-field,
+    body[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-year-field,
+    html[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-text,
+    html[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-month-field,
+    html[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-day-field,
+    html[data-theme="dark"] .date-input-wrapper input[type="date"]::-webkit-datetime-edit-year-field {
+        color: #ffffff !important;
+    }
+
+    [data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-text,
+    [data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-month-field,
+    [data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-day-field,
+    [data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-year-field,
+    body[data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-text,
+    body[data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-month-field,
+    body[data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-day-field,
+    body[data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-year-field,
+    html[data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-text,
+    html[data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-month-field,
+    html[data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-day-field,
+    html[data-theme="dark"] .date-input-wrapper input[type="date"]:invalid::-webkit-datetime-edit-year-field {
+        color: #ffffff !important;
+    }
+
+    /* ФИНАЛЬНЫЙ ПРИОРИТЕТ - СИММЕТРИЧНОЕ ВЫРАВНИВАНИЕ ЗАГОЛОВКОВ И ЯЧЕЕК ТАБЛИЦЫ */
+    /* Этот блок должен быть в самом конце, чтобы перекрыть ВСЕ остальные стили */
+    .invoices-page .table thead th,
+    .invoices-page .table tbody td,
+    #spa-content .invoices-page .table thead th,
+    #spa-content .invoices-page .table tbody td,
+    [data-theme="dark"] .invoices-page .table thead th,
+    [data-theme="dark"] .invoices-page .table tbody td,
+    body[data-theme="dark"] .invoices-page .table thead th,
+    body[data-theme="dark"] .invoices-page .table tbody td,
+    html[data-theme="dark"] .invoices-page .table thead th,
+    html[data-theme="dark"] .invoices-page .table tbody td {
+        padding: 12px 16px !important;
+        text-align: left !important;
+        vertical-align: middle !important;
+    }
+
+    /* Убедиться, что первая и последняя колонки также симметричны */
+    .invoices-page .table thead th:first-child,
+    .invoices-page .table tbody td:first-child,
+    .invoices-page .table thead th:last-child,
+    .invoices-page .table tbody td:last-child {
+        padding: 12px 16px !important;
+        text-align: left !important;
+        vertical-align: middle !important;
+    }
+
+    /* Invoices page - Dark theme for actions and filters sections (from admin.css) */
+    [data-theme="dark"] #spa-content .invoices-actions,
+    [data-theme="dark"] #spa-content .invoices-filters,
+    [data-theme="dark"] .dashboard-content .invoices-actions,
+    [data-theme="dark"] .dashboard-content .invoices-filters,
+    [data-theme="dark"] .content-wrapper .invoices-actions,
+    [data-theme="dark"] .content-wrapper .invoices-filters,
+    [data-theme="dark"] .invoices-page .invoices-actions,
+    [data-theme="dark"] .invoices-page .invoices-filters,
+    [data-theme="dark"] .invoices-actions,
+    [data-theme="dark"] .invoices-filters {
+        background: rgba(36, 40, 49, 0.95) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        color: #e4e6eb !important;
+    }
+
+    [data-theme="dark"] #spa-content .invoices-actions-group label,
+    [data-theme="dark"] #spa-content .invoices-filters-group label,
+    [data-theme="dark"] .dashboard-content .invoices-actions-group label,
+    [data-theme="dark"] .dashboard-content .invoices-filters-group label,
+    [data-theme="dark"] .content-wrapper .invoices-actions-group label,
+    [data-theme="dark"] .content-wrapper .invoices-filters-group label,
+    [data-theme="dark"] .invoices-page .invoices-actions-group label,
+    [data-theme="dark"] .invoices-page .invoices-filters-group label,
+    [data-theme="dark"] .invoices-actions-group label,
+    [data-theme="dark"] .invoices-filters-group label {
+        color: rgba(255, 255, 255, 0.8) !important;
+    }
+
+    [data-theme="dark"] #spa-content .invoices-actions-group input,
+    [data-theme="dark"] #spa-content .invoices-actions-group select,
+    [data-theme="dark"] #spa-content .invoices-filters-group input,
+    [data-theme="dark"] #spa-content .invoices-filters-group select,
+    [data-theme="dark"] .dashboard-content .invoices-actions-group input,
+    [data-theme="dark"] .dashboard-content .invoices-actions-group select,
+    [data-theme="dark"] .dashboard-content .invoices-filters-group input,
+    [data-theme="dark"] .dashboard-content .invoices-filters-group select,
+    [data-theme="dark"] .content-wrapper .invoices-actions-group input,
+    [data-theme="dark"] .content-wrapper .invoices-actions-group select,
+    [data-theme="dark"] .content-wrapper .invoices-filters-group input,
+    [data-theme="dark"] .content-wrapper .invoices-filters-group select,
+    [data-theme="dark"] .invoices-page .invoices-actions-group input,
+    [data-theme="dark"] .invoices-page .invoices-actions-group select,
+    [data-theme="dark"] .invoices-page .invoices-filters-group input,
+    [data-theme="dark"] .invoices-page .invoices-filters-group select,
+    [data-theme="dark"] .invoices-actions-group input,
+    [data-theme="dark"] .invoices-actions-group select,
+    [data-theme="dark"] .invoices-filters-group input,
+    [data-theme="dark"] .invoices-filters-group select {
+        background: rgba(255, 255, 255, 0.05) !important;
+        color: #fefefe !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    }
+
+    [data-theme="dark"] #spa-content .invoices-actions-group input:focus,
+    [data-theme="dark"] #spa-content .invoices-actions-group select:focus,
+    [data-theme="dark"] #spa-content .invoices-filters-group input:focus,
+    [data-theme="dark"] #spa-content .invoices-filters-group select:focus,
+    [data-theme="dark"] .dashboard-content .invoices-actions-group input:focus,
+    [data-theme="dark"] .dashboard-content .invoices-actions-group select:focus,
+    [data-theme="dark"] .dashboard-content .invoices-filters-group input:focus,
+    [data-theme="dark"] .dashboard-content .invoices-filters-group select:focus,
+    [data-theme="dark"] .content-wrapper .invoices-actions-group input:focus,
+    [data-theme="dark"] .content-wrapper .invoices-actions-group select:focus,
+    [data-theme="dark"] .content-wrapper .invoices-filters-group input:focus,
+    [data-theme="dark"] .content-wrapper .invoices-filters-group select:focus,
+    [data-theme="dark"] .invoices-page .invoices-actions-group input:focus,
+    [data-theme="dark"] .invoices-page .invoices-actions-group select:focus,
+    [data-theme="dark"] .invoices-page .invoices-filters-group input:focus,
+    [data-theme="dark"] .invoices-page .invoices-filters-group select:focus,
+    [data-theme="dark"] .invoices-actions-group input:focus,
+    [data-theme="dark"] .invoices-actions-group select:focus,
+    [data-theme="dark"] .invoices-filters-group input:focus,
+    [data-theme="dark"] .invoices-filters-group select:focus {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border-color: #667eea !important;
+    }
+
+    [data-theme="dark"] .invoices-actions-group input::placeholder,
+    [data-theme="dark"] .invoices-filters-group input::placeholder {
+        color: rgba(255, 255, 255, 0.35) !important;
+    }
+
+    [data-theme="dark"] .invoices-actions-group select option,
+    [data-theme="dark"] .invoices-filters-group select option {
+        background: #1f2432 !important;
+        color: #f6f7ff !important;
+    }
+
+    /* МАКСИМАЛЬНЫЙ ПРИОРИТЕТ - СЕРЫЙ ФОН ДЛЯ INVOICES SECTIONS */
+    [data-theme="dark"] .invoices-actions,
+    [data-theme="dark"] .invoices-filters,
+    [data-theme="dark"] .card.invoices-actions,
+    [data-theme="dark"] .card.invoices-filters,
+    [data-theme="dark"] #spa-content .invoices-actions,
+    [data-theme="dark"] #spa-content .invoices-filters,
+    [data-theme="dark"] #spa-content .card.invoices-actions,
+    [data-theme="dark"] #spa-content .card.invoices-filters,
+    [data-theme="dark"] .dashboard-content .invoices-actions,
+    [data-theme="dark"] .dashboard-content .invoices-filters,
+    [data-theme="dark"] .dashboard-content .card.invoices-actions,
+    [data-theme="dark"] .dashboard-content .card.invoices-filters,
+    [data-theme="dark"] .content-wrapper .invoices-actions,
+    [data-theme="dark"] .content-wrapper .invoices-filters,
+    [data-theme="dark"] .content-wrapper .card.invoices-actions,
+    [data-theme="dark"] .content-wrapper .card.invoices-filters,
+    [data-theme="dark"] .invoices-page .invoices-actions,
+    [data-theme="dark"] .invoices-page .invoices-filters,
+    [data-theme="dark"] .invoices-page .card.invoices-actions,
+    [data-theme="dark"] .invoices-page .card.invoices-filters,
+    body[data-theme="dark"] .invoices-actions,
+    body[data-theme="dark"] .invoices-filters,
+    body[data-theme="dark"] .card.invoices-actions,
+    body[data-theme="dark"] .card.invoices-filters,
+    html[data-theme="dark"] .invoices-actions,
+    html[data-theme="dark"] .invoices-filters,
+    html[data-theme="dark"] .card.invoices-actions,
+    html[data-theme="dark"] .card.invoices-filters {
+        background-color: #242831 !important;
+        background: #242831 !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+        color: #e4e6eb !important;
+    }
+
+    .content-wrapper.invoices-page {
+        border-radius: 20px;
+        overflow: visible !important;
+    }
+
+    /* Ensure dropdown is visible */
+    .content-wrapper.invoices-page>div[style*="position: relative"] {
+        overflow: visible !important;
+    }

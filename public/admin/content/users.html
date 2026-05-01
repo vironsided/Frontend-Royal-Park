@@ -1,0 +1,894 @@
+<link rel="stylesheet" href="/admin/content_css/users.css">
+<div class="content-wrapper">
+    <div class="users-header">
+        <h2 data-i18n="nav_users">Пользователи</h2>
+    </div>
+
+    <!-- Create User Form -->
+    <div class="user-create-form">
+        <input type="text" id="newUserLogin" placeholder="Логин нового пользователя" autocomplete="off" data-i18n-placeholder="users_new_login_placeholder" />
+        <select id="newUserRole">
+            <option value="ADMIN">ADMIN</option>
+            <option value="OPERATOR">OPERATOR</option>
+            <option value="RESIDENT">RESIDENT</option>
+            <option value="SALES">SALES</option>
+            <option value="ROOT">ROOT</option>
+        </select>
+        <button class="btn-create-user" onclick="createUser()">
+            <span data-i18n="create">Создать</span>
+        </button>
+    </div>
+
+
+
+    <!-- Users Table -->
+    <div style="position: relative;">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 data-i18n="users_list_title">Список пользователей</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover tenants-table">
+                        <thead>
+                            <tr>
+                                <th data-i18n="id">ID</th>
+                                <th data-i18n="tenants_col_login">Логин</th>
+                                <th data-i18n="users_col_role">Роль</th>
+                                <th data-i18n="tenants_col_last_login">Последний вход</th>
+                                <th data-i18n="tenants_col_password">Пароль</th>
+                                <th data-i18n="tariffs_col_actions">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Users will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Pagination -->
+            <div class="table-pagination">
+                <div class="pagination-controls" id="userPaginationControls">
+                    <button class="btn-pagination" onclick="goToUserPage('prev')" disabled id="userPrevBtn">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </button>
+                    <div id="userPageButtons" class="pagination-pages"></div>
+                    <button class="btn-pagination" onclick="goToUserPage('next')" disabled id="userNextBtn">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </button>
+                </div>
+                <div class="pagination-info">
+                    <span><span data-i18n="residents_pagination_page_short">Стр.</span> <span id="userCurrentPage">1</span> <span data-i18n="residents_pagination_of">из</span> <span id="userTotalPages">1</span> · <span data-i18n="residents_pagination_total">всего</span> <span
+                            id="userTotalItems">0</span></span>
+                </div>
+                <div class="pagination-per-page">
+                    <span data-i18n="residents_pagination_on">На</span>
+                    <span data-i18n="residents_pagination_per_page">странице:</span>
+                    <div class="custom-pag-select" id="customUserItemsPerPage">
+                        <select id="userItemsPerPage" onchange="changeUserItemsPerPage()" style="display: none;">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <div class="select-btn">
+                            <span class="select-text">25</span>
+                            <span class="arrow">▾</span>
+                        </div>
+                        <div class="select-options" style="background: rgba(36, 40, 49, 0.95) !important">
+                            <div class="select-option" data-value="10">10</div>
+                            <div class="select-option selected" data-value="25">25</div>
+                            <div class="select-option" data-value="50">50</div>
+                            <div class="select-option" data-value="100">100</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- QR Code Modal -->
+<div class="modal-overlay" id="qrModal">
+    <div class="modal-content qr-modal-content">
+        <div class="modal-header">
+            <h2 data-i18n="users_qr_title">QR-код для пользователя</h2>
+            <button class="modal-close" onclick="closeQRModal()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="modal-body qr-modal-body">
+            <div id="qrCodeContainer" style="text-align: center; padding: 20px;">
+                <canvas id="qrCanvas" style="max-width: 100%; height: auto;"></canvas>
+            </div>
+            <p style="text-align: center; color: #666; margin-top: 15px;">
+                <span data-i18n="users_qr_hint">Пользователь должен отсканировать этот QR-код для установки пароля</span>
+            </p>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-primary" onclick="printQRCode()" data-i18n="print">Print</button>
+            <button class="btn btn-secondary" onclick="closeQRModal()" data-i18n="close">Закрыть</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const t = (key, fallback = '') => window.i18n?.translate?.(key) || fallback || key;
+        const tr = (key, params = {}, fallback = '') => {
+            const base = t(key, fallback);
+            return Object.entries(params).reduce((txt, [p, v]) => txt.replace(new RegExp(`\\{${p}\\}`, 'g'), String(v)), base);
+        };
+        // Текущий список пользователей из backend
+        let users = [];
+        let usersData = {
+            items: [],
+            total: 0,
+            page: 1,
+            per_page: 25,
+            last_page: 1
+        };
+
+        // Pagination state
+        let paginationState = {
+            currentPage: 1,
+            itemsPerPage: 25,
+            totalItems: 0,
+            totalPages: 1
+        };
+
+        // Сохраняем данные текущего пользователя для печати
+        let currentQRUserData = {
+            username: null,
+            tempPassword: null,
+            qrUrl: null
+        };
+
+        const API_BASE = window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BASE || 'http://localhost:8000');
+
+        function formatUserDate(dateStr) {
+            if (!dateStr) return '—';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mi = String(d.getMinutes()).padStart(2, '0');
+            const ss = String(d.getSeconds()).padStart(2, '0');
+            return `${yyyy}/${mm}/${dd} ${hh}:${mi}:${ss}`;
+        }
+
+        async function fetchUsers() {
+            try {
+                const params = new URLSearchParams();
+                params.append('page', paginationState.currentPage);
+                params.append('per_page', paginationState.itemsPerPage);
+
+                // Загружаем пользователей
+                let resp = await fetch(`${API_BASE}/api/users?${params.toString()}`, { credentials: 'include' });
+                if (!resp.ok) throw new Error(`Failed to load users: ${resp.status}`);
+                const data = await resp.json();
+
+                // Handle paginated response
+                if (data.items) {
+                    usersData = data;
+                    users = data.items;
+
+                    // Update pagination state
+                    paginationState.totalItems = data.total || 0;
+                    paginationState.totalPages = data.last_page || 1;
+                    paginationState.currentPage = data.page || 1;
+                } else {
+                    // Fallback for non-paginated response (backward compatibility)
+                    users = Array.isArray(data) ? data : [];
+                    usersData = {
+                        items: users,
+                        total: users.length,
+                        page: 1,
+                        per_page: users.length,
+                        last_page: 1
+                    };
+                    // Update pagination state for fallback
+                    paginationState.totalItems = users.length;
+                    paginationState.totalPages = 1;
+                    paginationState.currentPage = 1;
+                }
+            } catch (e) {
+                console.error('Users API error:', e);
+                users = [];
+                usersData = {
+                    items: [],
+                    total: 0,
+                    page: 1,
+                    per_page: 25,
+                    last_page: 1
+                };
+                // Reset pagination state on error
+                paginationState.totalItems = 0;
+                paginationState.totalPages = 1;
+                paginationState.currentPage = 1;
+            }
+        }
+
+        // Load users on page load
+        async function loadUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">${t('loading', 'Загрузка...')}</td></tr>`;
+            }
+
+            await fetchUsers();
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+
+            if (users.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">${t('users_empty', 'Пока нет пользователей')}</td></tr>`;
+                updatePaginationUI();
+                return;
+            }
+
+            users.forEach(user => {
+                const row = document.createElement('tr');
+
+                // Get role badge class
+                const roleClass = `role-${String(user.role).toLowerCase()}`;
+                const roleLabelMap = {
+                    ROOT: t('system_admin', 'Системный администратор'),
+                    ADMIN: t('role_admin', 'Администратор'),
+                    OPERATOR: t('role_operator', 'Оператор'),
+                    RESIDENT: t('role_user', 'Жилец'),
+                    SALES: t('role_sales', 'Продажник')
+                };
+
+                // Password badge
+                let passwordBadge = '';
+                const passwordStatus = user.require_password_change ? 'temp' : 'set';
+                const tempPassword = user.temp_password_plain;
+
+                if (passwordStatus === 'set') {
+                    passwordBadge = `<span class="password-badge password-set">${t('tenants_password_set', 'установлен')}</span>`;
+                } else if (passwordStatus === 'temp' && tempPassword) {
+                    passwordBadge = `<span class="password-badge password-temp">${tr('tenants_password_temporary', { password: tempPassword }, 'временный: {password}')}</span>`;
+                }
+
+                // Actions (only for non-root users)
+                let actions = '';
+                if (user.username !== 'root') {
+                    actions = `
+                    <div class="user-actions">
+                        <button class="btn-user-action btn-reset-password" onclick="resetPassword(${user.id})">
+                            ${t('tenants_action_reset_password', 'Сброс пароля')}
+                        </button>
+                        <input 
+                            type="text" 
+                            class="input-new-name" 
+                            id="newName${user.id}" 
+                            placeholder="${t('users_new_name_placeholder', 'Новое имя')}"
+                            autocomplete="off"
+                        />
+                        <button class="btn-user-action btn-rename-user" onclick="renameUser(${user.id})">
+                            ${t('users_action_rename', 'Переимен.')}
+                        </button>
+                        <button class="btn-user-action btn-delete-user" onclick="deleteUser(${user.id})">
+                            ${t('action_delete', 'Удалить')}
+                        </button>
+                        ${user.require_password_change && user.temp_password_plain ? `
+                        <button class="btn-user-action btn-qr-user" onclick="showQRCode(${user.id}, '${user.username}', '${user.temp_password_plain}')">
+                            QR
+                        </button>
+                        ` : ''}
+                    </div>
+                `;
+                }
+
+                row.innerHTML = `
+                <td>${user.id}</td>
+                <td>${user.username}</td>
+                <td><span class="role-badge ${roleClass}">${roleLabelMap[user.role] || user.role}</span></td>
+                <td>${formatUserDate(user.last_login_at)}</td>
+                <td>${passwordBadge}</td>
+                <td>${actions}</td>
+            `;
+
+                tbody.appendChild(row);
+            });
+
+            updatePaginationUI();
+        }
+
+        // Pagination Functions
+        function buildUserPageList(current, total) {
+            if (total <= 5) {
+                return Array.from({ length: total }, (_, i) => i + 1);
+            }
+            const pages = new Set([1, total]);
+            if (current <= 3) {
+                [2, 3, 4, 5].forEach(p => pages.add(p));
+            } else if (current >= total - 2) {
+                [total - 1, total - 2, total - 3, total - 4].forEach(p => pages.add(p));
+            } else {
+                [current - 2, current - 1, current, current + 1, current + 2].forEach(p => pages.add(p));
+            }
+            const sorted = Array.from(pages).filter(p => p >= 1 && p <= total).sort((a, b) => a - b);
+            const result = [];
+            for (let i = 0; i < sorted.length; i++) {
+                const page = sorted[i];
+                result.push(page);
+                const next = sorted[i + 1];
+                if (next && next - page > 1) {
+                    result.push('dots');
+                }
+            }
+            return result;
+        }
+
+        function updatePaginationUI() {
+            const currentPageEl = document.getElementById('userCurrentPage');
+            const totalPagesEl = document.getElementById('userTotalPages');
+            const totalItemsEl = document.getElementById('userTotalItems');
+            const prevBtn = document.getElementById('userPrevBtn');
+            const nextBtn = document.getElementById('userNextBtn');
+            const pagesContainer = document.getElementById('userPageButtons');
+
+            if (currentPageEl) currentPageEl.textContent = paginationState.currentPage;
+            if (totalPagesEl) totalPagesEl.textContent = paginationState.totalPages;
+            if (totalItemsEl) totalItemsEl.textContent = paginationState.totalItems;
+            if (prevBtn) prevBtn.disabled = paginationState.currentPage <= 1;
+            if (nextBtn) nextBtn.disabled = paginationState.currentPage >= paginationState.totalPages;
+
+            if (!pagesContainer) return;
+            pagesContainer.innerHTML = '';
+
+            const pages = buildUserPageList(paginationState.currentPage, paginationState.totalPages);
+            pages.forEach(p => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-pagination';
+
+                if (p === 'dots') {
+                    btn.textContent = '...';
+                    btn.disabled = true;
+                    btn.classList.add('dots');
+                } else {
+                    btn.textContent = p;
+                    if (p > paginationState.totalPages) {
+                        btn.disabled = true;
+                    } else {
+                        btn.onclick = () => {
+                            if (p !== paginationState.currentPage) {
+                                goToUserPage(p);
+                            }
+                        };
+                    }
+                    if (p === paginationState.currentPage) {
+                        btn.classList.add('active');
+                        btn.setAttribute('aria-current', 'page');
+                    }
+                }
+
+                pagesContainer.appendChild(btn);
+            });
+        }
+
+        window.goToUserPage = function (page) {
+            if (page === 'prev') {
+                if (paginationState.currentPage > 1) {
+                    paginationState.currentPage--;
+                    loadUsers();
+                }
+            } else if (page === 'next') {
+                if (paginationState.currentPage < paginationState.totalPages) {
+                    paginationState.currentPage++;
+                    loadUsers();
+                }
+            } else if (typeof page === 'number') {
+                paginationState.currentPage = page;
+                loadUsers();
+            }
+        };
+
+        window.changeUserItemsPerPage = function () {
+            const select = document.getElementById('userItemsPerPage');
+            if (select) {
+                paginationState.itemsPerPage = parseInt(select.value);
+                paginationState.currentPage = 1;
+                loadUsers();
+                updateCustomUserPaginationDropdown();
+            }
+        };
+
+        function updateCustomUserPaginationDropdown() {
+            const select = document.getElementById('userItemsPerPage');
+            const customSelect = document.getElementById('customUserItemsPerPage');
+            if (!select || !customSelect) return;
+
+            const value = select.value;
+            const selectText = customSelect.querySelector('.select-text');
+            const options = customSelect.querySelectorAll('.select-option');
+
+            if (selectText) selectText.textContent = value;
+            options.forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.getAttribute('data-value') === value) {
+                    opt.classList.add('selected');
+                }
+            });
+        }
+
+        function initCustomUserPaginationDropdown() {
+            const customSelect = document.getElementById('customUserItemsPerPage');
+            if (!customSelect) return;
+
+            const selectBtn = customSelect.querySelector('.select-btn');
+            const selectOptions = customSelect.querySelector('.select-options');
+            const options = selectOptions.querySelectorAll('.select-option');
+
+            if (selectBtn) {
+                selectBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    customSelect.classList.toggle('open');
+                });
+            }
+
+            options.forEach(opt => {
+                opt.addEventListener('click', function () {
+                    const value = this.getAttribute('data-value');
+                    const select = document.getElementById('userItemsPerPage');
+                    if (select) {
+                        select.value = value;
+                        changeUserItemsPerPage();
+                    }
+                    customSelect.classList.remove('open');
+                });
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!customSelect.contains(e.target)) {
+                    customSelect.classList.remove('open');
+                }
+            });
+
+            updateCustomUserPaginationDropdown();
+        }
+
+        // Create user через backend API
+        window.createUser = async function () {
+            const loginInput = document.getElementById('newUserLogin');
+            const roleSelect = document.getElementById('newUserRole');
+
+            if (!loginInput || !roleSelect) return;
+
+            const login = loginInput.value.trim();
+            const role = roleSelect.value;
+
+            if (!login) {
+                if (window.showWarning) {
+                    showWarning(t('users_enter_login_warning', 'Введите логин пользователя'));
+                } else {
+                    alert(t('users_enter_login_warning', 'Введите логин пользователя'));
+                }
+                return;
+            }
+
+            const currentRole = String((localStorage.getItem('userRole') || '')).trim().toUpperCase();
+            if (currentRole === 'ADMIN' && ['ROOT', 'ADMIN', 'SALES'].includes(String(role).toUpperCase())) {
+                if (window.showWarning) {
+                    showWarning(t('users_role_forbidden', 'Недостаточно прав для создания этой роли'));
+                } else {
+                    alert(t('users_role_forbidden', 'Недостаточно прав для создания этой роли'));
+                }
+                return;
+            }
+
+            try {
+                // Сначала пробуем с авторизацией
+                let resp = await fetch(`${API_BASE}/api/users`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        username: login,
+                        role: role,
+                        full_name: null,
+                        phone: null,
+                        email: null
+                    })
+                });
+                if (!resp.ok) {
+                    const errorText = await resp.text();
+                    throw new Error(`Failed to create user: ${resp.status} - ${errorText}`);
+                }
+                const created = await resp.json();
+
+                // Reset to first page after creating user
+                paginationState.currentPage = 1;
+                await loadUsers();
+
+                loginInput.value = '';
+                if (roleSelect.options.length > 0) {
+                    roleSelect.value = roleSelect.querySelector('option[value="ADMIN"]')
+                        ? 'ADMIN'
+                        : roleSelect.options[0].value;
+                }
+
+                const tempPassword = created.temp_password_plain || t('tenants_password_set', 'установлен');
+                if (window.showSuccess) {
+                    showSuccess(tr('users_create_success', { login, password: tempPassword }, 'Пользователь "{login}" создан! Временный пароль: {password}'));
+                } else {
+                    alert(tr('users_create_success_alert', { login, password: tempPassword }, 'Пользователь создан!\nЛогин: {login}\nВременный пароль: {password}'));
+                }
+            } catch (e) {
+                console.error('Create user error:', e);
+                if (window.showError) {
+                    showError(t('users_create_error', 'Не удалось создать пользователя'));
+                } else {
+                    alert(t('users_create_error', 'Не удалось создать пользователя'));
+                }
+            }
+        };
+
+        // Reset password
+        window.resetPassword = async function (userId) {
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+
+            if (user.username === 'root') {
+                if (window.showWarning) {
+                    showWarning(t('users_root_reset_forbidden', 'Невозможно сбросить пароль для root'));
+                }
+                return;
+            }
+
+            try {
+                let resp = await fetch(`${API_BASE}/api/users/${userId}/reset`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                if (!resp.ok) throw new Error('Failed to reset password');
+                const updated = await resp.json();
+
+                // Reload current page to see updated password
+                await loadUsers();
+
+                const tempPassword = updated.temp_password_plain || t('users_temp_password_updated', 'временный пароль обновлён');
+                if (window.showSuccess) {
+                    showSuccess(tr('users_reset_success', { password: tempPassword }, 'Пароль сброшен! Новый временный пароль: {password}'));
+                } else {
+                    alert(tr('users_reset_success_alert', { password: tempPassword }, 'Пароль сброшен!\nНовый временный пароль: {password}'));
+                }
+            } catch (e) {
+                console.error('Reset password error:', e);
+                if (window.showError) {
+                    showError(t('users_reset_error', 'Не удалось сбросить пароль'));
+                } else {
+                    alert(t('users_reset_error', 'Не удалось сбросить пароль'));
+                }
+            }
+        };
+
+        // Rename user
+        window.renameUser = async function (userId) {
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+
+            const newNameInput = document.getElementById(`newName${userId}`);
+            if (!newNameInput) return;
+
+            const newName = newNameInput.value.trim();
+
+            if (!newName) {
+                if (window.showWarning) {
+                    showWarning(t('users_enter_new_name_warning', 'Введите новое имя'));
+                } else {
+                    alert(t('users_enter_new_name_warning', 'Введите новое имя'));
+                }
+                return;
+            }
+
+            try {
+                let resp = await fetch(`${API_BASE}/api/users/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ username: newName })
+                });
+                if (!resp.ok) throw new Error('Failed to rename user');
+                // Reload current page to see updated name
+                await loadUsers();
+
+                if (window.showSuccess) {
+                    showSuccess(tr('users_rename_success', { old: user.username, name: newName }, 'Пользователь "{old}" переименован в "{name}"'));
+                } else {
+                    alert(tr('users_rename_success_alert', { old: user.username, name: newName }, 'Пользователь переименован: {old} → {name}'));
+                }
+            } catch (e) {
+                console.error('Rename user error:', e);
+                if (window.showError) {
+                    showError(t('users_rename_error', 'Не удалось переименовать пользователя'));
+                } else {
+                    alert(t('users_rename_error', 'Не удалось переименовать пользователя'));
+                }
+            }
+        };
+
+        // Функция генерации QR-кода через Google Charts API (работает без внешних библиотек)
+        function generateQRCodeImage(qrUrl, canvas) {
+            // Используем Google Charts API для генерации QR-кода
+            const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrUrl)}`;
+
+            // Создаем изображение
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+
+            img.onload = function () {
+                const ctx = canvas.getContext('2d');
+                canvas.width = 300;
+                canvas.height = 300;
+                ctx.drawImage(img, 0, 0);
+
+                // Показываем модальное окно после успешной генерации
+                const modal = document.getElementById('qrModal');
+                if (modal) {
+                    modal.classList.add('active');
+                }
+            };
+
+            img.onerror = function () {
+                // Резервный вариант - показываем URL напрямую
+                const ctx = canvas.getContext('2d');
+                canvas.width = 300;
+                canvas.height = 300;
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, 300, 300);
+                ctx.fillStyle = '#000000';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(t('tenants_qr_code_url', 'QR Code URL:'), 150, 140);
+                ctx.fillText(qrUrl, 150, 160, 280);
+
+                const modal = document.getElementById('qrModal');
+                if (modal) {
+                    modal.classList.add('active');
+                }
+            };
+
+            img.src = apiUrl;
+        }
+
+        // Show QR Code
+        window.showQRCode = async function (userId, username, tempPassword) {
+            try {
+                // Создаем QR токен через API
+                let resp = await fetch(`${API_BASE}/api/qr/users/${userId}/qr-token`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+                if (!resp.ok) {
+                    const errorText = await resp.text();
+                    throw new Error(`Failed to generate QR token: ${resp.status} - ${errorText}`);
+                }
+
+                const data = await resp.json();
+                const qrToken = data.token;
+
+                // Формируем URL для QR-кода
+                const frontendUrl = window.location.origin || 'http://localhost:3000';
+                const qrUrl = `${frontendUrl}/qr-password-setup?token=${qrToken}`;
+
+                // Сохраняем данные для печати
+                currentQRUserData = {
+                    username: username,
+                    tempPassword: tempPassword,
+                    qrUrl: qrUrl
+                };
+
+                // Получаем canvas для QR-кода
+                const canvas = document.getElementById('qrCanvas');
+                if (!canvas) {
+                    console.error('QR canvas not found');
+                    if (window.showError) {
+                        showError(t('tenants_qr_element_missing', 'Элемент для QR-кода не найден'));
+                    } else {
+                        alert(t('tenants_qr_element_missing', 'Элемент для QR-кода не найден'));
+                    }
+                    return;
+                }
+
+                // Генерируем QR-код через API
+                generateQRCodeImage(qrUrl, canvas);
+            } catch (e) {
+                console.error('Show QR error:', e);
+                if (window.showError) {
+                    showError(t('tenants_qr_generate_error', 'Не удалось создать QR-код'));
+                } else {
+                    alert(t('tenants_qr_generate_error', 'Не удалось создать QR-код'));
+                }
+            }
+        };
+
+        // Print QR Code to PDF
+        window.printQRCode = function () {
+            if (!currentQRUserData || !currentQRUserData.qrUrl) {
+                if (window.showError) {
+                    showError(t('tenants_qr_no_data_print', 'Нет данных для печати QR'));
+                } else {
+                    alert(t('tenants_qr_no_data_print', 'Нет данных для печати QR'));
+                }
+                return;
+            }
+
+            const params = new URLSearchParams({
+                type: 'user',
+                username: currentQRUserData.username || '',
+                password: currentQRUserData.tempPassword || '',
+                qrUrl: currentQRUserData.qrUrl
+            });
+            const currentLang = (window.i18n && window.i18n.currentLanguage) || localStorage.getItem('language') || 'az';
+            params.set('lang', currentLang);
+
+            const base = window.location.origin || '';
+            const printUrl = `${base}/admin/content/qr-print.html?${params.toString()}`;
+
+            window.open(printUrl, '_blank');
+        };
+
+        // Close QR Modal
+        window.closeQRModal = function () {
+            const modal = document.getElementById('qrModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        };
+
+        // Close modal on overlay click
+        document.addEventListener('DOMContentLoaded', function () {
+            const qrModal = document.getElementById('qrModal');
+            if (qrModal) {
+                qrModal.addEventListener('click', function (e) {
+                    if (e.target === qrModal) {
+                        closeQRModal();
+                    }
+                });
+            }
+
+            // Close on Escape key
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    closeQRModal();
+                }
+            });
+        });
+
+        // Delete user
+        window.deleteUser = async function (userId) {
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+
+            if (user.username === 'root') {
+                if (window.showWarning) {
+                    showWarning(t('users_root_delete_forbidden', 'Невозможно удалить root пользователя'));
+                }
+                return;
+            }
+
+            // Используем модальное окно приложения вместо браузерного confirm
+            if (typeof showConfirm === 'function') {
+                showConfirm(
+                    tr('users_delete_confirm', { username: user.username }, 'Вы уверены, что хотите удалить пользователя "{username}"?'),
+                    async (confirmed) => {
+                        // Удаление происходит ТОЛЬКО если confirmed === true (нажата кнопка OK)
+                        if (confirmed === true) {
+                            await performDeleteUser(userId, user.username);
+                        }
+                        // Если confirmed === false, ничего не делаем (отмена)
+                    },
+                    () => {
+                        // Явный обработчик отмены - ничего не делаем
+                        // Это гарантирует, что при нажатии "Отмена" удаление не произойдет
+                    }
+                );
+            } else {
+                // Fallback на браузерный confirm, если showConfirm недоступен
+                if (confirm(tr('users_delete_confirm', { username: user.username }, 'Вы уверены, что хотите удалить пользователя "{username}"?'))) {
+                    await performDeleteUser(userId, user.username);
+                }
+            }
+        };
+
+        async function performDeleteUser(userId, username) {
+            try {
+                let resp = await fetch(`${API_BASE}/api/users/${userId}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                if (!resp.ok) throw new Error('Failed to delete user');
+
+                // Reload users first to get updated total
+                await loadUsers();
+
+                // If current page is now empty (beyond last page), go to last page
+                if (paginationState.currentPage > paginationState.totalPages && paginationState.totalPages > 0) {
+                    paginationState.currentPage = paginationState.totalPages;
+                    await loadUsers();
+                }
+
+                if (window.showSuccess) {
+                    showSuccess(tr('users_delete_success', { username }, 'Пользователь "{username}" удалён'));
+                } else {
+                    alert(tr('users_delete_success', { username }, 'Пользователь "{username}" удалён'));
+                }
+            } catch (e) {
+                console.error('Delete user error:', e);
+                if (window.showError) {
+                    showError(t('users_delete_error', 'Не удалось удалить пользователя'));
+                } else {
+                    alert(t('users_delete_error', 'Не удалось удалить пользователя'));
+                }
+            }
+        }
+
+        // Для роли ADMIN: запрещённые для создания роли убираем из селекта.
+        // ROOT может создавать любые роли. Функция идемпотентна (повторный вызов безопасен).
+        function applyRoleRestrictionsForCreateUser() {
+            try {
+                const roleSelect = document.getElementById('newUserRole');
+                if (!roleSelect) return;
+
+                const currentRole = String(
+                    (localStorage.getItem('userRole') || '')
+                ).trim().toUpperCase();
+
+                if (currentRole !== 'ADMIN') return;
+
+                const forbidden = new Set(['ROOT', 'ADMIN', 'SALES']);
+                Array.from(roleSelect.options).forEach(opt => {
+                    if (forbidden.has(String(opt.value).toUpperCase())) {
+                        opt.remove();
+                    }
+                });
+
+                if (forbidden.has(String(roleSelect.value).toUpperCase()) && roleSelect.options.length > 0) {
+                    roleSelect.value = roleSelect.options[0].value;
+                }
+            } catch (_e) { /* ignore */ }
+        }
+
+        // Initialize on page load
+        function initUsersPage() {
+            initCustomUserPaginationDropdown();
+            applyRoleRestrictionsForCreateUser();
+            loadUsers();
+        }
+
+        // Load on DOM ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initUsersPage);
+        } else {
+            initUsersPage();
+        }
+
+        // Re-initialize when SPA content loads
+        // Удаляем старый обработчик, если он существует
+        if (window._usersContentLoadedHandler) {
+            document.removeEventListener('spa:contentLoaded', window._usersContentLoadedHandler);
+        }
+
+        window._usersContentLoadedHandler = function (e) {
+            const route = e.detail?.route || window.location.hash.split('?')[0].slice(1);
+            if (!route || route === '/users' || route.startsWith('/users')) {
+                initUsersPage();
+            }
+        };
+
+        document.addEventListener('spa:contentLoaded', window._usersContentLoadedHandler);
+
+        window.refreshPageTranslations = function () {
+            const route = window.location.hash.split('?')[0].slice(1);
+            if (!route || route === '/users' || route.startsWith('/users')) {
+                loadUsers();
+            }
+        };
+    })();
+</script>

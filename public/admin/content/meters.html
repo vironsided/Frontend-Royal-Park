@@ -1,0 +1,42 @@
+<div class="dashboard-content">
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th data-i18n="apartment">Квартира</th>
+                            <th data-i18n="owner">Владелец</th>
+                            <th data-i18n="readings_meter_type">Тип</th>
+                            <th data-i18n="meter_number">№ Счетчика</th>
+                            <th data-i18n="meter_previous">Предыдущее</th>
+                            <th data-i18n="meter_current">Текущее</th>
+                            <th data-i18n="meter_consumption">Потребление</th>
+                            <th data-i18n="date">Дата</th>
+                            <th data-i18n="status">Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody id="metersTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const t = (key, fallback = '') => window.i18n?.translate?.(key) || fallback || key;
+        const tbody = document.getElementById('metersTable');
+        const types = {
+            electricity: t('meter_electricity', 'Электричество'),
+            water: t('meter_cold_water', 'Вода'),
+            gas: t('meter_gas', 'Газ')
+        };
+        const icons = { electricity: 'lightning-charge-fill', water: 'droplet-fill', gas: 'fire' };
+        if (tbody) {
+            tbody.innerHTML = TestData.meters.map(m => `
+            <tr><td><span class="badge bg-info">${m.apartment}</span></td><td><strong>${m.owner}</strong></td><td><i class="bi bi-${icons[m.type]}"></i> ${types[m.type]}</td><td><code>${m.meterNumber}</code></td><td>${m.lastReading}</td><td><strong>${m.currentReading}</strong></td><td><span class="badge bg-primary">${m.consumption}</span></td><td>${m.readingDate}</td><td><span class="badge bg-success">${t('meter_status_normal', 'Нормально')}</span></td></tr>
+        `).join('');
+        }
+    })();
+</script>

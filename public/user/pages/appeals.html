@@ -1,0 +1,536 @@
+<section class="user-appeals-section">
+    <div class="user-appeals-layout">
+        <!-- Left: create appeal -->
+        <div class="user-appeals-card user-appeals-form-card">
+            <h2 class="user-appeals-title" data-i18n="user_appeals_form_title">Сообщить о проблеме</h2>
+
+            <form class="user-appeals-form">
+                <div class="user-appeals-field">
+                    <label for="appealHouse" data-i18n="user_appeals_house">Дом</label>
+                    <select id="appealHouse">
+                        <!-- Будет заполнено из API -->
+                    </select>
+                </div>
+
+                <div class="user-appeals-field">
+                    <label for="appealText" data-i18n="user_appeals_description">Опишите проблему</label>
+                    <textarea id="appealText" rows="17" data-i18n-placeholder="user_appeals_placeholder" placeholder="Например: в доме 12Б не работает уличное освещение..."></textarea>
+                    <small class="user-appeals-hint" data-i18n="user_appeals_hint">Минимум 5 символов. Максимум 2000 символов.</small>
+                    <div class="user-appeals-error" id="appealError" style="display: none; color: var(--danger, #d94a4a); margin-top: 8px; font-size: 14px;"></div>
+                </div>
+
+                <div class="user-appeals-actions">
+                    <button type="submit" class="btn btn-primary" data-i18n="user_appeals_submit">Отправить</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Right: recent appeals -->
+        <div class="user-appeals-card user-appeals-list-card">
+            <div class="user-appeals-list-header">
+                <h2 class="user-appeals-title" data-i18n="user_appeals_list_title">Недавние обращения</h2>
+            </div>
+
+            <div class="user-appeals-list">
+                <div class="user-appeals-empty" style="display:none;" data-i18n="no_data">
+                    Обращений пока нет.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="user-appeal-modal-overlay" id="userAppealModal">
+        <div class="user-appeal-modal">
+            <div class="user-appeal-modal-header">
+                <h3 data-i18n="user_appeal_modal_title">Обращение</h3>
+                <button type="button" class="user-appeal-modal-close" id="userAppealModalClose">&times;</button>
+            </div>
+            <div class="user-appeal-modal-body">
+                <div class="user-appeal-modal-row">
+                    <span data-i18n="user_appeals_house">Дом</span>
+                    <strong id="userAppealModalApartment">—</strong>
+                </div>
+                <div class="user-appeal-modal-row">
+                    <span data-i18n="user_appeal_modal_created">Создано</span>
+                    <strong id="userAppealModalCreated">—</strong>
+                </div>
+                <div class="user-appeal-modal-row">
+                    <span data-i18n="user_appeal_modal_status">Статус</span>
+                    <strong id="userAppealModalStatus">—</strong>
+                </div>
+                <div class="user-appeal-modal-text" id="userAppealStaffBlock" style="display: none;">
+                    <span class="label" data-i18n="user_appeal_staff_update_label">Ответ службы</span>
+                    <div id="userAppealWorkflowPill" class="user-appeal-workflow-pill" style="display: none;"></div>
+                    <p id="userAppealStaffMessage" class="mb-0 mt-2" style="white-space: pre-wrap;"></p>
+                </div>
+                <div class="user-appeal-modal-text">
+                    <span class="label" data-i18n="user_appeal_modal_text_label">Текст обращения</span>
+                    <p id="userAppealModalText">—</p>
+                </div>
+                <div class="user-appeal-modal-edit">
+                    <label for="userAppealModalEdit" data-i18n="user_appeal_modal_edit_label">Изменить текст обращения</label>
+                    <textarea id="userAppealModalEdit" rows="4"></textarea>
+                    <small data-i18n="user_appeal_modal_edit_hint">Можно редактировать до прочтения оператором.</small>
+                </div>
+            </div>
+            <div class="user-appeal-modal-footer">
+                <button type="button" class="btn btn-danger btn-sm" id="userAppealDelete" data-i18n="user_appeal_modal_delete">Удалить</button>
+                <button type="button" class="btn btn-primary btn-sm" id="userAppealSave" data-i18n="user_appeal_modal_save">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Скрипт инициализируется сразу после загрузки фрагмента SPA
+        (function () {
+            const form = document.querySelector('.user-appeals-form');
+            const textarea = document.getElementById('appealText');
+            const list = document.querySelector('.user-appeals-list');
+            const emptyState = list?.querySelector('.user-appeals-empty');
+
+            const modal = document.getElementById('userAppealModal');
+            const modalClose = document.getElementById('userAppealModalClose');
+            const modalApartment = document.getElementById('userAppealModalApartment');
+            const modalCreated = document.getElementById('userAppealModalCreated');
+            const modalStatus = document.getElementById('userAppealModalStatus');
+            const modalText = document.getElementById('userAppealModalText');
+            const modalEdit = document.getElementById('userAppealModalEdit');
+            const modalEditBlock = document.querySelector('.user-appeal-modal-edit');
+            const modalSaveBtn = document.getElementById('userAppealSave');
+            const modalDeleteBtn = document.getElementById('userAppealDelete');
+            const userAppealStaffBlock = document.getElementById('userAppealStaffBlock');
+            const userAppealWorkflowPill = document.getElementById('userAppealWorkflowPill');
+            const userAppealStaffMessageEl = document.getElementById('userAppealStaffMessage');
+
+            if (!list || !modal) return;
+
+            const API_BASE_URL = window.getApiBase ? window.getApiBase() : (window.API_BASE_URL || window.BACKEND_API_BASE || 'http://localhost:8000');
+
+            let residents = [];
+            let currentAppealId = null;
+
+            function parseServerDate(dateString) {
+                if (!dateString) return null;
+                let s = String(dateString).trim();
+                if (!s) return null;
+
+                if (s.indexOf('T') === -1 && s.indexOf(' ') !== -1) {
+                    s = s.replace(' ', 'T');
+                }
+
+                const hasTimezone = /Z$|[+-]\d{2}:?\d{2}$/.test(s);
+                if (!hasTimezone) {
+                    s = `${s}Z`;
+                }
+
+                let d = new Date(s);
+                if (!isNaN(d.getTime())) {
+                    return d;
+                }
+
+                const m = s.match(/(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/);
+                if (m) {
+                    const year = parseInt(m[1], 10);
+                    const month = parseInt(m[2], 10) - 1;
+                    const day = parseInt(m[3], 10);
+                    const hour = parseInt(m[4], 10);
+                    const minute = parseInt(m[5], 10);
+                    const second = m[6] ? parseInt(m[6], 10) : 0;
+                    d = new Date(Date.UTC(year, month, day, hour, minute, second));
+                }
+
+                return isNaN(d.getTime()) ? null : d;
+            }
+
+            async function loadResidents() {
+                try {
+                    const resp = await fetch(`${API_BASE_URL}/api/resident/dashboard`, {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    if (!resp.ok) return;
+                    const data = await resp.json();
+                    residents = data.residents || [];
+                    const select = document.getElementById('appealHouse');
+                    if (select && residents.length) {
+                        select.innerHTML = '';
+                        residents.forEach(r => {
+                            const opt = document.createElement('option');
+                            opt.value = r.id;
+                            opt.textContent = r.code;
+                            select.appendChild(opt);
+                        });
+                    }
+                } catch (e) {
+                    console.error('Failed to load residents for appeals:', e);
+                }
+            }
+
+            function renderAppeals(items) {
+                // очищаем всё, кроме emptyState
+                list.querySelectorAll('.user-appeal-item').forEach(el => el.remove());
+                if (!items || !items.length) {
+                    if (emptyState) emptyState.style.display = 'block';
+                    return;
+                }
+                if (emptyState) emptyState.style.display = 'none';
+
+                items.forEach(appeal => {
+                    const item = document.createElement('div');
+                    item.className = 'user-appeal-item';
+                    item.dataset.id = appeal.id;
+                    item.dataset.apartment = appeal.resident_code || '—';
+                    const lang = (localStorage.getItem('language') || 'ru').toLowerCase();
+                    const locale = lang === 'az' ? 'az-AZ' : (lang === 'en' ? 'en-US' : 'ru-RU');
+                    const createdDate = appeal.created_at ? parseServerDate(appeal.created_at) : null;
+                    const createdDisplay = createdDate && !isNaN(createdDate.getTime())
+                        ? createdDate.toLocaleString(locale)
+                        : '—';
+                    item.dataset.createdRaw = appeal.created_at || '';
+                    item.dataset.created = createdDisplay;
+                    item.dataset.status = appeal.status === 'READ' ? 'read' : 'unread';
+                    item.dataset.text = appeal.message;
+                    item.dataset.appealWorkflow = appeal.appeal_workflow || '';
+                    item.dataset.staffMessage = appeal.staff_message || '';
+
+                    const isRead = appeal.status === 'READ';
+                    const statusRead = window.i18n?.translate?.('user_appeal_status_read', lang) || 'Прочитано';
+                    const statusUnread = window.i18n?.translate?.('user_appeal_status_unread', lang) || 'Не прочитано';
+                    const viewLabel = window.i18n?.translate?.('action_view', lang) || 'Просмотр';
+                    const wfCode = appeal.appeal_workflow || '';
+                    const wfText = wfCode
+                        ? (window.i18n?.translate?.('appeal_wf_' + String(wfCode).toLowerCase(), lang) || wfCode)
+                        : '';
+                    const wfHtml = wfText
+                        ? `<div class="user-appeal-wf-line">${wfText}</div>`
+                        : '';
+
+                    item.innerHTML = `
+                        <div class="user-appeal-main">
+                            <div>
+                                <div class="user-appeal-house">${item.dataset.apartment}</div>
+                                <div class="user-appeal-date">${item.dataset.created}</div>
+                                ${wfHtml}
+                            </div>
+                            <span class="user-appeal-badge ${isRead ? 'user-appeal-badge-read' : 'user-appeal-badge-unread'}" 
+                                  data-appeal-status="${isRead ? 'read' : 'unread'}">
+                                ${isRead ? statusRead : statusUnread}
+                            </span>
+                        </div>
+                        <button type="button" class="btn btn-outline-info btn-sm user-appeal-view">${viewLabel}</button>
+                    `;
+
+                    list.insertBefore(item, emptyState);
+                });
+            }
+
+            async function loadAppeals() {
+                try {
+                    const resp = await fetch(`${API_BASE_URL}/api/resident/appeals`, {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+                    if (!resp.ok) {
+                        console.error('Failed to load appeals, status:', resp.status);
+                        return;
+                    }
+                    const data = await resp.json();
+                    renderAppeals(data);
+                    let highlightId = null;
+                    try {
+                        highlightId = sessionStorage.getItem('appealsHighlightId');
+                    } catch (e) { /* ignore */ }
+                    if (highlightId) {
+                        try {
+                            sessionStorage.removeItem('appealsHighlightId');
+                        } catch (e) { /* ignore */ }
+                        const row = list.querySelector(`.user-appeal-item[data-id="${highlightId}"]`);
+                        if (row) {
+                            row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            openModalFromItem(row);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Failed to load appeals:', e);
+                }
+            }
+
+            function openModalFromItem(item) {
+                currentAppealId = item.dataset.id ? Number(item.dataset.id) : null;
+                modalApartment.textContent = item.dataset.apartment || '—';
+                modalCreated.textContent = item.dataset.created || '—';
+
+                // Определяем язык интерфейса: сначала из languageManager, затем из <html lang>, по умолчанию ru
+                const currentLang =
+                    (window.languageManager && window.languageManager.currentLanguage) ||
+                    document.documentElement.lang ||
+                    'ru';
+
+                // Хелпер перевода статуса (работает даже без languageManager)
+                const translateStatus = (key, fallback) => {
+                    if (window.languageManager && typeof window.languageManager.translateKey === 'function') {
+                        const v = window.languageManager.translateKey(key);
+                        if (v) return v;
+                    }
+                    if (typeof translations !== 'undefined' &&
+                        translations[currentLang] &&
+                        translations[currentLang][key]) {
+                        return translations[currentLang][key];
+                    }
+                    return fallback;
+                };
+
+                // Локализуем статус по ключу (read/unread)
+                const lang = localStorage.getItem('language') || 'ru';
+                const statusKey = item.dataset.status;
+                const isRead = statusKey === 'read';
+                if (statusKey === 'read') {
+                    modalStatus.textContent = window.i18n?.translate?.('user_appeal_status_read', lang) || 'Прочитано';
+                } else if (statusKey === 'unread') {
+                    modalStatus.textContent = window.i18n?.translate?.('user_appeal_status_unread', lang) || 'Не прочитано';
+                } else {
+                    modalStatus.textContent = statusKey || '—';
+                }
+                modalStatus.dataset.appealStatus = statusKey;
+
+                modalText.textContent = item.dataset.text || '—';
+                modalEdit.value = item.dataset.text || '';
+
+                const wfRaw = item.dataset.appealWorkflow || '';
+                const staffRaw = item.dataset.staffMessage || '';
+                if (userAppealStaffBlock && userAppealWorkflowPill && userAppealStaffMessageEl) {
+                    const showStaff = isRead && (wfRaw || staffRaw);
+                    userAppealStaffBlock.style.display = showStaff ? '' : 'none';
+                    if (showStaff) {
+                        if (wfRaw) {
+                            const wfLabel = window.i18n?.translate?.(
+                                'appeal_wf_' + String(wfRaw).toLowerCase(),
+                                lang
+                            ) || wfRaw;
+                            userAppealWorkflowPill.textContent = wfLabel;
+                            userAppealWorkflowPill.style.display = '';
+                        } else {
+                            userAppealWorkflowPill.style.display = 'none';
+                        }
+                        userAppealStaffMessageEl.textContent = staffRaw || '';
+                    }
+                }
+
+                // READ: скрываем редактор и кнопку "Сохранить", оставляем только просмотр и удаление
+                if (isRead) {
+                    if (modalEditBlock) modalEditBlock.style.display = 'none';
+                    if (modalSaveBtn) modalSaveBtn.style.display = 'none';
+                    modalEdit.readOnly = true;
+                } else {
+                    if (modalEditBlock) modalEditBlock.style.display = '';
+                    if (modalSaveBtn) modalSaveBtn.style.display = '';
+                    modalEdit.readOnly = false;
+                }
+                modal.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeModal() {
+                modal.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+
+            list.addEventListener('click', (e) => {
+                const viewBtn = e.target.closest('.user-appeal-view');
+                if (!viewBtn) return;
+                const item = viewBtn.closest('.user-appeal-item');
+                if (item) openModalFromItem(item);
+            });
+
+            if (modalClose) {
+                modalClose.addEventListener('click', closeModal);
+            }
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+
+            if (modalSaveBtn) {
+                modalSaveBtn.addEventListener('click', async () => {
+                    if (!currentAppealId) return;
+                    const newText = (modalEdit.value || '').trim();
+                    if (!newText) return;
+                    try {
+                        const resp = await fetch(`${API_BASE_URL}/api/resident/appeals/${currentAppealId}`, {
+                            method: 'PUT',
+                            credentials: 'include',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ message: newText })
+                        });
+                        if (!resp.ok) {
+                            console.error('Failed to update appeal, status:', resp.status);
+                            return;
+                        }
+                        const updated = await resp.json();
+                        // обновляем текущий элемент в списке
+                        const item = list.querySelector(`.user-appeal-item[data-id="${currentAppealId}"]`);
+                        if (item) {
+                            item.dataset.text = updated.message;
+                            const lang = (localStorage.getItem('language') || 'ru').toLowerCase();
+                            const locale = lang === 'az' ? 'az-AZ' : (lang === 'en' ? 'en-US' : 'ru-RU');
+                            const createdDate = updated.created_at ? parseServerDate(updated.created_at) : null;
+                            const createdDisplay = createdDate && !isNaN(createdDate.getTime())
+                                ? createdDate.toLocaleString(locale)
+                                : '—';
+                            item.dataset.createdRaw = updated.created_at || '';
+                            item.dataset.created = createdDisplay;
+                            item.querySelector('.user-appeal-date').textContent = createdDisplay;
+                        }
+                        modalText.textContent = updated.message;
+                        modalEdit.value = updated.message;
+                        closeModal();
+                    } catch (e) {
+                        console.error('Failed to update appeal:', e);
+                    }
+                });
+            }
+
+            if (modalDeleteBtn) {
+                modalDeleteBtn.addEventListener('click', async () => {
+                    if (!currentAppealId) return;
+
+                    // Подтверждение удаления
+                    let confirmed = true;
+                    const lang = localStorage.getItem('language') || 'ru';
+                    const confirmMessage =
+                        (window.i18n?.translate?.('appeals_delete_confirm', lang)) ||
+                        'Вы уверены, что хотите удалить это обращение?';
+                    const confirmTitle =
+                        (window.i18n?.translate?.('confirm_title', lang)) ||
+                        'Подтверждение';
+                    if (window.showConfirm && typeof window.showConfirm === 'function') {
+                        confirmed = await window.showConfirm(confirmMessage, confirmTitle);
+                    } else if (typeof window.confirm === 'function') {
+                        confirmed = window.confirm(confirmMessage);
+                    }
+                    if (!confirmed) return;
+
+                    try {
+                        const resp = await fetch(`${API_BASE_URL}/api/resident/appeals/${currentAppealId}`, {
+                            method: 'DELETE',
+                            credentials: 'include'
+                        });
+                        if (!resp.ok) {
+                            console.error('Failed to delete appeal, status:', resp.status);
+                            return;
+                        }
+                        // удаляем элемент из списка
+                        const item = list.querySelector(`.user-appeal-item[data-id="${currentAppealId}"]`);
+                        if (item) {
+                            item.remove();
+                        }
+                        // показать empty state если больше нет элементов
+                        if (!list.querySelector('.user-appeal-item') && emptyState) {
+                            emptyState.style.display = 'block';
+                        }
+                        closeModal();
+                    } catch (e) {
+                        console.error('Failed to delete appeal:', e);
+                    }
+                });
+            }
+
+            if (form && textarea && emptyState) {
+                const errorDiv = document.getElementById('appealError');
+                
+                const showError = (message) => {
+                    if (errorDiv) {
+                        errorDiv.textContent = message;
+                        errorDiv.style.display = 'block';
+                    }
+                };
+                
+                const hideError = () => {
+                    if (errorDiv) {
+                        errorDiv.style.display = 'none';
+                        errorDiv.textContent = '';
+                    }
+                };
+
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    hideError();
+                    
+                    const text = textarea.value.trim();
+                    if (!text) {
+                        showError('Пожалуйста, введите текст обращения');
+                        return;
+                    }
+                    
+                    if (text.length < 5) {
+                        showError('Текст обращения должен содержать минимум 5 символов');
+                        return;
+                    }
+
+                    const select = document.getElementById('appealHouse');
+                    const residentId = select ? Number(select.value) : null;
+                    if (!residentId) {
+                        showError('Пожалуйста, выберите дом');
+                        return;
+                    }
+
+                    fetch(`${API_BASE_URL}/api/resident/appeals`, {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            resident_id: residentId,
+                            message: text
+                        })
+                    })
+                        .then(async resp => {
+                            if (!resp.ok) {
+                                let errorMessage = `Ошибка ${resp.status}`;
+                                try {
+                                    const errorData = await resp.json();
+                                    if (errorData.detail) {
+                                        errorMessage = errorData.detail;
+                                    }
+                                } catch (e) {
+                                    // Если не удалось распарсить JSON, используем стандартное сообщение
+                                }
+                                throw new Error(errorMessage);
+                            }
+                            return resp.json();
+                        })
+                        .then(appeal => {
+                            // Дополняем список локально
+                            renderAppeals([appeal, ...Array.from(list.querySelectorAll('.user-appeal-item')).map(el => ({
+                                id: Number(el.dataset.id),
+                                resident_code: el.dataset.apartment,
+                                created_at: el.dataset.createdRaw || el.dataset.created,
+                                status: el.dataset.status === 'read' ? 'READ' : 'UNREAD',
+                                message: el.dataset.text,
+                                appeal_workflow: el.dataset.appealWorkflow || null,
+                                staff_message: el.dataset.staffMessage || null
+                            }))]);
+                            textarea.value = '';
+                            hideError();
+                        })
+                        .catch(err => {
+                            console.error('Failed to submit appeal:', err);
+                            showError(err.message || 'Не удалось отправить обращение. Попробуйте позже.');
+                        });
+                });
+            }
+
+            // initial load
+            loadResidents();
+            loadAppeals();
+
+            window.addEventListener('languageChanged', () => {
+                loadAppeals();
+            });
+        })();
+    </script>
+</section>
+
+

@@ -1,0 +1,650 @@
+/* 🌓 UNIVERSAL DARK MODE STYLES FOR ALL DASHBOARDS */
+
+/* User Dashboard Dark Mode */
+[data-theme="dark"] .user-container {
+    background: #1a1d23;
+}
+
+[data-theme="dark"] .user-sidebar {
+    background: linear-gradient(180deg, #242831 0%, #1e2128 100%);
+    border-right-color: #3a3f4a;
+}
+
+[data-theme="dark"] .user-main-content {
+    background: #1a1d23;
+}
+
+/* Maintenance Dashboard Dark Mode */
+[data-theme="dark"] .maintenance-container {
+    background: #1a1d23;
+}
+
+[data-theme="dark"] .maintenance-sidebar {
+    background: linear-gradient(180deg, #242831 0%, #1e2128 100%);
+    border-right-color: #3a3f4a;
+}
+
+[data-theme="dark"] .maintenance-main-content {
+    background: #1a1d23;
+}
+
+/* Accountant Dashboard Dark Mode */
+[data-theme="dark"] .accountant-container {
+    background: #1a1d23;
+}
+
+[data-theme="dark"] .accountant-sidebar {
+    background: linear-gradient(180deg, #242831 0%, #1e2128 100%);
+    border-right-color: #3a3f4a;
+}
+
+[data-theme="dark"] .accountant-main-content {
+    background: #1a1d23;
+}
+
+/* Common Dark Mode Styles */
+[data-theme="dark"] .card,
+[data-theme="dark"] .stat-card:not(.solid-purple):not(.solid-orange):not(.solid-blue):not(.solid-red):not(.solid-green):not(.solid-yellow),
+[data-theme="dark"] .chart-card,
+[data-theme="dark"] .activity-card,
+[data-theme="dark"] .bill-card,
+[data-theme="dark"] .request-card,
+[data-theme="dark"] .report-card,
+[data-theme="dark"] .meter-card {
+    background: #242831;
+    border-color: #3a3f4a;
+}
+
+[data-theme="dark"] .card:hover,
+[data-theme="dark"] .stat-card:not(.solid-purple):not(.solid-orange):not(.solid-blue):not(.solid-red):not(.solid-green):not(.solid-yellow):hover,
+[data-theme="dark"] .chart-card:hover,
+[data-theme="dark"] .activity-card:hover,
+[data-theme="dark"] .bill-card:hover,
+[data-theme="dark"] .request-card:hover,
+[data-theme="dark"] .report-card:hover,
+[data-theme="dark"] .meter-card:hover {
+    border-color: #667eea;
+}
+
+/* Icons in colored stat cards - colored backgrounds */
+[data-theme="dark"] .stat-card.solid-purple .stat-icon {
+    background: linear-gradient(135deg, #a55eea 0%, #8854d0 100%) !important;
+}
+
+[data-theme="dark"] .stat-card.solid-orange .stat-icon {
+    background: linear-gradient(135deg, #f5a623 0%, #e8830c 100%) !important;
+}
+
+[data-theme="dark"] .stat-card.solid-blue .stat-icon {
+    background: linear-gradient(135deg, #4facfe 0%, #2e86de 100%) !important;
+}
+
+[data-theme="dark"] .stat-card.solid-red .stat-icon {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5253 100%) !important;
+}
+
+[data-theme="dark"] .stat-card.solid-green .stat-icon {
+    background: linear-gradient(135deg, #38ef7d 0%, #11998e 100%) !important;
+}
+
+[data-theme="dark"] .stat-card.solid-yellow .stat-icon {
+    background: linear-gradient(135deg, #f5af19 0%, #f12711 100%) !important;
+}
+
+[data-theme="dark"] .card-header {
+    background: linear-gradient(135deg, #2d3139 0%, #242831 100%);
+    border-bottom-color: #3a3f4a;
+}
+
+[data-theme="dark"] .card-header h3,
+[data-theme="dark"] .card-header h4,
+[data-theme="dark"] .card-header h5 {
+    color: #e4e6eb;
+}
+
+[data-theme="dark"] .top-bar {
+    background: #242831;
+    border-bottom-color: #3a3f4a;
+}
+
+[data-theme="dark"] .nav-item {
+    color: #b8bcc4;
+}
+
+[data-theme="dark"] .nav-item:hover,
+[data-theme="dark"] .nav-item.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+[data-theme="dark"] .breadcrumb-item {
+    color: #8d9199;
+}
+
+[data-theme="dark"] .breadcrumb-item.active {
+    color: #e4e6eb;
+}
+
+[data-theme="dark"] .stat-value,
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4 {
+    color: #e4e6eb;
+}
+
+[data-theme="dark"] .stat-label,
+[data-theme="dark"] p {
+    color: #8d9199;
+}
+
+[data-theme="dark"] .table {
+    background: #242831;
+}
+
+[data-theme="dark"] .table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+[data-theme="dark"] .table tbody tr {
+    border-bottom-color: #3a3f4a;
+}
+
+[data-theme="dark"] .table tbody tr:hover {
+    background: #2d3139;
+}
+
+[data-theme="dark"] .table tbody td {
+    color: #b8bcc4;
+}
+
+[data-theme="dark"] .search-box input,
+[data-theme="dark"] .filter-input,
+[data-theme="dark"] .filter-select,
+[data-theme="dark"] .report-period,
+[data-theme="dark"] .reading-input {
+    background: #2d3139;
+    color: #e4e6eb;
+    border-color: #3a3f4a;
+}
+
+[data-theme="dark"] .search-box input::placeholder,
+[data-theme="dark"] .filter-input::placeholder {
+    color: #8d9199;
+}
+
+[data-theme="dark"] .search-box input:focus,
+[data-theme="dark"] .filter-input:focus,
+[data-theme="dark"] .filter-select:focus,
+[data-theme="dark"] .report-period:focus {
+    background: #242831;
+    border-color: #667eea;
+}
+
+/* Account modal inputs in dark theme */
+[data-theme="dark"] .account-modal-body {
+    background: rgba(30, 33, 40, 0.5);
+}
+
+[data-theme="dark"] .account-form-group label {
+    color: #e4e6eb;
+}
+
+[data-theme="dark"] .account-form-group input,
+[data-theme="dark"] .account-form-group select {
+    background: rgba(45, 49, 57, 0.9);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #e4e6eb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .account-form-group input:hover,
+[data-theme="dark"] .account-form-group select:hover {
+    border-color: rgba(255, 255, 255, 0.18);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .account-form-group input:focus,
+[data-theme="dark"] .account-form-group select:focus {
+    border-color: #a78bfa;
+    box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.2), 0 2px 8px rgba(167, 139, 250, 0.25);
+    transform: translateY(-1px);
+}
+
+[data-theme="dark"] .account-form-group input::placeholder {
+    color: #8d9199;
+}
+
+/* Extra guarantee for password tab inputs (делаем ещё темнее, перекрываем любые другие стили) */
+[data-theme="dark"] .account-tab-panel .account-form-group input {
+    background: rgba(45, 49, 57, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: #e4e6eb !important;
+}
+
+/* Улучшенные стили для вкладок в темной теме */
+[data-theme="dark"] .account-tabs {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .account-tab-btn {
+    color: #9ca3af;
+}
+
+[data-theme="dark"] .account-tab-btn:hover {
+    color: #a78bfa;
+    background: rgba(167, 139, 250, 0.1);
+}
+
+[data-theme="dark"] .account-tab-btn.active {
+    color: #a78bfa;
+    background: rgba(167, 139, 250, 0.15);
+    box-shadow: 0 2px 8px rgba(167, 139, 250, 0.2);
+}
+
+[data-theme="dark"] .account-tab-btn.active::before {
+    background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+}
+
+/* File input in account modal (Аватар) */
+[data-theme="dark"] #accountAvatarInput {
+    background: #232734;
+    border-color: #3a3f4a;
+    color: #e4e6eb;
+}
+
+[data-theme="dark"] #accountAvatarInput::file-selector-button {
+    background: #2d3139;
+    border: 1px solid #3a3f4a;
+    color: #e4e6eb;
+    border-radius: 999px;
+    padding: 0.3rem 0.9rem;
+    cursor: pointer;
+}
+
+[data-theme="dark"] #accountAvatarInput::file-selector-button:hover {
+    background: #3a3f4a;
+    border-color: #667eea;
+}
+
+/* Date input (в том числе в "Сообщить об оплате") */
+[data-theme="dark"] input[type="date"],
+[data-theme="dark"] .user-report-form .date-group input[type="date"] {
+    background: #2d3139;
+    color: #e4e6eb;
+    border-color: #3a3f4a;
+    color-scheme: dark; /* попытка затемнить всплывающий календарь в поддерживаемых браузерах */
+}
+
+/* Native picker dark mode (date/time/datetime-local/month) */
+/* Для showPicker()/браузерных календарей нужен color-scheme на контейнере и на самих полях */
+html[data-theme="dark"],
+body[data-theme="dark"] {
+    color-scheme: dark;
+}
+
+[data-theme="dark"] input[type="datetime-local"],
+[data-theme="dark"] input[type="time"],
+[data-theme="dark"] input[type="date"],
+[data-theme="dark"] input[type="month"],
+body[data-theme="dark"] input[type="datetime-local"],
+body[data-theme="dark"] input[type="time"],
+body[data-theme="dark"] input[type="date"],
+body[data-theme="dark"] input[type="month"] {
+    color-scheme: dark !important;
+}
+
+/* Meter Verification Dark Mode */
+[data-theme="dark"] .meter-header {
+    background: linear-gradient(135deg, #2d3139 0%, #242831 100%);
+}
+
+[data-theme="dark"] .meter-info h4 {
+    color: #e4e6eb;
+}
+
+[data-theme="dark"] .meter-info p {
+    color: #8d9199;
+}
+
+[data-theme="dark"] .reading-item label {
+    color: #b8bcc4;
+}
+
+[data-theme="dark"] .reading-item .value {
+    color: #e4e6eb;
+}
+
+/* Reports Dark Mode */
+[data-theme="dark"] .filters-container {
+    background: transparent;
+}
+
+[data-theme="dark"] .quick-stats {
+    background: linear-gradient(135deg, #2d3139 0%, #242831 100%);
+    border-color: #3a3f4a;
+}
+
+[data-theme="dark"] .export-formats {
+    background: #242831;
+    border-color: #3a3f4a;
+}
+
+[data-theme="dark"] .quick-stat-item {
+    border-bottom-color: #3a3f4a;
+}
+
+[data-theme="dark"] .format-option {
+    color: #b8bcc4;
+}
+
+[data-theme="dark"] .format-option:hover {
+    color: #667eea;
+}
+
+/* Page Title with Gradient */
+[data-theme="dark"] .page-title h1 {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Activity Items */
+[data-theme="dark"] .activity-title {
+    color: #e4e6eb;
+}
+
+[data-theme="dark"] .activity-time {
+    color: #8d9199;
+}
+
+/* Bill Status */
+[data-theme="dark"] .bill-status {
+    background: #2d3139;
+    color: #b8bcc4;
+}
+
+/* Request Cards */
+[data-theme="dark"] .request-title {
+    color: #e4e6eb;
+}
+
+[data-theme="dark"] .request-description {
+    color: #8d9199;
+}
+
+/* Chart Cards */
+[data-theme="dark"] .chart-container {
+    background: transparent;
+}
+
+/* Sidebar Logo */
+[data-theme="dark"] .sidebar-logo {
+    color: #e4e6eb;
+    border-bottom-color: #3a3f4a;
+}
+
+/* User Info */
+[data-theme="dark"] .user-info h4 {
+    color: #e4e6eb;
+}
+
+[data-theme="dark"] .user-info p {
+    color: #8d9199;
+}
+
+/* Dropdown Menu */
+[data-theme="dark"] .dropdown-menu {
+    background: #242831;
+    border-color: #3a3f4a;
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: #b8bcc4;
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+    background: #2d3139;
+    color: #667eea;
+}
+
+/* Native select dropdown dark scrollbars */
+[data-theme="dark"] select,
+[data-theme="dark"] .form-select,
+body[data-theme="dark"] select,
+body[data-theme="dark"] .form-select {
+    color-scheme: dark;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(102, 126, 234, 0.55) #1f2432;
+}
+
+[data-theme="dark"] select::-webkit-scrollbar,
+[data-theme="dark"] .form-select::-webkit-scrollbar,
+body[data-theme="dark"] select::-webkit-scrollbar,
+body[data-theme="dark"] .form-select::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+[data-theme="dark"] select::-webkit-scrollbar-track,
+[data-theme="dark"] .form-select::-webkit-scrollbar-track,
+body[data-theme="dark"] select::-webkit-scrollbar-track,
+body[data-theme="dark"] .form-select::-webkit-scrollbar-track {
+    background: #1f2432;
+    border-radius: 8px;
+}
+
+[data-theme="dark"] select::-webkit-scrollbar-thumb,
+[data-theme="dark"] .form-select::-webkit-scrollbar-thumb,
+body[data-theme="dark"] select::-webkit-scrollbar-thumb,
+body[data-theme="dark"] .form-select::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.55);
+    border-radius: 8px;
+    border: 2px solid #1f2432;
+}
+
+[data-theme="dark"] select::-webkit-scrollbar-thumb:hover,
+[data-theme="dark"] .form-select::-webkit-scrollbar-thumb:hover,
+body[data-theme="dark"] select::-webkit-scrollbar-thumb:hover,
+body[data-theme="dark"] .form-select::-webkit-scrollbar-thumb:hover {
+    background: rgba(102, 126, 234, 0.75);
+}
+
+/*
+ * Native <option> dark styling.
+ *
+ * ВАЖНО: никакого !important. На Windows Chromium !important на color/background
+ * у <option> заставляет браузер считать, что автор полностью управляет popup'ом,
+ * и отключает нативную тёмную раскраску — в итоге popup рисуется системным
+ * СВЕТЛЫМ фоном, а форсированный белый текст становится невидимым.
+ * Обычные author-правила вместе с color-scheme: dark (см. блок выше) дают
+ * корректный тёмный popup — так же, как у селекта ролей в users.html.
+ */
+[data-theme="dark"] select option,
+[data-theme="dark"] .form-select option,
+body[data-theme="dark"] select option,
+body[data-theme="dark"] .form-select option {
+    background-color: #1e2128;
+    color: #ffffff;
+}
+
+[data-theme="dark"] select option:checked,
+[data-theme="dark"] .form-select option:checked,
+body[data-theme="dark"] select option:checked,
+body[data-theme="dark"] .form-select option:checked {
+    background-color: #2f3442;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+[data-theme="dark"] select option:disabled,
+[data-theme="dark"] .form-select option:disabled,
+body[data-theme="dark"] select option:disabled,
+body[data-theme="dark"] .form-select option:disabled {
+    color: #6b7180;
+}
+
+/* Notifications */
+[data-theme="dark"] .notification-badge {
+    background: #dc3545 !important;
+}
+
+/* Footer */
+[data-theme="dark"] .footer {
+    background: #242831;
+    border-top-color: #3a3f4a;
+    color: #8d9199;
+}
+
+/* Dashboard Content */
+[data-theme="dark"] .dashboard-content {
+    background: transparent!important;
+}
+
+/* Global horizontal pagination layout (admin tables) */
+[data-theme="dark"] #spa-content .table-pagination .pagination-controls,
+[data-theme="dark"] #spa-content .table-pagination .pagination-pages,
+[data-theme="dark"] .table-pagination .pagination-controls,
+[data-theme="dark"] .table-pagination .pagination-pages {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+}
+
+[data-theme="dark"] .table-pagination .btn-pagination {
+    white-space: nowrap;
+}
+
+/* Open per-page dropdown upwards in tables (so it не уходит вниз за пределы) */
+[data-theme="dark"] .table-pagination .custom-pag-select .select-options {
+    top: auto !important;
+    bottom: calc(100% + 8px) !important;
+}
+
+/* Reading Details Modal Filter Dark Mode */
+[data-theme="dark"] .reading-details-filter {
+    background: rgba(36, 40, 49, 0.95) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .reading-details-filter label {
+    color: #e4e6eb !important;
+}
+
+[data-theme="dark"] .reading-details-filter input[type="month"] {
+    background: rgba(45, 49, 57, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #e4e6eb !important;
+    color-scheme: dark;
+}
+
+[data-theme="dark"] .reading-details-filter input[type="month"]:hover {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    background: rgba(45, 49, 57, 1) !important;
+}
+
+[data-theme="dark"] .reading-details-filter input[type="month"]:focus {
+    border-color: #667eea !important;
+    background: rgba(45, 49, 57, 1) !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+    outline: none !important;
+}
+
+[data-theme="dark"] .reading-details-filter input[type="month"]::placeholder {
+    color: #8d9199 !important;
+}
+
+[data-theme="dark"] .reading-details-filter button {
+    transition: all 0.2s ease !important;
+}
+
+[data-theme="dark"] .reading-details-filter .reading-details-filter-btn-apply,
+[data-theme="dark"] .reading-details-filter button[onclick*="applyReadingDetailsFilter"] {
+    background: #667eea !important;
+    color: #fff !important;
+    border: none !important;
+}
+
+[data-theme="dark"] .reading-details-filter .reading-details-filter-btn-apply:hover,
+[data-theme="dark"] .reading-details-filter button[onclick*="applyReadingDetailsFilter"]:hover {
+    background: #5568d3 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3) !important;
+}
+
+[data-theme="dark"] .reading-details-filter .reading-details-filter-btn-reset,
+[data-theme="dark"] .reading-details-filter button[onclick*="resetReadingDetailsFilter"] {
+    background: transparent !important;
+    color: #e4e6eb !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+[data-theme="dark"] .reading-details-filter .reading-details-filter-btn-reset:hover,
+[data-theme="dark"] .reading-details-filter button[onclick*="resetReadingDetailsFilter"]:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+[data-theme="dark"] .reading-details-filter span {
+    color: #e4e6eb !important;
+}
+
+/* Month input dark mode (general) */
+[data-theme="dark"] input[type="month"] {
+    background: #2d3139 !important;
+    color: #e4e6eb !important;
+    border-color: #3a3f4a !important;
+    color-scheme: dark;
+}
+
+[data-theme="dark"] input[type="month"]:hover {
+    background: #242831 !important;
+    border-color: #667eea !important;
+}
+
+[data-theme="dark"] input[type="month"]:focus {
+    background: #242831 !important;
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+    outline: none !important;
+}
+
+/* Scrollbar dark mode for modals and reading details */
+[data-theme="dark"] .reading-details-body::-webkit-scrollbar,
+[data-theme="dark"] .readings-detail-modal::-webkit-scrollbar,
+[data-theme="dark"] .modal-content::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+[data-theme="dark"] .reading-details-body::-webkit-scrollbar-track,
+[data-theme="dark"] .readings-detail-modal::-webkit-scrollbar-track,
+[data-theme="dark"] .modal-content::-webkit-scrollbar-track {
+    background: rgba(36, 40, 49, 0.5);
+    border-radius: 4px;
+}
+
+[data-theme="dark"] .reading-details-body::-webkit-scrollbar-thumb,
+[data-theme="dark"] .readings-detail-modal::-webkit-scrollbar-thumb,
+[data-theme="dark"] .modal-content::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.5);
+    border-radius: 4px;
+}
+
+[data-theme="dark"] .reading-details-body::-webkit-scrollbar-thumb:hover,
+[data-theme="dark"] .readings-detail-modal::-webkit-scrollbar-thumb:hover,
+[data-theme="dark"] .modal-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(102, 126, 234, 0.7);
+}
+
+/* Firefox scrollbar */
+[data-theme="dark"] .reading-details-body,
+[data-theme="dark"] .readings-detail-modal,
+[data-theme="dark"] .modal-content {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(102, 126, 234, 0.5) rgba(36, 40, 49, 0.5);
+}

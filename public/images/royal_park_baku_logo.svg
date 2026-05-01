@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="Royal Park BAKU logo">
+  
+  <!-- Sage green background -->
+  <rect width="100%" height="100%" fill="#7f9a74"/>
+  
+  <!-- Main group centered -->
+  <g id="logo" transform="translate(512,400)" text-anchor="middle" fill="#ffffff" stroke="none">
+
+    <!-- Detailed fleur-de-lis tree design -->
+    
+    <!-- Central fleur-de-lis (three petals) -->
+    <!-- Center petal (tallest) -->
+    <path d="M0 -140 C-12 -120 -18 -100 -18 -80 C-18 -60 -12 -40 0 -20 C12 -40 18 -60 18 -80 C18 -100 12 -120 0 -140 Z" fill="#ffffff"/>
+    
+    <!-- Left petal -->
+    <path d="M-60 -80 C-80 -70 -100 -50 -90 -30 C-85 -20 -75 -15 -65 -15 C-55 -15 -45 -20 -35 -25 C-25 -30 -25 -40 -35 -50 C-45 -60 -55 -70 -60 -80 Z" fill="#ffffff"/>
+    
+    <!-- Right petal -->
+    <path d="M60 -80 C80 -70 100 -50 90 -30 C85 -20 75 -15 65 -15 C55 -15 45 -20 35 -25 C25 -30 25 -40 35 -50 C45 -60 55 -70 60 -80 Z" fill="#ffffff"/>
+    
+    <!-- Left main branch -->
+    <path d="M-90 -20 C-110 -10 -130 10 -120 30 C-115 40 -105 45 -95 45 C-85 45 -75 40 -65 35 C-55 30 -55 20 -65 10 C-75 0 -85 -10 -90 -20 Z" fill="#ffffff"/>
+    
+    <!-- Right main branch -->
+    <path d="M90 -20 C110 -10 130 10 120 30 C115 40 105 45 95 45 C85 45 75 40 65 35 C55 30 55 20 65 10 C75 0 85 -10 90 -20 Z" fill="#ffffff"/>
+    
+    <!-- Small leaves near trunk -->
+    <path d="M-30 40 C-40 35 -50 25 -45 15 C-42 10 -37 8 -32 8 C-27 8 -22 10 -17 15 C-12 20 -12 25 -17 30 C-22 35 -27 40 -30 40 Z" fill="#ffffff"/>
+    
+    <path d="M30 40 C40 35 50 25 45 15 C42 10 37 8 32 8 C27 8 22 10 17 15 C12 20 12 25 17 30 C22 35 27 40 30 40 Z" fill="#ffffff"/>
+    
+    <!-- Central trunk (wider at base) -->
+    <path d="M-15 50 L-15 20 C-15 15 -12 12 -8 12 L8 12 C12 12 15 15 15 20 L15 50 L-15 50 Z" fill="#ffffff"/>
+
+    <!-- text — using system fonts -->
+    <text x="0" y="180"
+          font-family="Georgia, 'Times New Roman', serif"
+          font-size="80"
+          font-weight="600"
+          letter-spacing="2"
+          fill="#ffffff">Royal Park</text>
+
+    <text x="0" y="230"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="36"
+          font-weight="700"
+          letter-spacing="8"
+          fill="#ffffff">BAKU</text>
+  </g>
+</svg>

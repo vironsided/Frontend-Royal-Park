@@ -1,0 +1,765 @@
+<link rel="stylesheet" href="/admin/content_css/logs.css?v=dark-select-1">
+<div class="content-wrapper">
+    <div style="position: relative;">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 data-i18n="logs_title">История действий (логи показаний)</h3>
+            </div>
+            
+            <!-- Filters Section -->
+            <div class="card-body">
+                <div class="logs-filters mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label" data-i18n="logs_filter_action">Действие</label>
+                            <select id="filterAction" class="form-select">
+                                <option value="" data-i18n="all">Все</option>
+                                <option value="CREATE" data-i18n="logs_action_create">Создание</option>
+                                <option value="UPDATE" data-i18n="logs_action_update">Обновление</option>
+                                <option value="DELETE" data-i18n="logs_action_delete">Удаление</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" data-i18n="resident">Резидент</label>
+                            <select id="filterResident" class="form-select">
+                                <option value="" data-i18n="all">Все</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" data-i18n="user">Пользователь</label>
+                            <select id="filterUser" class="form-select">
+                                <option value="" data-i18n="all">Все</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-12">
+                            <button class="btn btn-primary" onclick="applyFilters()">
+                                <i class="bi bi-funnel"></i> <span data-i18n="apply">Применить</span>
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                                <i class="bi bi-x-circle"></i> <span data-i18n="reset">Очистить</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Table -->
+                <div class="table-responsive">
+                    <table class="table logs-table">
+                        <thead>
+                            <tr>
+                                <th data-i18n="id">ID</th>
+                                <th data-i18n="logs_th_datetime">ДАТА/ВРЕМЯ</th>
+                                <th data-i18n="logs_filter_action">ДЕЙСТВИЕ</th>
+                                <th data-i18n="resident">РЕЗИДЕНТ</th>
+                                <th data-i18n="logs_th_meter">СЧЁТЧИК</th>
+                                <th data-i18n="user">ПОЛЬЗОВАТЕЛЬ</th>
+                                <th data-i18n="logs_th_details">ДЕТАЛИ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center text-muted" data-i18n="loading">Загрузка...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                
+            </div>
+                    <!-- Pagination -->
+        <div class="table-pagination">
+            <div class="pagination-controls" id="logPaginationControls">
+                    <button class="btn-pagination" onclick="goToLogPage('prev')" disabled id="logPrevBtn">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </button>
+                <div id="logPageButtons" class="pagination-pages"></div>
+                    <button class="btn-pagination" onclick="goToLogPage('next')" disabled id="logNextBtn">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </button>
+                </div>
+                <div class="pagination-info">
+                    <span><span data-i18n="residents_pagination_page_short">Стр.</span> <span id="logCurrentPage">1</span> <span data-i18n="residents_pagination_of">из</span> <span id="logTotalPages">1</span> · <span data-i18n="residents_pagination_total">всего</span> <span id="logTotalItems">0</span></span>
+                </div>
+                <div class="pagination-per-page">
+                    <span>На</span>
+                    <span data-i18n="residents_pagination_per_page">странице:</span>
+                    <div class="custom-pag-select" id="customLogItemsPerPage">
+                        <select id="logItemsPerPage" onchange="changeLogItemsPerPage()" style="display: none;">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <div class="select-btn">
+                            <span class="select-text">25</span>
+                            <span class="arrow">▾</span>
+                        </div>
+                        <div class="select-options" style="background: rgba(36, 40, 49, 0.95) !important">
+                            <div class="select-option" data-value="10">10</div>
+                            <div class="select-option selected" data-value="25">25</div>
+                            <div class="select-option" data-value="50">50</div>
+                            <div class="select-option" data-value="100">100</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+    
+    const API_BASE = window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BASE || 'http://localhost:8000');
+    const t = (key, fallback = '') => window.i18n?.translate?.(key) || fallback || key;
+    
+    // Pagination state
+    let paginationState = {
+        currentPage: 1,
+        itemsPerPage: 25,
+        totalItems: 0,
+        totalPages: 1
+    };
+    
+    let residents = [];
+    let users = [];
+    
+    // Загрузка списков для фильтров
+    async function loadFilterData() {
+        try {
+            // Загружаем резидентов
+            const residentsResp = await fetch(`${API_BASE}/api/residents`, { credentials: 'include' });
+            if (residentsResp.ok) {
+                const residentsData = await residentsResp.json();
+                residents = Array.isArray(residentsData) ? residentsData : (residentsData.residents || residentsData.items || []);
+                
+                const residentSelect = document.getElementById('filterResident');
+                if (residentSelect) {
+                    residentSelect.innerHTML = '<option value="" data-i18n="all">' + t('all', 'Все') + '</option>';
+                    residents.forEach(r => {
+                        const option = document.createElement('option');
+                        option.value = r.id;
+                        option.textContent = `${r.block_name || ''}/${r.unit_number || ''}`;
+                        residentSelect.appendChild(option);
+                    });
+                    if (residentSelect._lcd) residentSelect._lcd.refresh();
+                }
+            }
+            
+            // Загружаем пользователей
+            const usersResp = await fetch(`${API_BASE}/api/users`, { credentials: 'include' });
+            if (usersResp.ok) {
+                const usersData = await usersResp.json();
+                let allUsers = Array.isArray(usersData) ? usersData : (usersData.users || usersData.items || []);
+                
+                // Фильтруем пользователей: только ROOT, ADMIN, OPERATOR
+                const allowedRoles = ['ROOT', 'ADMIN', 'OPERATOR'];
+                users = allUsers.filter(u => allowedRoles.includes(u.role?.toUpperCase()));
+                
+                const userSelect = document.getElementById('filterUser');
+                if (userSelect) {
+                    userSelect.innerHTML = '<option value="" data-i18n="all">' + t('all', 'Все') + '</option>';
+                    users.forEach(u => {
+                        const option = document.createElement('option');
+                        option.value = u.id;
+                        option.textContent = u.username || u.full_name || `User ${u.id}`;
+                        userSelect.appendChild(option);
+                    });
+                    if (userSelect._lcd) userSelect._lcd.refresh();
+                }
+            }
+        } catch (error) {
+            console.error('Error loading filter data:', error);
+        }
+    }
+
+    /*
+     * Фабрика custom-dropdown'а для filter-селектов.
+     * Нативный <select> остаётся как value-хранилище (для applyFilters/clearFilters);
+     * <select>.dispatchEvent('change') тоже продолжает работать. Сам popup рисуется
+     * div'ом, который переносится в document.body → обходит любые stacking/transform
+     * конфликты админского layout'а, чем страдает native <select> в Windows Chromium.
+     */
+    function createLogsCustomDropdown(nativeSelect) {
+        if (!nativeSelect || nativeSelect._lcd) return nativeSelect?._lcd;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'lcd';
+
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = 'lcd-trigger';
+        trigger.setAttribute('aria-haspopup', 'listbox');
+        trigger.setAttribute('aria-expanded', 'false');
+
+        const label = document.createElement('span');
+        label.className = 'lcd-value';
+
+        const caret = document.createElement('i');
+        caret.className = 'bi bi-chevron-down lcd-caret';
+
+        trigger.appendChild(label);
+        trigger.appendChild(caret);
+
+        const menu = document.createElement('ul');
+        menu.className = 'lcd-menu';
+        menu.setAttribute('role', 'listbox');
+        menu.hidden = true;
+
+        nativeSelect.parentNode.insertBefore(wrap, nativeSelect);
+        wrap.appendChild(trigger);
+        document.body.appendChild(menu);
+
+        function syncFromNative() {
+            menu.innerHTML = '';
+            const current = nativeSelect.value;
+            let selectedOpt = null;
+            Array.from(nativeSelect.options).forEach(opt => {
+                const li = document.createElement('li');
+                li.className = 'lcd-option';
+                li.dataset.value = opt.value;
+                li.textContent = opt.textContent;
+                li.setAttribute('role', 'option');
+                if (opt.value === current) {
+                    li.classList.add('is-selected');
+                    selectedOpt = opt;
+                }
+                li.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    choose(opt.value);
+                    close();
+                });
+                menu.appendChild(li);
+            });
+            label.textContent = selectedOpt ? selectedOpt.textContent
+                : (nativeSelect.options[0] ? nativeSelect.options[0].textContent : '');
+        }
+        function positionMenu() {
+            const r = trigger.getBoundingClientRect();
+            menu.style.top = `${r.bottom + 4}px`;
+            menu.style.left = `${r.left}px`;
+            menu.style.width = `${r.width}px`;
+        }
+        function open() {
+            // закрываем другие открытые lcd
+            document.querySelectorAll('.lcd.is-open').forEach(d => {
+                if (d !== wrap) d.classList.remove('is-open');
+            });
+            document.querySelectorAll('body > .lcd-menu:not([hidden])').forEach(m => {
+                if (m !== menu) m.setAttribute('hidden', '');
+            });
+            wrap.classList.add('is-open');
+            menu.removeAttribute('hidden');
+            trigger.setAttribute('aria-expanded', 'true');
+            positionMenu();
+            window.addEventListener('scroll', positionMenu, true);
+            window.addEventListener('resize', positionMenu);
+        }
+        function close() {
+            wrap.classList.remove('is-open');
+            menu.setAttribute('hidden', '');
+            trigger.setAttribute('aria-expanded', 'false');
+            window.removeEventListener('scroll', positionMenu, true);
+            window.removeEventListener('resize', positionMenu);
+        }
+        function choose(val) {
+            if (nativeSelect.value !== val) {
+                nativeSelect.value = val;
+                nativeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            syncFromNative();
+        }
+
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            wrap.classList.contains('is-open') ? close() : open();
+        });
+        document.addEventListener('click', (e) => {
+            if (wrap.contains(e.target)) return;
+            if (menu.contains(e.target)) return;
+            close();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') close();
+        });
+
+        syncFromNative();
+
+        const api = {
+            refresh: syncFromNative,
+            destroy: () => {
+                close();
+                menu.remove();
+                if (wrap.parentNode) wrap.parentNode.insertBefore(nativeSelect, wrap);
+                wrap.remove();
+                delete nativeSelect._lcd;
+            }
+        };
+        nativeSelect._lcd = api;
+        return api;
+    }
+
+    function initLogsCustomDropdowns() {
+        // Чистим осиротевшие меню от предыдущих загрузок страницы (SPA навигация).
+        document.querySelectorAll('body > .lcd-menu').forEach(el => el.remove());
+
+        ['filterAction', 'filterResident', 'filterUser'].forEach(id => {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            // Если dropdown уже инициализирован (SPA повторный init) — уничтожаем и пересоздаём.
+            if (sel._lcd) sel._lcd.destroy();
+            createLogsCustomDropdown(sel);
+        });
+    }
+    
+    // Загрузка логов
+    async function loadLogs() {
+        const tbody = document.getElementById('logsTableBody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">' + t('loading', 'Загрузка...') + '</td></tr>';
+        }
+        
+        try {
+            const action = document.getElementById('filterAction')?.value || '';
+            const residentId = document.getElementById('filterResident')?.value || '';
+            const userId = document.getElementById('filterUser')?.value || '';
+            
+            const params = new URLSearchParams();
+            params.append('page', paginationState.currentPage);
+            params.append('per_page', paginationState.itemsPerPage);
+            if (action) params.append('action', action);
+            if (residentId) params.append('resident_id', residentId);
+            if (userId) params.append('user_id', userId);
+            
+            const url = `${API_BASE}/api/logs/reading-logs?${params.toString()}`;
+            console.log('Loading logs from:', url);
+            console.log('Pagination state:', paginationState);
+            
+            const response = await fetch(url, { credentials: 'include' }).catch(() => 
+                fetch(url)
+            );
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('Logs loaded:', data);
+            console.log('Data structure:', {
+                hasLogs: !!data.logs,
+                hasTotal: !!data.total,
+                hasPage: !!data.page,
+                hasLastPage: !!data.last_page,
+                logsCount: data.logs?.length || 0
+            });
+            
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            // Handle paginated response
+            if (data.logs && Array.isArray(data.logs)) {
+                // Update pagination state
+                paginationState.totalItems = data.total || 0;
+                paginationState.totalPages = data.last_page || 1;
+                paginationState.currentPage = data.page || 1;
+                
+                renderLogs(data.logs);
+                updatePaginationUI();
+            } else {
+                // Fallback for non-paginated response
+                console.warn('Unexpected data format:', data);
+                paginationState.totalItems = 0;
+                paginationState.totalPages = 1;
+                paginationState.currentPage = 1;
+                renderLogs([]);
+                updatePaginationUI();
+            }
+        } catch (error) {
+            console.error('Error loading logs:', error);
+            const tbody = document.getElementById('logsTableBody');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">' + t('logs_load_error', 'Ошибка загрузки логов') + ': ' + error.message + '</td></tr>';
+            }
+            // Reset pagination state on error
+            paginationState.totalItems = 0;
+            paginationState.totalPages = 1;
+            paginationState.currentPage = 1;
+            updatePaginationUI();
+        }
+    }
+    
+    function normalizeLogAction(actionRaw) {
+        const raw = String(actionRaw || '').toUpperCase();
+        if (raw === 'СОЗДАНИЕ' || raw === 'CREATE') {
+            return { key: 'logs_action_create', className: 'badge-success' };
+        }
+        if (raw === 'ОБНОВЛЕНИЕ' || raw === 'UPDATE') {
+            return { key: 'logs_action_update', className: 'badge-warning' };
+        }
+        if (raw === 'УДАЛЕНИЕ' || raw === 'DELETE') {
+            return { key: 'logs_action_delete', className: 'badge-danger' };
+        }
+        return { key: '', className: 'badge-info' };
+    }
+
+    function localizeLogMeter(meter) {
+        const value = String(meter || '').trim();
+        if (!value) return '—';
+        const lower = value.toLowerCase();
+        let key = '';
+
+        if (lower.includes('elect') || lower.includes('электр')) {
+            key = 'meter_electricity';
+        } else if (lower.includes('water') || lower.includes('вода') || lower.includes('su')) {
+            key = 'meter_cold_water';
+        } else if (lower.includes('gas') || lower.includes('газ')) {
+            key = 'meter_gas';
+        } else if (lower.includes('канализац') || lower.includes('sewerage') || lower.includes('meter_sewerage')) {
+            key = 'meter_sewerage';
+        } else if (lower.includes('аренда') || lower.includes('rent')) {
+            key = 'tariffs_purpose_rent';
+        } else if (lower.includes('строительств') || lower.includes('construction')) {
+            key = 'tariffs_purpose_construction';
+        } else if (lower.includes('услуг') || lower.includes('service')) {
+            key = 'tariffs_purpose_service';
+        }
+
+        if (key) {
+            return window.i18n?.translate?.(key) || value;
+        }
+        return value;
+    }
+
+    function parseLogServerDate(dateString) {
+        if (!dateString) return null;
+        let s = String(dateString).trim();
+        if (!s) return null;
+
+        if (s.indexOf('T') === -1 && s.indexOf(' ') !== -1) {
+            s = s.replace(' ', 'T');
+        }
+
+        const hasTimezone = /Z$|[+-]\d{2}:?\d{2}$/.test(s);
+        if (!hasTimezone) {
+            s = `${s}Z`;
+        }
+
+        let d = new Date(s);
+        if (!isNaN(d.getTime())) {
+            return d;
+        }
+
+        const m = s.match(/(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/);
+        if (m) {
+            const year = parseInt(m[1], 10);
+            const month = parseInt(m[2], 10) - 1;
+            const day = parseInt(m[3], 10);
+            const hour = parseInt(m[4], 10);
+            const minute = parseInt(m[5], 10);
+            const second = m[6] ? parseInt(m[6], 10) : 0;
+            d = new Date(Date.UTC(year, month, day, hour, minute, second));
+        }
+
+        return isNaN(d.getTime()) ? null : d;
+    }
+
+    function renderLogs(logs) {
+        const tbody = document.getElementById('logsTableBody');
+        if (!tbody) return;
+        
+        if (!logs.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">' + t('logs_empty', 'Нет логов') + '</td></tr>';
+            return;
+        }
+        const lang = (localStorage.getItem('language') || 'az').toLowerCase();
+        const locale = lang === 'ru' ? 'ru-RU' : (lang === 'en' ? 'en-US' : 'az-AZ');
+
+        tbody.innerHTML = logs.map(log => {
+            const actionInfo = normalizeLogAction(log.action);
+            const actionText = actionInfo.key ? t(actionInfo.key, log.action || '') : (log.action || '');
+            const meterText = localizeLogMeter(log.meter);
+            const dt = log.date_time ? parseLogServerDate(log.date_time) : null;
+            const dateDisplay = dt && !isNaN(dt.getTime())
+                ? dt.toLocaleString(locale)
+                : (log.date_time || '—');
+            
+            return `
+                <tr>
+                    <td>${log.id}</td>
+                    <td>${dateDisplay}</td>
+                    <td><span class="badge ${actionInfo.className}"${actionInfo.key ? ` data-i18n="${actionInfo.key}"` : ''}>${actionText}</span></td>
+                    <td>${log.resident}</td>
+                    <td>${meterText}</td>
+                    <td>${log.user}</td>
+                    <td>${log.details}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+    
+    // Pagination Functions
+    function buildLogPageList(current, total) {
+        if (total <= 5) {
+            return Array.from({ length: total }, (_, i) => i + 1);
+        }
+        const pages = new Set([1, total]);
+        if (current <= 3) {
+            [2, 3, 4, 5].forEach(p => pages.add(p));
+        } else if (current >= total - 2) {
+            [total - 1, total - 2, total - 3, total - 4].forEach(p => pages.add(p));
+        } else {
+            [current - 2, current - 1, current, current + 1, current + 2].forEach(p => pages.add(p));
+        }
+        const sorted = Array.from(pages).filter(p => p >= 1 && p <= total).sort((a, b) => a - b);
+        const result = [];
+        for (let i = 0; i < sorted.length; i++) {
+            const page = sorted[i];
+            result.push(page);
+            const next = sorted[i + 1];
+            if (next && next - page > 1) {
+                result.push('dots');
+            }
+        }
+        return result;
+    }
+
+    function updatePaginationUI() {
+        const currentPageEl = document.getElementById('logCurrentPage');
+        const totalPagesEl = document.getElementById('logTotalPages');
+        const totalItemsEl = document.getElementById('logTotalItems');
+        const prevBtn = document.getElementById('logPrevBtn');
+        const nextBtn = document.getElementById('logNextBtn');
+        const pagesContainer = document.getElementById('logPageButtons');
+        
+        if (currentPageEl) currentPageEl.textContent = paginationState.currentPage;
+        if (totalPagesEl) totalPagesEl.textContent = paginationState.totalPages;
+        if (totalItemsEl) totalItemsEl.textContent = paginationState.totalItems;
+        if (prevBtn) prevBtn.disabled = paginationState.currentPage <= 1;
+        if (nextBtn) nextBtn.disabled = paginationState.currentPage >= paginationState.totalPages;
+
+        if (!pagesContainer) return;
+        pagesContainer.innerHTML = '';
+
+        const pages = buildLogPageList(paginationState.currentPage, paginationState.totalPages);
+        pages.forEach(p => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-pagination';
+
+            if (p === 'dots') {
+                btn.textContent = '...';
+                btn.disabled = true;
+                btn.classList.add('dots');
+            } else {
+                btn.textContent = p;
+                if (p > paginationState.totalPages) {
+                    btn.disabled = true;
+                } else {
+                    btn.onclick = () => {
+                        if (p !== paginationState.currentPage) {
+                            goToLogPage(p);
+                        }
+                    };
+                }
+                if (p === paginationState.currentPage) {
+                    btn.classList.add('active');
+                    btn.setAttribute('aria-current', 'page');
+                }
+            }
+
+            pagesContainer.appendChild(btn);
+        });
+    }
+    
+    window.goToLogPage = function(page) {
+        console.log('goToLogPage called with:', page, 'Current state:', paginationState);
+        if (page === 'prev') {
+            if (paginationState.currentPage > 1) {
+                paginationState.currentPage--;
+                console.log('Going to previous page:', paginationState.currentPage);
+                loadLogs();
+            }
+        } else if (page === 'next') {
+            if (paginationState.currentPage < paginationState.totalPages) {
+                paginationState.currentPage++;
+                console.log('Going to next page:', paginationState.currentPage);
+                loadLogs();
+            }
+        } else if (typeof page === 'number' && page >= 1 && page <= paginationState.totalPages) {
+            paginationState.currentPage = page;
+            console.log('Going to page:', paginationState.currentPage);
+            loadLogs();
+        } else {
+            console.warn('Invalid page number:', page);
+        }
+    };
+    
+    window.changeLogItemsPerPage = function() {
+        const select = document.getElementById('logItemsPerPage');
+        if (select) {
+            const newValue = parseInt(select.value);
+            console.log('changeLogItemsPerPage called, new value:', newValue);
+            paginationState.itemsPerPage = newValue;
+            paginationState.currentPage = 1;
+            loadLogs();
+            updateCustomLogPaginationDropdown();
+        } else {
+            console.error('logItemsPerPage select not found');
+        }
+    };
+    
+    function updateCustomLogPaginationDropdown() {
+        const select = document.getElementById('logItemsPerPage');
+        const customSelect = document.getElementById('customLogItemsPerPage');
+        if (!select || !customSelect) {
+            console.warn('updateCustomLogPaginationDropdown: select or customSelect not found');
+            return;
+        }
+        
+        // Sync select value with paginationState
+        const currentValue = paginationState.itemsPerPage.toString();
+        if (select.value !== currentValue) {
+            select.value = currentValue;
+        }
+        
+        const selectText = customSelect.querySelector('.select-text');
+        const options = customSelect.querySelectorAll('.select-option');
+        
+        if (selectText) {
+            selectText.textContent = currentValue;
+            console.log('Updated select text to:', currentValue);
+        }
+        
+        options.forEach(opt => {
+            opt.classList.remove('selected');
+            if (opt.getAttribute('data-value') === currentValue) {
+                opt.classList.add('selected');
+            }
+        });
+    }
+    
+    function initCustomLogPaginationDropdown() {
+        const customSelect = document.getElementById('customLogItemsPerPage');
+        if (!customSelect || customSelect.dataset.initialized === 'true') return;
+        customSelect.dataset.initialized = 'true';
+        
+        const nativeSelect = document.getElementById('logItemsPerPage');
+        const selectBtn = customSelect.querySelector('.select-btn');
+        const selectText = customSelect.querySelector('.select-text');
+        const options = customSelect.querySelectorAll('.select-option');
+        
+        if (nativeSelect) {
+            const selectedValue = nativeSelect.value;
+            if (selectText) selectText.textContent = selectedValue;
+            options.forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.dataset.value === selectedValue) {
+                    opt.classList.add('selected');
+                }
+            });
+        }
+        
+        if (selectBtn) {
+            selectBtn.onclick = function(e) {
+                e.stopPropagation();
+                customSelect.classList.toggle('open');
+            };
+        }
+        
+        options.forEach(option => {
+            option.onclick = function(e) {
+                e.stopPropagation();
+                const value = option.dataset.value;
+                if (nativeSelect) {
+                    nativeSelect.value = value;
+                    nativeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                if (selectText) selectText.textContent = value;
+                options.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                customSelect.classList.remove('open');
+            };
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (!customSelect.contains(e.target)) {
+                customSelect.classList.remove('open');
+            }
+        });
+    }
+    
+    window.applyFilters = function() {
+        paginationState.currentPage = 1;
+        loadLogs();
+    };
+    
+    window.clearFilters = function() {
+        ['filterAction', 'filterResident', 'filterUser'].forEach(id => {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            sel.value = '';
+            if (sel._lcd) sel._lcd.refresh();
+        });
+        paginationState.currentPage = 1;
+        paginationState.itemsPerPage = 25;
+        const select = document.getElementById('logItemsPerPage');
+        if (select) {
+            select.value = '25';
+            updateCustomLogPaginationDropdown();
+        }
+        loadLogs();
+    };
+    
+    // Инициализация
+    async function initLogsPage() {
+        initCustomLogPaginationDropdown();
+        initLogsCustomDropdowns();
+        await loadFilterData();
+        await loadLogs();
+    }
+    
+    // Инициализация при загрузке страницы
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initLogsPage);
+    } else {
+        initLogsPage();
+    }
+    
+    // Также инициализируем при SPA загрузке
+    if (window._logsContentLoadedHandler) {
+        window.removeEventListener('spa:contentLoaded', window._logsContentLoadedHandler);
+    }
+    
+    window._logsContentLoadedHandler = function(e) {
+        const route = e.detail?.route || window.location.hash.split('?')[0].slice(1);
+        if (route === '/logs' || route.startsWith('/logs')) {
+            console.log('Loading logs from spa:contentLoaded');
+            setTimeout(() => {
+                initLogsPage();
+            }, 100);
+        }
+    };
+    
+    window.addEventListener('spa:contentLoaded', window._logsContentLoadedHandler);
+
+    if (window._logsLanguageChangedHandler) {
+        window.removeEventListener('languageChanged', window._logsLanguageChangedHandler);
+    }
+    window._logsLanguageChangedHandler = function() {
+        const route = window.location.hash.split('?')[0].slice(1);
+        if (route === '/logs' || route.startsWith('/logs')) {
+            loadFilterData();
+            loadLogs();
+            // i18n заменит textContent у <option> → рефрешим видимые label/пункты.
+            ['filterAction', 'filterResident', 'filterUser'].forEach(id => {
+                const sel = document.getElementById(id);
+                if (sel && sel._lcd) sel._lcd.refresh();
+            });
+        }
+    };
+    window.addEventListener('languageChanged', window._logsLanguageChangedHandler);
+    
+})();
+</script>

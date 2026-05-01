@@ -1,0 +1,902 @@
+        .content-wrapper {
+            padding: 0 32px 32px 32px;
+        }
+
+        .filters-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Темный фон для filters-container в темном режиме */
+        [data-theme="dark"] .filters-container,
+        body[data-theme="dark"] .filters-container,
+        html[data-theme="dark"] .filters-container,
+        [data-theme="dark"] #spa-content .filters-container,
+        body[data-theme="dark"] #spa-content .filters-container,
+        html[data-theme="dark"] #spa-content .filters-container {
+            background: #242831 !important;
+            background-color: #242831 !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .filters-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .purpose-filter-details {
+            position: relative;
+            width: 100%;
+        }
+
+        .purpose-filter-details>summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fff;
+            min-height: 42px;
+            display: flex;
+            align-items: center;
+        }
+
+        .purpose-filter-details>summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .purpose-filter-dropdown {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            z-index: 30;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            padding: 8px;
+            max-height: 260px;
+            overflow-y: auto;
+        }
+
+        .purpose-filter-dropdown label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            padding: 6px 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .purpose-filter-dropdown label:hover {
+            background: rgba(102, 126, 234, 0.08);
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Темные стили для фильтров в темном режиме */
+        [data-theme="dark"] .filter-group label,
+        body[data-theme="dark"] .filter-group label,
+        html[data-theme="dark"] .filter-group label {
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+
+        [data-theme="dark"] .filter-group select,
+        [data-theme="dark"] .filter-group input,
+        body[data-theme="dark"] .filter-group select,
+        body[data-theme="dark"] .filter-group input,
+        html[data-theme="dark"] .filter-group select,
+        html[data-theme="dark"] .filter-group input {
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: #fefefe !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        }
+
+        [data-theme="dark"] .filter-group select:focus,
+        [data-theme="dark"] .filter-group input:focus,
+        body[data-theme="dark"] .filter-group select:focus,
+        body[data-theme="dark"] .filter-group input:focus,
+        html[data-theme="dark"] .filter-group select:focus,
+        html[data-theme="dark"] .filter-group input:focus {
+            border-color: #667eea !important;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+            background: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        [data-theme="dark"] .filter-group select option,
+        body[data-theme="dark"] .filter-group select option,
+        html[data-theme="dark"] .filter-group select option {
+            background: #242831 !important;
+            color: #f6f7ff !important;
+        }
+
+        [data-theme="dark"] .purpose-filter-details>summary,
+        body[data-theme="dark"] .purpose-filter-details>summary,
+        html[data-theme="dark"] .purpose-filter-details>summary,
+        [data-theme="dark"] .purpose-filter-dropdown,
+        body[data-theme="dark"] .purpose-filter-dropdown,
+        html[data-theme="dark"] .purpose-filter-dropdown {
+            background: #242831 !important;
+            color: #f6f7ff !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(102, 126, 234, 0.55) #1f2432;
+        }
+
+        [data-theme="dark"] .purpose-filter-dropdown::-webkit-scrollbar,
+        body[data-theme="dark"] .purpose-filter-dropdown::-webkit-scrollbar,
+        html[data-theme="dark"] .purpose-filter-dropdown::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        [data-theme="dark"] .purpose-filter-dropdown::-webkit-scrollbar-track,
+        body[data-theme="dark"] .purpose-filter-dropdown::-webkit-scrollbar-track,
+        html[data-theme="dark"] .purpose-filter-dropdown::-webkit-scrollbar-track {
+            background: #1f2432;
+            border-radius: 8px;
+        }
+
+        [data-theme="dark"] .purpose-filter-dropdown::-webkit-scrollbar-thumb,
+        body[data-theme="dark"] .purpose-filter-dropdown::-webkit-scrollbar-thumb,
+        html[data-theme="dark"] .purpose-filter-dropdown::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.55);
+            border-radius: 8px;
+            border: 2px solid #1f2432;
+        }
+
+        [data-theme="dark"] .purpose-filter-dropdown::-webkit-scrollbar-thumb:hover,
+        body[data-theme="dark"] .purpose-filter-dropdown::-webkit-scrollbar-thumb:hover,
+        html[data-theme="dark"] .purpose-filter-dropdown::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.75);
+        }
+
+        [data-theme="dark"] .purpose-filter-dropdown label:hover,
+        body[data-theme="dark"] .purpose-filter-dropdown label:hover,
+        html[data-theme="dark"] .purpose-filter-dropdown label:hover {
+            background: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        .filters-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filters-actions .export-format-select {
+            min-width: 120px;
+            width: 120px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background: #fff;
+            color: #212529;
+            font-size: 0.95rem;
+        }
+
+        .filters-actions .export-format-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+
+        [data-theme="dark"] .filters-actions .export-format-select,
+        body[data-theme="dark"] .filters-actions .export-format-select,
+        html[data-theme="dark"] .filters-actions .export-format-select {
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: #fefefe !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        }
+
+        /* Карточка списка тарифов оформляется так же, как и стандартные .card */
+
+        .tariffs-table-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .tariffs-table-header h3 {
+            margin-bottom: 4px;
+            color: #f5f7ff;
+        }
+
+        .tariffs-table-header p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .tariffs-table-shell::-webkit-scrollbar,
+        .table-responsive::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .tariffs-table-shell::-webkit-scrollbar-thumb,
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: rgba(117, 132, 255, 0.45);
+            border-radius: 999px;
+        }
+
+        .tariffs-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .tariffs-table thead th {
+            text-transform: uppercase;
+            font-size: 0.78rem;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.65);
+            white-space: nowrap;
+            text-align: left;
+        }
+
+        .tariffs-table thead th:last-child {
+            text-align: center;
+        }
+
+        .tariffs-table tbody td:last-child {
+            text-align: center;
+        }
+
+        .table-actions {
+            justify-content: center;
+        }
+
+        .tariffs-table tbody td {
+            padding: 16px;
+            font-size: 0.95rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            vertical-align: middle;
+        }
+
+        .tariffs-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .tariffs-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .tariffs-table tbody td:nth-child(6) {
+            font-size: 0.85rem;
+        }
+
+        /* Цветные бейджи в таблице тарифов */
+        .tariff-purpose-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: #0f172a;
+            background: #e5e7eb;
+        }
+
+        .tariff-purpose-gas {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .tariff-purpose-electricity {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .tariff-purpose-water {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .tariff-purpose-service {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .tariff-client-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .tariff-client-individual {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
+        .tariff-client-legal {
+            background: rgba(59, 130, 246, 0.16);
+            color: #3b82f6;
+        }
+
+        .tariff-steps-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            background: rgba(148, 163, 184, 0.2);
+            color: #e5e7eb;
+            margin-right: 4px;
+            margin-bottom: 4px;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .empty-table {
+            text-align: center;
+            padding: 32px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.95rem;
+        }
+
+        .tariff-block-group {
+            margin-top: 30px;
+        }
+
+        .tariff-block-group:first-child {
+            margin-top: 0;
+        }
+
+        .tariff-block-group h4 {
+            margin-bottom: 15px;
+            color: #f5f7ff;
+        }
+
+        .tariff-card {
+            background: rgba(30, 34, 45, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: #f5f7ff;
+        }
+
+        .tariff-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 25px 45px rgba(16, 19, 28, 0.65);
+        }
+
+        .tariff-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .tariff-type {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #9eaafc;
+        }
+
+        .entity-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .entity-legal {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .entity-individual {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .tariff-table {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .tariff-table td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .tariff-table td:first-child {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .tariff-table td:last-child {
+            text-align: right;
+            font-weight: 600;
+            color: #c8d1ff;
+        }
+
+        .block-tariffs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1f2432 0%, #181c27 100%);
+            border-radius: 24px;
+            padding: 30px;
+            max-width: 750px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            animation: modalSlideIn 0.3s ease-out;
+            color: #f6f7ff;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(110, 118, 155, 0.6) rgba(17, 20, 28, 0.9);
+        }
+
+        .modal-content::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .modal-content::-webkit-scrollbar-track {
+            background: rgba(17, 20, 28, 0.9);
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, rgba(93, 103, 160, 0.9), rgba(59, 66, 108, 0.95));
+            border-radius: 999px;
+            border: 2px solid rgba(17, 20, 28, 0.9);
+            box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.35);
+        }
+
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, rgba(120, 132, 210, 0.95), rgba(76, 84, 140, 0.95));
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.75rem;
+            color: #f5f7ff;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #9ea4c0;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: #ffffff;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #cfd5ff;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fefefe;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+        .form-group input[type="number"]::-webkit-inner-spin-button,
+        .form-group input[type="number"]::-webkit-outer-spin-button {
+            background: #272b38;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            width: 20px;
+            height: 20px;
+            padding: 4px;
+            margin: 2px;
+            filter: invert(0.7);
+        }
+
+        .form-group input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .form-group select option {
+            background: #2b2f3d;
+            color: #fefefe;
+        }
+
+        .form-group select option:checked,
+        .form-group select option:hover {
+            background: #3b4261;
+            color: #ffffff;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-group input::placeholder,
+        .form-group select::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        /* Use same checkbox look as invoice master checkbox */
+        .consumption-multiplier-toggle {
+            display: inline-flex !important;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+
+        .form-group input.invoice-master-checkbox {
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            padding: 0;
+            margin: 0;
+            border: none;
+            border-radius: 4px;
+            appearance: auto;
+            -webkit-appearance: auto;
+            -moz-appearance: auto;
+            accent-color: #6d9bff;
+            cursor: pointer;
+            box-shadow: none;
+            background: transparent;
+        }
+
+        .form-group input.invoice-master-checkbox:focus {
+            box-shadow: none;
+        }
+
+        .tariff-steps {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .tariff-steps h4 {
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            color: #f5f6ff;
+        }
+
+        .step-row {
+            display: grid;
+            grid-template-columns: 0.8fr 0.8fr 0.8fr 1fr auto;
+            gap: 8px;
+            margin-bottom: 15px;
+            align-items: end;
+        }
+
+        .step-row.rent-row {
+            grid-template-columns: 1fr 1fr auto;
+        }
+
+        .step-input-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .step-input-group label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #b4bbd8;
+            white-space: nowrap;
+        }
+
+        .step-input-group input {
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fefefe;
+        }
+
+        .step-input-group input[type="number"]::-webkit-inner-spin-button,
+        .step-input-group input[type="number"]::-webkit-outer-spin-button {
+            background: #272b38;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            width: 20px;
+            height: 20px;
+            padding: 4px;
+            margin: 2px;
+            filter: invert(0.7);
+        }
+
+        .step-input-group input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .step-input-group input.unit-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 18px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(108, 117, 255, 0.15);
+            color: #f7f8ff;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            text-align: center;
+            cursor: default;
+            pointer-events: none;
+            box-shadow: inset 0 0 10px rgba(102, 126, 234, 0.35);
+        }
+
+        .step-input-group input.unit-chip:focus {
+            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: inset 0 0 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .step-input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .step-input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .step-row .btn-danger {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        @media (max-width: 768px) {
+            .step-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .step-row .btn-danger {
+                grid-column: 1 / -1;
+                width: 100%;
+            }
+        }
+
+        /* Dark mode for Tariff Cards (from admin.css) */
+        [data-theme="dark"] .tariff-card {
+            background: rgba(36, 40, 49, 0.95) !important;
+            color: #e4e6eb !important;
+            border: 1px solid rgba(102, 126, 234, 0.15) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        [data-theme="dark"] .tariff-card:hover {
+            background: rgba(42, 47, 58, 0.98) !important;
+            border-color: rgba(102, 126, 234, 0.3) !important;
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.2) !important;
+        }
+
+        [data-theme="dark"] .tariff-type {
+            color: #a8b3ff !important;
+        }
+
+        [data-theme="dark"] .tariff-table td {
+            border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+            color: #e4e6eb !important;
+        }
+
+        [data-theme="dark"] .tariff-table td:first-child {
+            color: #b8bcc4 !important;
+        }
+
+        [data-theme="dark"] .tariff-table td:last-child {
+            color: #ffffff !important;
+            font-weight: 600;
+        }
+
+        /* Стили для виджетов на странице тарифов - темный фон как у solid-green в панели пользователя */
+        /* Максимальная специфичность для переопределения стилей admin.css */
+        #spa-content .content-wrapper .stats-grid .stat-card.solid-orange,
+        #spa-content .content-wrapper .stats-grid .stat-card.solid-blue,
+        #spa-content .content-wrapper .stats-grid .stat-card.solid-red,
+        body #spa-content .content-wrapper .stats-grid .stat-card.solid-orange,
+        body #spa-content .content-wrapper .stats-grid .stat-card.solid-blue,
+        body #spa-content .content-wrapper .stats-grid .stat-card.solid-red,
+        .content-wrapper .stats-grid .stat-card.solid-orange,
+        .content-wrapper .stats-grid .stat-card.solid-blue,
+        .content-wrapper .stats-grid .stat-card.solid-red {
+            background: #242831 !important;
+            background-color: #242831 !important;
+            background-image: none !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        #spa-content .content-wrapper .stats-grid .stat-card.solid-orange:hover,
+        #spa-content .content-wrapper .stats-grid .stat-card.solid-blue:hover,
+        #spa-content .content-wrapper .stats-grid .stat-card.solid-red:hover,
+        body #spa-content .content-wrapper .stats-grid .stat-card.solid-orange:hover,
+        body #spa-content .content-wrapper .stats-grid .stat-card.solid-blue:hover,
+        body #spa-content .content-wrapper .stats-grid .stat-card.solid-red:hover,
+        .content-wrapper .stats-grid .stat-card.solid-orange:hover,
+        .content-wrapper .stats-grid .stat-card.solid-blue:hover,
+        .content-wrapper .stats-grid .stat-card.solid-red:hover {
+            background: #2a2f3a !important;
+            background-color: #2a2f3a !important;
+            background-image: none !important;
+            border-color: rgba(255, 255, 255, 0.15) !important;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
+            transform: translateY(-5px) !important;
+        }
+
+        #spa-content .content-wrapper .stats-grid .stat-card.solid-orange .stat-value,
+        #spa-content .content-wrapper .stats-grid .stat-card.solid-blue .stat-value,
+        #spa-content .content-wrapper .stats-grid .stat-card.solid-red .stat-value,
+        #spa-content .content-wrapper .stats-grid .stat-card.solid-orange .stat-label,
+        #spa-content .content-wrapper .stats-grid .stat-card.solid-blue .stat-label,
+        #spa-content .content-wrapper .stats-grid .stat-card.solid-red .stat-label,
+        #spa-content .content-wrapper .stats-grid .stat-card.solid-orange .stat-change,
+        #spa-content .content-wrapper .stats-grid .stat-card.solid-blue .stat-change,
+        #spa-content .content-wrapper .stats-grid .stat-card.solid-red .stat-change,
+        .content-wrapper .stats-grid .stat-card .stat-value,
+        .content-wrapper .stats-grid .stat-card .stat-label,
+        .content-wrapper .stats-grid .stat-card .stat-change {
+            color: white !important;
+        }
+
+        /* Иконки с цветным фоном */
+        #spa-content .content-wrapper .stats-grid .stat-card.solid-orange .stat-icon,
+        body #spa-content .content-wrapper .stats-grid .stat-card.solid-orange .stat-icon,
+        .content-wrapper .stats-grid .stat-card.solid-orange .stat-icon {
+            background: linear-gradient(135deg, #f5a623 0%, #e8830c 100%) !important;
+            background-color: transparent !important;
+        }
+
+        #spa-content .content-wrapper .stats-grid .stat-card.solid-blue .stat-icon,
+        body #spa-content .content-wrapper .stats-grid .stat-card.solid-blue .stat-icon,
+        .content-wrapper .stats-grid .stat-card.solid-blue .stat-icon {
+            background: linear-gradient(135deg, #4facfe 0%, #2e86de 100%) !important;
+            background-color: transparent !important;
+        }
+
+        #spa-content .content-wrapper .stats-grid .stat-card.solid-red .stat-icon,
+        body #spa-content .content-wrapper .stats-grid .stat-card.solid-red .stat-icon,
+        .content-wrapper .stats-grid .stat-card.solid-red .stat-icon {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5253 100%) !important;
+            background-color: transparent !important;
+        }

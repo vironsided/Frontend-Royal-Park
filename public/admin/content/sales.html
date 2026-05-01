@@ -1,0 +1,1432 @@
+<link rel="stylesheet" href="/admin/content_css/sales.css?v=dark-select-7">
+
+<div class="dashboard-content sales-page">
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center" style="gap:12px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <i class="bi bi-house-heart" style="font-size:1.5rem; color:#667eea;"></i>
+                <h3 style="margin:0;" data-i18n="nav_sales">Продажи</h3>
+            </div>
+        </div>
+
+        <div class="card-body">
+
+            <div class="sales-toolbar">
+                <div class="sales-filters">
+                    <input type="text" id="salesSearch" data-i18n-placeholder="sales_search_placeholder" placeholder="Поиск: ФИО, № дома, № договора">
+
+                    <!--
+                        Custom dropdown (Chromium/Windows native <select> popup не подчиняется CSS
+                        и рисуется белым даже с color-scheme: dark → переключились на div-виджет).
+                        Native <select> ниже скрыт и хранит значение для существующего JS
+                        (statusFilter.value / 'change' event).
+                    -->
+                    <div class="sales-select" id="salesStatusDropdown">
+                        <button type="button" class="sales-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                            <span class="sales-select-value" data-i18n="sales_status_all">Все статусы</span>
+                            <i class="bi bi-chevron-down sales-select-caret"></i>
+                        </button>
+                        <ul class="sales-select-menu" role="listbox" hidden>
+                            <li class="sales-select-option is-selected" role="option" data-value="" data-i18n="sales_status_all">Все статусы</li>
+                            <li class="sales-select-option" role="option" data-value="DRAFT" data-i18n="sales_status_DRAFT">Черновик</li>
+                            <li class="sales-select-option" role="option" data-value="PENDING_APPROVAL" data-i18n="sales_status_PENDING_APPROVAL">Ожидает одобрения</li>
+                            <li class="sales-select-option" role="option" data-value="VIEWED" data-i18n="sales_status_VIEWED">Просмотрено</li>
+                            <li class="sales-select-option" role="option" data-value="APPROVED" data-i18n="sales_status_APPROVED">Одобрено</li>
+                            <li class="sales-select-option" role="option" data-value="REJECTED" data-i18n="sales_status_REJECTED">Отклонено</li>
+                            <li class="sales-select-option" role="option" data-value="PRINTED" data-i18n="sales_status_PRINTED">Распечатано</li>
+                        </ul>
+                    </div>
+
+                    <select id="salesStatusFilter" class="sales-status-native" aria-hidden="true" tabindex="-1">
+                        <option value="" data-i18n="sales_status_all">Все статусы</option>
+                        <option value="DRAFT" data-i18n="sales_status_DRAFT">Черновик</option>
+                        <option value="PENDING_APPROVAL" data-i18n="sales_status_PENDING_APPROVAL">Ожидает одобрения</option>
+                        <option value="VIEWED" data-i18n="sales_status_VIEWED">Просмотрено</option>
+                        <option value="APPROVED" data-i18n="sales_status_APPROVED">Одобрено</option>
+                        <option value="REJECTED" data-i18n="sales_status_REJECTED">Отклонено</option>
+                        <option value="PRINTED" data-i18n="sales_status_PRINTED">Распечатано</option>
+                    </select>
+                </div>
+                <button class="btn-sales-new" id="salesNewBtn">
+                    <i class="bi bi-plus-lg"></i>
+                    <span data-i18n="sales_new_contract">Новый договор</span>
+                </button>
+            </div>
+
+            <div style="overflow-x:auto;">
+                <table class="sales-table" id="salesTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th data-i18n="sales_col_type">Тип</th>
+                            <th data-i18n="sales_col_number">№ договора</th>
+                            <th data-i18n="sales_col_buyer">Покупатель</th>
+                            <th data-i18n="sales_col_house">Дом</th>
+                            <th data-i18n="sales_col_total">Сумма, $</th>
+                            <th data-i18n="sales_col_status">Статус</th>
+                            <th data-i18n="sales_col_created">Создан</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesTableBody">
+                        <tr><td colspan="9" class="sales-empty">
+                            <i class="bi bi-hourglass-split"></i>
+                            <div data-i18n="loading">Загрузка…</div>
+                        </td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- ================ CONFIRM MODAL (delete, etc.) ================ -->
+<div class="sales-modal-overlay" id="salesConfirmModal">
+    <div class="sales-modal-content sales-prompt-modal sales-confirm-modal">
+        <div class="sales-modal-header">
+            <h2 id="salesConfirmTitle">—</h2>
+            <button type="button" class="sales-modal-close" id="salesConfirmCloseBtn" aria-label="close">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="sales-modal-body">
+            <div class="sales-confirm-message" id="salesConfirmMessage">—</div>
+        </div>
+        <div class="sales-modal-footer">
+            <div></div>
+            <div class="sales-action-group">
+                <button type="button" class="sales-btn secondary" id="salesConfirmCancelBtn" data-i18n="common_cancel">Отмена</button>
+                <button type="button" class="sales-btn reject" id="salesConfirmOkBtn" data-i18n="common_ok">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================ PROMPT MODAL (approve/reject comments) ================ -->
+<div class="sales-modal-overlay" id="salesPromptModal">
+    <div class="sales-modal-content sales-prompt-modal">
+        <div class="sales-modal-header">
+            <h2 id="salesPromptTitle">—</h2>
+            <button type="button" class="sales-modal-close" id="salesPromptCloseBtn" aria-label="close">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="sales-modal-body">
+            <label class="sales-prompt-label" id="salesPromptLabel" for="salesPromptInput">—</label>
+            <textarea id="salesPromptInput" class="sales-prompt-input" rows="4"></textarea>
+            <div id="salesPromptError" class="sales-prompt-error" style="display:none;"></div>
+        </div>
+        <div class="sales-modal-footer">
+            <div></div>
+            <div class="sales-action-group">
+                <button type="button" class="sales-btn secondary" id="salesPromptCancelBtn" data-i18n="common_cancel">Отмена</button>
+                <button type="button" class="sales-btn primary" id="salesPromptOkBtn" data-i18n="common_ok">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================ MODAL ================ -->
+<div class="sales-modal-overlay" id="salesModal">
+    <div class="sales-modal-content">
+
+        <div class="sales-modal-header">
+            <h2 id="salesModalTitle" data-i18n="sales_modal_new">Новый договор</h2>
+            <button type="button" class="sales-modal-close" id="salesModalCloseBtn" aria-label="close">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="sales-modal-body">
+
+            <div id="salesStatusBanner" class="sales-status-banner DRAFT" style="display:none;"></div>
+
+            <div class="sales-type-switch" id="salesTypeSwitch">
+                <button type="button" data-type="FULL" class="active" data-i18n="sales_type_FULL">Tam ödənişli (полная оплата)</button>
+                <button type="button" data-type="INSTALLMENT" data-i18n="sales_type_INSTALLMENT">Hissəli (в рассрочку)</button>
+            </div>
+
+            <form id="salesForm" autocomplete="off" onsubmit="return false;">
+
+                <!-- Шапка -->
+                <fieldset class="sales-section">
+                    <h4><i class="bi bi-file-earmark-text"></i> <span data-i18n="sales_section_header">Шапка договора</span></h4>
+                    <div class="sales-grid">
+                        <div class="sales-field">
+                            <label data-i18n="sales_field_contract_number">№ договора (NN)</label>
+                            <input type="text" name="contract_number" placeholder="001/2026">
+                        </div>
+                        <div class="sales-field">
+                            <label data-i18n="sales_field_contract_date">Дата договора</label>
+                            <input type="date" name="contract_date">
+                        </div>
+                        <div class="sales-field">
+                            <label data-i18n="sales_field_contract_year">Год</label>
+                            <input type="number" name="contract_year" min="2020" max="2100" placeholder="2026">
+                        </div>
+                        <div class="sales-field">
+                            <label data-i18n="sales_field_city">Город</label>
+                            <input type="text" name="city" value="Bakı şəhəri">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- Покупатель -->
+                <fieldset class="sales-section">
+                    <h4><i class="bi bi-person-badge"></i> <span data-i18n="sales_section_buyer">Покупатель (Alıcı)</span></h4>
+                    <div class="sales-grid">
+                        <div class="sales-field" style="grid-column: 1 / -1;">
+                            <label data-i18n="sales_field_buyer_full_name">ФИО покупателя *</label>
+                            <input type="text" name="buyer_full_name" required placeholder="Məmmədov Əli Həsən oğlu">
+                        </div>
+                        <div class="sales-field">
+                            <label data-i18n="sales_field_buyer_id_series">Ş/V seriya</label>
+                            <input type="text" name="buyer_id_series" placeholder="AA">
+                        </div>
+                        <div class="sales-field">
+                            <label data-i18n="sales_field_buyer_id_number">Ş/V №</label>
+                            <input type="text" name="buyer_id_number" placeholder="1234567">
+                        </div>
+                        <div class="sales-field">
+                            <label data-i18n="sales_field_buyer_fin">FIN *</label>
+                            <input type="text" name="buyer_fin" required placeholder="XXXXXXX">
+                        </div>
+                        <div class="sales-field">
+                            <label data-i18n="sales_field_buyer_phone">Əlaqə nömrəsi</label>
+                            <input type="text" name="buyer_phone" placeholder="+994 ...">
+                        </div>
+                        <div class="sales-field">
+                            <label data-i18n="sales_field_buyer_email">Elektron poçt</label>
+                            <input type="email" name="buyer_email" placeholder="buyer@example.com">
+                        </div>
+                        <div class="sales-field" style="grid-column: 1 / -1;">
+                            <label data-i18n="sales_field_buyer_address">Ünvan (адрес)</label>
+                            <textarea name="buyer_address"></textarea>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- Объект -->
+                <fieldset class="sales-section">
+                    <h4><i class="bi bi-house"></i> <span data-i18n="sales_section_property">Объект (Yaşayış sahəsi)</span></h4>
+                    <div class="sales-grid">
+                        <div class="sales-field">
+                            <label data-i18n="sales_field_house_number">№ дома / виллы *</label>
+                            <input type="text" name="house_number" required placeholder="A-12">
+                        </div>
+                        <div class="sales-field">
+                            <label data-i18n="sales_field_area">Площадь, м² *</label>
+                            <input type="number" step="0.01" min="0" name="area_m2" required>
+                        </div>
+                        <div class="sales-field">
+                            <label data-i18n="sales_field_price_per_m2">Цена за м², USD</label>
+                            <input type="number" step="0.01" min="0" name="price_per_m2_usd" id="salesPricePerM2">
+                        </div>
+                        <div class="sales-field">
+                            <label data-i18n="sales_field_total_price">Общая сумма, USD *</label>
+                            <input type="number" step="0.01" min="0" name="total_price_usd" id="salesTotalPrice" required>
+                            <small class="hint" data-i18n="sales_total_autohint">Автоматически = площадь × цена за м² (можно править вручную).</small>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- Рассрочка -->
+                <fieldset class="sales-section" id="salesInstallmentSection" style="display:none;">
+                    <h4><i class="bi bi-calendar-week"></i> <span data-i18n="sales_section_installment">Рассрочка</span></h4>
+                    <div class="sales-grid">
+                        <div class="sales-field">
+                            <label data-i18n="sales_field_initial">Первоначальный взнос, USD *</label>
+                            <input type="number" step="0.01" min="0" name="initial_payment_usd" id="salesInitial">
+                        </div>
+                        <div class="sales-field">
+                            <label data-i18n="sales_field_remaining">Остаток, USD</label>
+                            <input type="number" step="0.01" min="0" name="remaining_usd" id="salesRemaining" readonly>
+                        </div>
+                        <div class="sales-field">
+                            <label data-i18n="sales_field_months">Кол-во месяцев *</label>
+                            <input type="number" step="1" min="1" name="months_count" id="salesMonths">
+                        </div>
+                        <div class="sales-field">
+                            <label data-i18n="sales_field_monthly">Ежемесячно, USD *</label>
+                            <input type="number" step="0.01" min="0" name="monthly_payment_usd" id="salesMonthly">
+                            <small class="hint" data-i18n="sales_monthly_autohint">Автоматически = остаток / месяцы.</small>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:0.8rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                            <strong style="font-size:0.9rem;" data-i18n="sales_schedule_title">График платежей (Əlavə №2)</strong>
+                            <button type="button" class="sales-schedule-add" id="salesScheduleAddBtn">
+                                <i class="bi bi-plus-lg"></i> <span data-i18n="sales_schedule_add">Добавить строку</span>
+                            </button>
+                        </div>
+                        <table class="sales-schedule-table" id="salesScheduleTable">
+                            <thead>
+                                <tr>
+                                    <th style="width:60px;" data-i18n="sales_schedule_month">Месяц</th>
+                                    <th data-i18n="sales_schedule_date">Дата оплаты</th>
+                                    <th data-i18n="sales_schedule_amount">Сумма, USD</th>
+                                    <th style="width:60px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="salesScheduleBody"></tbody>
+                        </table>
+                        <small class="hint" data-i18n="sales_schedule_hint">Можно вручную редактировать. Кнопка «Автозаполнить по месяцам» создаст строки на N месяцев от даты договора.</small>
+                        <div style="margin-top:0.4rem;">
+                            <button type="button" class="sales-schedule-add" id="salesScheduleAutoBtn">
+                                <i class="bi bi-lightning-charge"></i> <span data-i18n="sales_schedule_autofill">Автозаполнить</span>
+                            </button>
+                        </div>
+                    </div>
+                </fieldset>
+
+            </form>
+
+        </div>
+
+        <div class="sales-modal-footer">
+
+            <div id="salesViewIndicator" class="sales-view-indicator" style="display:none;">
+                <span class="dot"></span>
+                <span id="salesViewIndicatorText"></span>
+            </div>
+
+            <div class="sales-action-group" id="salesActionGroup">
+                <button type="button" class="sales-btn secondary" id="salesCancelBtn" data-i18n="cancel">Отмена</button>
+                <button type="button" class="sales-btn primary" id="salesSaveBtn">
+                    <i class="bi bi-save"></i> <span data-i18n="save">Сохранить</span>
+                </button>
+                <button type="button" class="sales-btn primary" id="salesRequestApprovalBtn" style="display:none;">
+                    <i class="bi bi-send-check"></i> <span data-i18n="sales_request_approval">Получить подтверждение</span>
+                </button>
+                <button type="button" class="sales-btn print" id="salesPrintBtn" style="display:none;" disabled>
+                    <i class="bi bi-printer"></i> <span data-i18n="sales_print">Распечатать</span>
+                </button>
+                <button type="button" class="sales-btn approve" id="salesApproveBtn" style="display:none;">
+                    <i class="bi bi-check-lg"></i> <span data-i18n="sales_approve">Одобрить</span>
+                </button>
+                <button type="button" class="sales-btn reject" id="salesRejectBtn" style="display:none;">
+                    <i class="bi bi-x-lg"></i> <span data-i18n="sales_reject">Отклонить</span>
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    // ================= i18n helper =================
+    const t = (k, def) => (window.i18n && typeof window.i18n.t === 'function')
+        ? (window.i18n.t(k) !== k ? window.i18n.t(k) : (def ?? k))
+        : (def ?? k);
+
+    // ================= API base =================
+    const API = (window.APP_API_BASE || window.API_BASE || '').replace(/\/$/, '');
+
+    // ================= State =================
+    let meUser = null;             // current logged-in user
+    let currentContract = null;    // contract being viewed/edited in modal
+    let contractsList = [];
+    let pollTimer = null;
+
+    // ================= DOM refs =================
+    const modal = document.getElementById('salesModal');
+    const modalTitle = document.getElementById('salesModalTitle');
+    const closeBtn = document.getElementById('salesModalCloseBtn');
+    const cancelBtn = document.getElementById('salesCancelBtn');
+    const saveBtn = document.getElementById('salesSaveBtn');
+    const requestApprovalBtn = document.getElementById('salesRequestApprovalBtn');
+    const printBtn = document.getElementById('salesPrintBtn');
+    const approveBtn = document.getElementById('salesApproveBtn');
+    const rejectBtn = document.getElementById('salesRejectBtn');
+    const viewIndicator = document.getElementById('salesViewIndicator');
+    const viewIndicatorText = document.getElementById('salesViewIndicatorText');
+    const statusBanner = document.getElementById('salesStatusBanner');
+    const typeSwitch = document.getElementById('salesTypeSwitch');
+    const installmentSection = document.getElementById('salesInstallmentSection');
+    const tableBody = document.getElementById('salesTableBody');
+    const statusFilter = document.getElementById('salesStatusFilter');
+    const searchInput = document.getElementById('salesSearch');
+    const scheduleBody = document.getElementById('salesScheduleBody');
+    const scheduleAddBtn = document.getElementById('salesScheduleAddBtn');
+    const scheduleAutoBtn = document.getElementById('salesScheduleAutoBtn');
+    const form = document.getElementById('salesForm');
+
+    // ================= Helpers =================
+    function fmtDate(iso) {
+        if (!iso) return '—';
+        try {
+            const d = new Date(iso);
+            return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } catch (e) { return iso; }
+    }
+
+    function fmtMoney(v) {
+        if (v == null || v === '') return '—';
+        const n = Number(v);
+        if (!isFinite(n)) return '—';
+        return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function toast(msg, type = 'info') {
+        if (typeof window.showNotification === 'function') {
+            window.showNotification(msg, type);
+        } else {
+            console.log(`[${type}]`, msg);
+        }
+    }
+
+    async function api(path, options = {}) {
+        const opts = Object.assign({ credentials: 'include' }, options);
+        opts.headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {});
+        const res = await fetch(`${API}${path}`, opts);
+        if (!res.ok) {
+            let msg = `HTTP ${res.status}`;
+            try { const j = await res.json(); msg = j.detail || j.message || msg; } catch {}
+            throw new Error(msg);
+        }
+        if (res.status === 204) return null;
+        return await res.json();
+    }
+
+    async function fetchMe() {
+        try {
+            meUser = await api('/api/users/me');
+        } catch (e) {
+            meUser = null;
+        }
+    }
+
+    function isRoot() { return meUser && meUser.role === 'ROOT'; }
+    function isSales() { return meUser && meUser.role === 'SALES'; }
+
+    // ================= List =================
+    async function loadContracts() {
+        const params = new URLSearchParams();
+        const s = statusFilter.value;
+        const q = searchInput.value.trim();
+        if (s) params.set('status', s);
+        if (q) params.set('q', q);
+        params.set('per_page', '100');
+
+        try {
+            const data = await api(`/api/sales/contracts?${params.toString()}`);
+            contractsList = data.items || [];
+            renderList();
+        } catch (e) {
+            tableBody.innerHTML = `<tr><td colspan="9" class="sales-empty" style="color:#f87171;">
+                <i class="bi bi-exclamation-triangle"></i>
+                <div>${t('error', 'Ошибка')}: ${e.message}</div>
+            </td></tr>`;
+        }
+    }
+
+    function renderList() {
+        if (!contractsList.length) {
+            tableBody.innerHTML = `<tr><td colspan="9" class="sales-empty">
+                <i class="bi bi-inbox"></i>
+                <div>${t('sales_no_contracts', 'Договоров пока нет')}</div>
+            </td></tr>`;
+            return;
+        }
+        tableBody.innerHTML = contractsList.map(c => {
+            const typeLabel = t('sales_type_short_' + c.contract_type, c.contract_type === 'FULL' ? 'TAM' : 'HİSSƏLİ');
+            const statusLabel = t('sales_status_' + c.status, c.status);
+            return `
+                <tr data-id="${c.id}">
+                    <td style="color:#6b7280;">${c.id}</td>
+                    <td><span class="sales-type ${c.contract_type}">${typeLabel}</span></td>
+                    <td>${escapeHtml(c.contract_number || '—')}</td>
+                    <td>${escapeHtml(c.buyer_full_name || '—')}</td>
+                    <td>${escapeHtml(c.house_number || '—')}</td>
+                    <td>${fmtMoney(c.total_price_usd)}</td>
+                    <td><span class="sales-status sales-status-${c.status}">${statusLabel}</span></td>
+                    <td style="color:#9aa0ab;">${fmtDate(c.created_at)}</td>
+                    <td>
+                        <div class="sales-row-actions">
+                            <button type="button" data-act="open" title="${t('open', 'Открыть')}"><i class="bi bi-pencil-square"></i></button>
+                            ${canDelete(c) ? `<button type="button" class="danger" data-act="del" title="${t('delete', 'Удалить')}"><i class="bi bi-trash3"></i></button>` : ''}
+                        </div>
+                    </td>
+                </tr>`;
+        }).join('');
+
+        tableBody.querySelectorAll('tr').forEach(tr => {
+            const id = Number(tr.dataset.id);
+            tr.querySelector('[data-act="open"]').addEventListener('click', () => openContract(id));
+            const d = tr.querySelector('[data-act="del"]');
+            if (d) d.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const ok = await openConfirmModal({
+                    title: t('sales_confirm_delete_title', 'Удаление договора'),
+                    message: t('sales_confirm_delete', 'Удалить договор?'),
+                    okText: t('delete', 'Удалить'),
+                    cancelText: t('common_cancel', 'Отмена'),
+                    okVariant: 'reject',
+                });
+                if (!ok) return;
+                try {
+                    await api(`/api/sales/contracts/${id}`, { method: 'DELETE' });
+                    toast(t('deleted', 'Удалено'), 'success');
+                    loadContracts();
+                } catch (err) { toast(err.message, 'error'); }
+            });
+            tr.addEventListener('click', () => openContract(id));
+        });
+    }
+
+    function canDelete(c) {
+        if (!meUser) return false;
+        if (meUser.role === 'ROOT') return true;
+        if (meUser.role === 'SALES' && c.created_by_id === meUser.id && (c.status === 'DRAFT' || c.status === 'REJECTED')) return true;
+        if (meUser.role === 'ADMIN' && (c.status === 'DRAFT' || c.status === 'REJECTED')) return true;
+        return false;
+    }
+
+    function escapeHtml(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    // ================= Modal ops =================
+    function openNewContract() {
+        currentContract = null;
+        resetForm();
+        setType('FULL');
+        modalTitle.textContent = t('sales_modal_new', 'Новый договор');
+        statusBanner.style.display = 'none';
+        updateActionButtons();
+        showModal();
+    }
+
+    async function openContract(id) {
+        try {
+            const c = await api(`/api/sales/contracts/${id}`);
+            currentContract = c;
+            fillForm(c);
+            modalTitle.textContent = `${t('sales_modal_edit', 'Договор')} #${c.id}`;
+            updateStatusBanner(c);
+            updateActionButtons();
+            showModal();
+            if (c.status === 'PENDING_APPROVAL' || c.status === 'VIEWED') {
+                startPolling(id);
+            } else {
+                stopPolling();
+            }
+        } catch (e) {
+            toast(e.message, 'error');
+        }
+    }
+
+    function showModal() { modal.classList.add('active'); document.body.style.overflow = 'hidden'; }
+
+    function closeModal() {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+        stopPolling();
+        currentContract = null;
+    }
+
+    function resetForm() {
+        form.reset();
+        const today = new Date();
+        form.contract_date.value = today.toISOString().slice(0, 10);
+        form.contract_year.value = today.getFullYear();
+        form.city.value = 'Bakı şəhəri';
+        scheduleBody.innerHTML = '';
+        form.querySelectorAll('input, textarea, select').forEach(el => el.removeAttribute('readonly'));
+    }
+
+    function fillForm(c) {
+        resetForm();
+        setType(c.contract_type || 'FULL');
+        const set = (name, val) => { const el = form.elements[name]; if (el) el.value = val == null ? '' : val; };
+        set('contract_number', c.contract_number);
+        set('contract_year', c.contract_year);
+        set('contract_date', c.contract_date);
+        set('city', c.city);
+        set('buyer_full_name', c.buyer_full_name);
+        set('buyer_id_series', c.buyer_id_series);
+        set('buyer_id_number', c.buyer_id_number);
+        set('buyer_fin', c.buyer_fin);
+        set('buyer_phone', c.buyer_phone);
+        set('buyer_email', c.buyer_email);
+        set('buyer_address', c.buyer_address);
+        set('house_number', c.house_number);
+        set('area_m2', c.area_m2);
+        set('price_per_m2_usd', c.price_per_m2_usd);
+        set('total_price_usd', c.total_price_usd);
+        set('initial_payment_usd', c.initial_payment_usd);
+        set('remaining_usd', c.remaining_usd);
+        set('months_count', c.months_count);
+        set('monthly_payment_usd', c.monthly_payment_usd);
+
+        scheduleBody.innerHTML = '';
+        (c.installments || []).forEach(r => addScheduleRow(r));
+
+        const editable = isEditable(c);
+        form.querySelectorAll('input, textarea, select').forEach(el => {
+            if (!editable) el.setAttribute('readonly', 'readonly');
+        });
+    }
+
+    function isEditable(c) {
+        if (!c) return true;
+        if (meUser && meUser.role === 'ROOT') return false; // root только просматривает
+        if (meUser && meUser.role === 'SALES' && c.created_by_id !== meUser.id) return false;
+        return c.status === 'DRAFT' || c.status === 'REJECTED';
+    }
+
+    function updateStatusBanner(c) {
+        if (!c) { statusBanner.style.display = 'none'; return; }
+        statusBanner.style.display = 'flex';
+        statusBanner.className = 'sales-status-banner ' + c.status;
+        let text = t('sales_status_' + c.status, c.status);
+        const extra = [];
+        if (c.viewed_at) extra.push(`${t('sales_viewed_at', 'просмотрен')}: ${fmtDate(c.viewed_at)}`);
+        if (c.reviewed_at) extra.push(`${t('sales_reviewed_at', 'решение')}: ${fmtDate(c.reviewed_at)}`);
+        if (c.printed_at) extra.push(`${t('sales_printed_at', 'распечатан')}: ${fmtDate(c.printed_at)} (${c.printed_count || 1}×)`);
+        if (c.review_comment) extra.push(`${t('sales_review_comment', 'комментарий')}: ${escapeHtml(c.review_comment)}`);
+        statusBanner.innerHTML = `<i class="bi bi-info-circle"></i> <div><strong>${text}</strong>${extra.length ? ' — ' + extra.join(' · ') : ''}</div>`;
+    }
+
+    function updateActionButtons() {
+        // Скрываем всё, затем включаем нужное
+        [saveBtn, requestApprovalBtn, printBtn, approveBtn, rejectBtn].forEach(b => b.style.display = 'none');
+        viewIndicator.style.display = 'none';
+
+        const c = currentContract;
+        if (!c) {
+            // Новый черновик — только сохранить
+            saveBtn.style.display = 'inline-flex';
+            saveBtn.querySelector('span').textContent = t('sales_save_draft', 'Сохранить черновик');
+            return;
+        }
+
+        if (isRoot()) {
+            if (c.status === 'PENDING_APPROVAL' || c.status === 'VIEWED') {
+                approveBtn.style.display = 'inline-flex';
+                rejectBtn.style.display = 'inline-flex';
+            }
+            // root может напечатать одобренный
+            if (c.status === 'APPROVED' || c.status === 'PRINTED') {
+                printBtn.style.display = 'inline-flex';
+                printBtn.disabled = false;
+            }
+            return;
+        }
+
+        // SALES / ADMIN (автор)
+        if (c.status === 'DRAFT' || c.status === 'REJECTED') {
+            saveBtn.style.display = 'inline-flex';
+            saveBtn.querySelector('span').textContent = t('save', 'Сохранить');
+            requestApprovalBtn.style.display = 'inline-flex';
+        }
+        if (c.status === 'PENDING_APPROVAL' || c.status === 'VIEWED') {
+            // Кнопка печати видна, но disabled; рядом — индикатор статуса просмотра
+            printBtn.style.display = 'inline-flex';
+            printBtn.disabled = true;
+            viewIndicator.style.display = 'inline-flex';
+            if (c.status === 'VIEWED') {
+                viewIndicator.className = 'sales-view-indicator viewed';
+                viewIndicatorText.textContent = t('sales_indicator_viewed', 'Просмотрено root-ом, ожидается решение…');
+            } else {
+                viewIndicator.className = 'sales-view-indicator';
+                viewIndicatorText.textContent = t('sales_indicator_waiting', 'Отправлено — root ещё не просмотрел');
+            }
+        }
+        if (c.status === 'APPROVED' || c.status === 'PRINTED') {
+            printBtn.style.display = 'inline-flex';
+            printBtn.disabled = false;
+            viewIndicator.style.display = 'inline-flex';
+            viewIndicator.className = 'sales-view-indicator approved';
+            viewIndicatorText.textContent = c.status === 'PRINTED'
+                ? t('sales_indicator_printed', 'Одобрено и распечатано')
+                : t('sales_indicator_approved', 'Одобрено — можно печатать');
+        }
+    }
+
+    // ================= Schedule rows =================
+    function addScheduleRow(row = {}) {
+        const idx = scheduleBody.children.length + 1;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="number" min="1" step="1" class="s-month" value="${row.month_no ?? idx}"></td>
+            <td><input type="date" class="s-date" value="${row.payment_date || ''}"></td>
+            <td><input type="number" min="0" step="0.01" class="s-amount" value="${row.amount_usd ?? ''}"></td>
+            <td><button type="button" class="sales-schedule-row-del"><i class="bi bi-x"></i></button></td>`;
+        tr.querySelector('.sales-schedule-row-del').addEventListener('click', () => tr.remove());
+        scheduleBody.appendChild(tr);
+    }
+
+    scheduleAddBtn.addEventListener('click', () => addScheduleRow());
+
+    scheduleAutoBtn.addEventListener('click', () => {
+        const months = parseInt(form.months_count.value || '0', 10);
+        const amt = parseFloat(form.monthly_payment_usd.value || '0');
+        if (!months || months <= 0) { toast(t('sales_err_need_months', 'Укажите кол-во месяцев'), 'warning'); return; }
+        const start = form.contract_date.value ? new Date(form.contract_date.value) : new Date();
+        scheduleBody.innerHTML = '';
+        for (let i = 1; i <= months; i++) {
+            const d = new Date(start.getFullYear(), start.getMonth() + i, start.getDate());
+            addScheduleRow({
+                month_no: i,
+                payment_date: d.toISOString().slice(0, 10),
+                amount_usd: amt || null,
+            });
+        }
+    });
+
+    // ================= Type switch =================
+    function setType(type) {
+        typeSwitch.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+        installmentSection.style.display = type === 'INSTALLMENT' ? '' : 'none';
+    }
+    typeSwitch.querySelectorAll('button').forEach(b => b.addEventListener('click', () => setType(b.dataset.type)));
+
+    // ================= Auto-calc =================
+    function autoCalcTotal() {
+        const area = parseFloat(form.area_m2.value);
+        const price = parseFloat(form.price_per_m2_usd.value);
+        if (isFinite(area) && isFinite(price)) {
+            form.total_price_usd.value = (area * price).toFixed(2);
+        }
+        autoCalcRemaining();
+    }
+    function autoCalcRemaining() {
+        const total = parseFloat(form.total_price_usd.value);
+        const initial = parseFloat(form.initial_payment_usd.value);
+        if (isFinite(total) && isFinite(initial)) {
+            form.remaining_usd.value = Math.max(0, total - initial).toFixed(2);
+        }
+        autoCalcMonthly();
+    }
+    function autoCalcMonthly() {
+        const remaining = parseFloat(form.remaining_usd.value);
+        const months = parseInt(form.months_count.value || '0', 10);
+        if (isFinite(remaining) && months > 0 && !form.monthly_payment_usd.dataset.manual) {
+            form.monthly_payment_usd.value = (remaining / months).toFixed(2);
+        }
+    }
+    form.area_m2.addEventListener('input', autoCalcTotal);
+    form.price_per_m2_usd.addEventListener('input', autoCalcTotal);
+    form.total_price_usd.addEventListener('input', autoCalcRemaining);
+    form.initial_payment_usd.addEventListener('input', autoCalcRemaining);
+    form.months_count.addEventListener('input', autoCalcMonthly);
+    form.monthly_payment_usd.addEventListener('input', () => { form.monthly_payment_usd.dataset.manual = '1'; });
+
+    // ================= Save / actions =================
+    function collectPayload() {
+        const type = typeSwitch.querySelector('button.active').dataset.type;
+        const fd = new FormData(form);
+        const obj = { contract_type: type };
+        for (const [k, v] of fd.entries()) {
+            obj[k] = (v === '' ? null : v);
+        }
+        // numeric
+        ['contract_year', 'months_count'].forEach(k => { if (obj[k] != null) obj[k] = parseInt(obj[k], 10) || null; });
+        ['area_m2', 'price_per_m2_usd', 'total_price_usd', 'initial_payment_usd', 'remaining_usd', 'monthly_payment_usd']
+            .forEach(k => { if (obj[k] != null) obj[k] = Number(obj[k]); });
+
+        if (type !== 'INSTALLMENT') {
+            obj.initial_payment_usd = null;
+            obj.remaining_usd = null;
+            obj.months_count = null;
+            obj.monthly_payment_usd = null;
+        }
+
+        const installments = Array.from(scheduleBody.children).map(tr => ({
+            month_no: parseInt(tr.querySelector('.s-month').value || '1', 10),
+            payment_date: tr.querySelector('.s-date').value || null,
+            amount_usd: tr.querySelector('.s-amount').value ? Number(tr.querySelector('.s-amount').value) : null,
+        }));
+        obj.installments = type === 'INSTALLMENT' ? installments : [];
+        return obj;
+    }
+
+    async function saveContract() {
+        const payload = collectPayload();
+        try {
+            let saved;
+            if (currentContract && currentContract.id) {
+                saved = await api(`/api/sales/contracts/${currentContract.id}`, {
+                    method: 'PUT', body: JSON.stringify(payload),
+                });
+            } else {
+                saved = await api('/api/sales/contracts', {
+                    method: 'POST', body: JSON.stringify(payload),
+                });
+            }
+            currentContract = saved;
+            toast(t('saved', 'Сохранено'), 'success');
+            updateStatusBanner(saved);
+            updateActionButtons();
+            loadContracts();
+            return saved;
+        } catch (e) {
+            toast(e.message, 'error');
+            return null;
+        }
+    }
+
+    async function requestApproval() {
+        // Сначала сохраним текущие правки
+        const saved = await saveContract();
+        if (!saved) return;
+        try {
+            const r = await api(`/api/sales/contracts/${saved.id}/request-approval`, { method: 'POST' });
+            currentContract = r;
+            toast(t('sales_sent_for_approval', 'Отправлено на одобрение'), 'success');
+            updateStatusBanner(r);
+            updateActionButtons();
+            loadContracts();
+            startPolling(r.id);
+        } catch (e) { toast(e.message, 'error'); }
+    }
+
+    // ================= Custom prompt modal (approve/reject) =================
+    const promptModal = document.getElementById('salesPromptModal');
+    const promptTitle = document.getElementById('salesPromptTitle');
+    const promptLabel = document.getElementById('salesPromptLabel');
+    const promptInput = document.getElementById('salesPromptInput');
+    const promptError = document.getElementById('salesPromptError');
+    const promptOkBtn = document.getElementById('salesPromptOkBtn');
+    const promptCancelBtn = document.getElementById('salesPromptCancelBtn');
+    const promptCloseBtn = document.getElementById('salesPromptCloseBtn');
+
+    function openPromptModal({ title, label, placeholder = '', required = false, okVariant = 'primary' }) {
+        return new Promise((resolve) => {
+            promptTitle.textContent = title;
+            promptLabel.textContent = label;
+            promptInput.value = '';
+            promptInput.placeholder = placeholder || '';
+            promptError.style.display = 'none';
+            promptError.textContent = '';
+            promptOkBtn.classList.remove('primary', 'approve', 'reject');
+            promptOkBtn.classList.add(okVariant);
+
+            const cleanup = (value) => {
+                promptModal.classList.remove('active');
+                promptOkBtn.removeEventListener('click', onOk);
+                promptCancelBtn.removeEventListener('click', onCancel);
+                promptCloseBtn.removeEventListener('click', onCancel);
+                promptModal.removeEventListener('click', onOverlay);
+                document.removeEventListener('keydown', onKey);
+                resolve(value);
+            };
+            const onOk = () => {
+                const val = promptInput.value.trim();
+                if (required && !val) {
+                    promptError.textContent = t('sales_reject_comment_required', 'Укажите причину отказа');
+                    promptError.style.display = 'block';
+                    promptInput.focus();
+                    return;
+                }
+                cleanup(val);
+            };
+            const onCancel = () => cleanup(null);
+            const onOverlay = (e) => { if (e.target === promptModal) onCancel(); };
+            const onKey = (e) => {
+                if (e.key === 'Escape') { e.preventDefault(); onCancel(); }
+                else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); onOk(); }
+            };
+
+            promptOkBtn.addEventListener('click', onOk);
+            promptCancelBtn.addEventListener('click', onCancel);
+            promptCloseBtn.addEventListener('click', onCancel);
+            promptModal.addEventListener('click', onOverlay);
+            document.addEventListener('keydown', onKey);
+
+            promptModal.classList.add('active');
+            setTimeout(() => promptInput.focus(), 50);
+        });
+    }
+
+    // ================= Custom confirm modal =================
+    const confirmModal = document.getElementById('salesConfirmModal');
+    const confirmTitle = document.getElementById('salesConfirmTitle');
+    const confirmMessage = document.getElementById('salesConfirmMessage');
+    const confirmOkBtn = document.getElementById('salesConfirmOkBtn');
+    const confirmCancelBtn = document.getElementById('salesConfirmCancelBtn');
+    const confirmCloseBtn = document.getElementById('salesConfirmCloseBtn');
+
+    function openConfirmModal({ title, message, okText, cancelText, okVariant = 'reject' }) {
+        return new Promise((resolve) => {
+            confirmTitle.textContent = title || t('common_confirm', 'Подтвердите действие');
+            confirmMessage.textContent = message || '';
+            confirmOkBtn.textContent = okText || t('common_ok', 'OK');
+            confirmCancelBtn.textContent = cancelText || t('common_cancel', 'Отмена');
+            confirmOkBtn.classList.remove('primary', 'approve', 'reject', 'secondary', 'print');
+            confirmOkBtn.classList.add(okVariant);
+
+            const cleanup = (value) => {
+                confirmModal.classList.remove('active');
+                confirmOkBtn.removeEventListener('click', onOk);
+                confirmCancelBtn.removeEventListener('click', onCancel);
+                confirmCloseBtn.removeEventListener('click', onCancel);
+                confirmModal.removeEventListener('click', onOverlay);
+                document.removeEventListener('keydown', onKey);
+                resolve(value);
+            };
+            const onOk = () => cleanup(true);
+            const onCancel = () => cleanup(false);
+            const onOverlay = (e) => { if (e.target === confirmModal) onCancel(); };
+            const onKey = (e) => {
+                if (e.key === 'Escape') { e.preventDefault(); onCancel(); }
+                else if (e.key === 'Enter') { e.preventDefault(); onOk(); }
+            };
+
+            confirmOkBtn.addEventListener('click', onOk);
+            confirmCancelBtn.addEventListener('click', onCancel);
+            confirmCloseBtn.addEventListener('click', onCancel);
+            confirmModal.addEventListener('click', onOverlay);
+            document.addEventListener('keydown', onKey);
+
+            confirmModal.classList.add('active');
+            setTimeout(() => confirmOkBtn.focus(), 50);
+        });
+    }
+
+    async function approve() {
+        const comment = await openPromptModal({
+            title: t('sales_approve', 'Одобрить'),
+            label: t('sales_approve_comment', 'Комментарий (не обязательно):'),
+            required: false,
+            okVariant: 'approve',
+        });
+        if (comment === null) return;
+        try {
+            const r = await api(`/api/sales/contracts/${currentContract.id}/approve`, {
+                method: 'POST', body: JSON.stringify({ comment: comment || null }),
+            });
+            currentContract = r;
+            toast(t('sales_approved_ok', 'Договор одобрен'), 'success');
+            updateStatusBanner(r); updateActionButtons();
+            loadContracts();
+        } catch (e) { toast(e.message, 'error'); }
+    }
+
+    async function reject() {
+        const comment = await openPromptModal({
+            title: t('sales_reject', 'Отклонить'),
+            label: t('sales_reject_comment', 'Причина отказа:'),
+            required: true,
+            okVariant: 'reject',
+        });
+        if (comment === null) return;
+        try {
+            const r = await api(`/api/sales/contracts/${currentContract.id}/reject`, {
+                method: 'POST', body: JSON.stringify({ comment: comment || null }),
+            });
+            currentContract = r;
+            toast(t('sales_rejected_ok', 'Договор отклонён'), 'success');
+            updateStatusBanner(r); updateActionButtons();
+            loadContracts();
+        } catch (e) { toast(e.message, 'error'); }
+    }
+
+    async function printContract() {
+        if (!currentContract) return;
+        if (currentContract.status !== 'APPROVED' && currentContract.status !== 'PRINTED') {
+            toast(t('sales_err_not_approved', 'Договор ещё не одобрен'), 'warning');
+            return;
+        }
+        // Открыть новое окно с заполненным шаблоном
+        const html = window.buildSalesContractHtml(currentContract);
+        const w = window.open('', '_blank', 'width=900,height=1200');
+        if (!w) { toast(t('sales_popup_blocked', 'Разрешите всплывающие окна'), 'error'); return; }
+        w.document.open();
+        w.document.write(html);
+        w.document.close();
+        // Пометим на сервере
+        try {
+            const r = await api(`/api/sales/contracts/${currentContract.id}/mark-printed`, { method: 'POST' });
+            currentContract = r;
+            updateStatusBanner(r); updateActionButtons();
+            loadContracts();
+        } catch (e) {/* не блокирующая ошибка */ console.warn(e); }
+    }
+
+    // ================= Polling while waiting for approval =================
+    function startPolling(id) {
+        stopPolling();
+        pollTimer = setInterval(async () => {
+            try {
+                const r = await api(`/api/sales/contracts/${id}`);
+                // если статус сменился — обновим UI
+                if (!currentContract || currentContract.status !== r.status || currentContract.viewed_at !== r.viewed_at) {
+                    currentContract = r;
+                    updateStatusBanner(r);
+                    updateActionButtons();
+                    loadContracts();
+                }
+                if (r.status === 'APPROVED' || r.status === 'REJECTED' || r.status === 'PRINTED') {
+                    stopPolling();
+                }
+            } catch (e) { /* ignore */ }
+        }, 8000);
+    }
+    function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+
+    // ================= Event bindings =================
+    document.getElementById('salesNewBtn').addEventListener('click', openNewContract);
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    saveBtn.addEventListener('click', saveContract);
+    requestApprovalBtn.addEventListener('click', requestApproval);
+    printBtn.addEventListener('click', printContract);
+    approveBtn.addEventListener('click', approve);
+    rejectBtn.addEventListener('click', reject);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    let searchDebounce = null;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(loadContracts, 300);
+    });
+    statusFilter.addEventListener('change', loadContracts);
+
+    // ================= Custom status dropdown =================
+    // Native <select> popup в Windows Chromium игнорирует CSS и рисуется белым.
+    // Строим полностью управляемый div-виджет и синхронизируем его с скрытым <select>.
+    // Меню переезжает в document.body, чтобы обойти stacking context родителей
+    // (admin-layout использует transform/contain, из-за чего position:fixed
+    // позиционируется не от viewport, а от контейнера).
+    (function initStatusDropdown() {
+        const wrap = document.getElementById('salesStatusDropdown');
+        if (!wrap) return;
+        const trigger = wrap.querySelector('.sales-select-trigger');
+        const label = wrap.querySelector('.sales-select-value');
+        const menu = wrap.querySelector('.sales-select-menu');
+        const options = Array.from(menu.querySelectorAll('.sales-select-option'));
+
+        // Чистим осиротевшие menu от предыдущих загрузок страницы (SPA навигация).
+        document.querySelectorAll('body > .sales-select-menu').forEach(el => el.remove());
+        // Переносим menu в body — гарантирует отсутствие stacking/transform/contain
+        // конфликтов с админским layout'ом.
+        document.body.appendChild(menu);
+
+        function positionMenu() {
+            const r = trigger.getBoundingClientRect();
+            menu.style.top = `${r.bottom + 4}px`;
+            menu.style.left = `${r.left}px`;
+            menu.style.width = `${r.width}px`;
+        }
+        function close() {
+            wrap.classList.remove('is-open');
+            menu.setAttribute('hidden', '');
+            trigger.setAttribute('aria-expanded', 'false');
+            window.removeEventListener('scroll', positionMenu, true);
+            window.removeEventListener('resize', positionMenu);
+        }
+        function open() {
+            wrap.classList.add('is-open');
+            menu.removeAttribute('hidden');
+            trigger.setAttribute('aria-expanded', 'true');
+            positionMenu();
+            window.addEventListener('scroll', positionMenu, true);
+            window.addEventListener('resize', positionMenu);
+        }
+        function choose(val) {
+            options.forEach(o => o.classList.toggle('is-selected', o.dataset.value === val));
+            const sel = options.find(o => o.dataset.value === val) || options[0];
+            label.textContent = sel.textContent;
+            if (statusFilter.value !== val) {
+                statusFilter.value = val;
+                statusFilter.dispatchEvent(new Event('change'));
+            }
+        }
+
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            wrap.classList.contains('is-open') ? close() : open();
+        });
+        options.forEach(opt => {
+            opt.addEventListener('click', (e) => {
+                e.stopPropagation();
+                choose(opt.dataset.value);
+                close();
+            });
+        });
+        // Клик вне trigger и вне menu (menu теперь в body, поэтому проверяем отдельно).
+        document.addEventListener('click', (e) => {
+            if (wrap.contains(e.target)) return;
+            if (menu.contains(e.target)) return;
+            close();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') close();
+        });
+        window.addEventListener('languageChanged', () => {
+            const sel = options.find(o => o.classList.contains('is-selected')) || options[0];
+            if (sel) label.textContent = sel.textContent;
+        });
+    })();
+
+    // Перерисовываем таблицу и баннер статуса при смене языка,
+    // чтобы статус/тип договора обновлялись без F5.
+    window.addEventListener('languageChanged', () => {
+        try {
+            if (Array.isArray(contractsList) && contractsList.length) renderList();
+        } catch (_e) { /* noop */ }
+        try {
+            if (currentContract) updateStatusBanner(currentContract);
+        } catch (_e) { /* noop */ }
+    });
+
+    // ================= Bootstrap =================
+    (async function init() {
+        await fetchMe();
+        if (!meUser || !['ROOT', 'ADMIN', 'SALES'].includes(meUser.role)) {
+            tableBody.innerHTML = `<tr><td colspan="9" class="sales-empty" style="color:#f87171;">
+                <i class="bi bi-shield-exclamation"></i>
+                <div>${t('access_denied', 'Доступ запрещён')}</div>
+            </td></tr>`;
+            document.getElementById('salesNewBtn').disabled = true;
+            return;
+        }
+        // root не может создавать новые договора (только одобряет)
+        if (isRoot()) {
+            document.getElementById('salesNewBtn').style.display = 'none';
+        }
+        await loadContracts();
+
+        // Если в URL передан contract_id — сразу открываем
+        const url = new URL(window.location.href);
+        const openId = url.searchParams.get('contract_id');
+        if (openId) {
+            openContract(parseInt(openId, 10));
+        }
+    })();
+
+    // Чистим при уходе со страницы (SPA)
+    window.addEventListener('beforeunload', stopPolling);
+})();
+</script>
+
+<!-- ===================== CONTRACT PRINT TEMPLATE BUILDER ===================== -->
+<script>
+/**
+ * Строит готовый HTML-документ (контракт купли-продажи) с подставленными
+ * значениями. Открывается в новом окне и отдаётся на печать / сохранение в PDF.
+ * Текст дословно из шаблонов из папки /public/contracts.
+ */
+window.buildSalesContractHtml = function (c) {
+    const esc = (v) => String(v == null ? '' : v).replace(/[&<>]/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[s]));
+    // T — подставляет значение в типографские кавычки «"…"» либо оставляет пустое место с подчёркиваниями ровно так, как в оригинале.
+    const T = (v, n) => {
+        const len = typeof n === 'number' ? n : 4;
+        if (v == null || v === '') return '\u201C' + '_'.repeat(len) + '\u201D';
+        return '\u201C' + esc(v) + '\u201D';
+    };
+    const M = (v) => {
+        if (v == null || v === '') return '\u201C____\u201D';
+        const num = Number(v);
+        if (!isFinite(num)) return '\u201C____\u201D';
+        return '\u201C' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '\u201D';
+    };
+    // Форматирует дату как dd.mm.yyyy (для графика)
+    const fmtDate = (v) => {
+        if (!v) return T('', 8);
+        try {
+            const d = new Date(v);
+            if (isNaN(d.getTime())) return T(v, 8);
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            return '\u201C' + dd + '.' + mm + '.' + d.getFullYear() + '\u201D';
+        } catch (e) { return T(v, 8); }
+    };
+
+    const isInstallment = c.contract_type === 'INSTALLMENT';
+
+    // подстановки для сторон / предмета
+    const contractNum = T(c.contract_number);
+    const yearField = T(c.contract_year);
+    const buyerName = T(c.buyer_full_name, 12);
+    const idComposite = (c.buyer_id_series || '') + (c.buyer_id_number ? ' ' + c.buyer_id_number : '');
+    const idField = idComposite.trim() ? T(idComposite.trim(), 8) : T('', 8);
+    const finField = T(c.buyer_fin, 7);
+    const areaField = T(c.area_m2);
+    const houseField = T(c.house_number);
+    const pricePerM2 = M(c.price_per_m2_usd);
+    const totalPrice = M(c.total_price_usd);
+    const initial = M(c.initial_payment_usd);
+    const remaining = M(c.remaining_usd);
+    const months = T(c.months_count);
+    const monthly = M(c.monthly_payment_usd);
+    const city = esc(c.city || 'Bakı şəhəri');
+
+    // === 1.4 — различается между полным и частичным расчётом ===
+    const clause1_4 = isInstallment ? `
+<p>1.4. Tərəflər arasında hesablaşma qaydası aşağıdakı qaydada müəyyən edilir:</p>
+<p>\u201CAlıcı\u201D yaşayış sahəsinin alqı-satqı Müqaviləsinin 1.2-ci bəndində nəzərdə tutulan <b>${totalPrice} ABŞ dolları</b> məbləğinin <b>${initial} ABŞ dolları</b> hissəsini bu Müqavilə ikitərəfli qaydada imzalandıqdan dərhal sonra ilkin ödəniş olaraq, qalan <b>${remaining} ABŞ dollarını</b> isə <b>${months} ay ərzində hər bir ay üçün ${monthly} ABŞ dolları</b> ödəməklə həyata keçirəcəkdir.</p>
+<p>Tərəflər arasında ödəniş qaydası və cədvəli ətraflı şəkildə bu Müqaviləyə <b>2 saylı Əlavədə</b> razılaşdırılır.</p>
+` : `
+<p>1.4. Tərəflər arasında hesablaşma qaydası aşağıdakı qaydada müəyyən edilir:</p>
+<p>\u201CAlıcı\u201D yaşayış sahəsinin alqı-satqı Müqaviləsinin 1.2-ci bəndində nəzərdə tutulan edən <b>${totalPrice} ABŞ dolları</b> məbləğini bu müqavilə imzalandıqdan sonra dərhal tam həcmdə ödəməklə həyata keçirəcəkdir.</p>
+`;
+
+    // === 1.8 — различается номером Əlavə (3 vs 2) ===
+    const annexServiceNo = isInstallment ? '3' : '2';
+    const clause1_8 = `<p>1.8. Yaşayış sahəsi yerləşən ərazidə (yaşayış kompleksində) \u201CSatıcı\u201D tərəfindən göstərilən xidmətlərə dair \u201CSatıcı\u201D ilə \u201CAlıcı\u201D arasında servis müqaviləsi (bundan sonra \u201CXidmət müqaviləsi\u201D adlanacaq) bağlanır. \u201CXidmət müqaviləsi\u201D hazırki müqavilənin ayrılmaz tərkib hissəsini təşkil edərək, bu müqavilənin <b>${annexServiceNo} saylı Əlavəsini</b> əhatə edir və \u201CTərəflər\u201D üçün \u201CXidmət müqaviləsi\u201Dnin müddəaları qətidir. Xidmət müqaviləsi hazırki müqavilənin predmetini təşkil edən yaşayış sahəsinin \u201CAlıcı\u201Dya təhvil verildiyi andan tərəflər arasında imzalanır və qüvvəyə minir.</p>`;
+
+    // === 3.10 — только для рассрочки ===
+    const clause3_10 = isInstallment
+        ? `<p>3.10. Bu müqavilənin 1.4-cü bəndinə əsasən müqaviləyə əlavə edilmiş <b>2 saylı Əlavədə göstərilən</b> ödəniş cədvəlinin şərtləri \u201CAlıcı\u201D tərəfindən pozulduqda və hər hansı ay üzrə ödəniş 20 (iyirmi) iş günündən artıq gecikdirilərsə müqavilənin 3.4-cü bəndinə əsasən \u201CSatıcı\u201D 15 (on beş) təqvim günü ərzində qabaqcadan \u201CAlıcı\u201Dya yazılı bildiriş göndərməklə ona xəbərdarlıq edir, \u201CAlıcı\u201D isə  xəbərdarlığı aldığı gündən  daha  15 (on beş) təqvim günü ərzində borcun ödənilməsi ilə bağlı hər hansı bir hərəkət etmədikdə  \u201CSatıcı\u201D bu Müqaviləyə birtərəfli qaydada xitam verir.</p>`
+        : '';
+
+    // === 6.4 — различается упоминанием Əlavə №2 ===
+    const clause6_4 = isInstallment
+        ? `<p>6.4. Bu Müqavilə hər biri eyni hüquqi qüvvəyə malik olan, tərəflərin hər birinə bir nüsxə nəzərdə tutulmaqla, 2 (iki) əsl nüsxədən 5 (beş) səhifədən, 1 (bir) səhifə Əlavə № 1 və 1 (bir) səhifə Əlavə № 2-dən ibarət tərtib edilir.</p>`
+        : `<p>6.4. Bu Müqavilə hər biri eyni hüquqi qüvvəyə malik olan, tərəflərin hər birinə bir nüsxə nəzərdə tutulmaqla, 2 (iki) əsl nüsxədən 5 (beş) səhifədən, 1 (bir) səhifə Əlavə № 1-dən ibarət tərtib edilir.</p>`;
+
+    // === 6.5 — различается номером Əlavə для Xidmət müqaviləsi ===
+    const clause6_5 = `<p>6.5. Bu Müqavilənin 1.8-ci bəndi ilə tənzimlənən \u201CXidmət müqaviləsi\u201D hazırki müqavilənin ayrılmaz tərkib hissəsini təşkil edərək, bu müqavilənin <b>${annexServiceNo} saylı Əlavəsini</b> əhatə edir və \u201CTərəflər\u201D arasında təsdiq edilərək hazırki Müqaviləyə əlavə olunur.</p>`;
+
+    // === Əlavə №2 — график платежей (только для рассрочки) ===
+    let scheduleRows = '';
+    const inst = c.installments || [];
+    // Если есть меньше 5 строк — дополняем пустыми строками до 5 (как в оригинале)
+    const minRows = 5;
+    const totalRows = Math.max(inst.length, minRows);
+    for (let i = 0; i < totalRows; i++) {
+        const row = inst[i];
+        scheduleRows += `
+<tr>
+    <td style="text-align:center;">${row ? esc(row.month_no ?? i + 1) : (i + 1)}</td>
+    <td style="text-align:center;">${row ? fmtDate(row.payment_date) : T('', 8)}</td>
+    <td style="text-align:center;">$ ${row ? M(row.amount_usd) : M(null)}</td>
+</tr>`;
+    }
+
+    const appendix2 = isInstallment ? `
+<div class="page-break"></div>
+<h3 style="text-align:center;">DAŞINMAZ  ƏMLAKIN<br>ALQI-SATQI MÜQAVİLƏSİ NN ${contractNum}<br>ƏLAVƏ № 2</h3>
+
+<table class="schedule">
+    <thead>
+        <tr><th style="width:80px;">Ay</th><th>Ödəniş Tarixi</th><th>Məbləğ USD</th></tr>
+    </thead>
+    <tbody>${scheduleRows}</tbody>
+</table>
+
+<p>\u201CAlıcı\u201D yaşayış sahəsinin alqı-satqı Müqaviləsinin 1.2-ci bəndində nəzərdə tutulan <b>${totalPrice} ABŞ dolları</b> məbləğinin <b>${initial} ABŞ dolları</b> hissəsini bu Müqavilə ikitərəfli qaydada imzalandıqdan dərhal sonra ilkin ödəniş olaraq, qalan <b>${remaining} ABŞ dollarını</b> isə <b>${months} ay ərzində hər bir ay üçün ${monthly} ABŞ dolları</b> ödəməklə həyata keçirəcəkdir.</p>
+
+<table class="totals">
+    <tr><th>Qiymət</th><td>$ ${totalPrice}</td></tr>
+    <tr><th>İlkin Ödəniş ($)</th><td>$ ${initial}</td></tr>
+    <tr><th>Qalan Ödəmə</th><td>$ ${remaining}</td></tr>
+    <tr><th>Aylar üzrə Ödəniş</th><td>$ ${monthly}</td></tr>
+</table>
+
+<div class="signatures">
+    <div><b>\u201CSatıcı\u201D</b><br><b>\u201CNN QRUP\u201D MMC</b><br><br>________________________________</div>
+    <div><b>\u201CAlıcı\u201D</b><br>${esc(c.buyer_full_name || '')}<br><br>________________________________</div>
+</div>
+` : '';
+
+    return `<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<title>Alqı-satqı müqaviləsi ${esc(c.contract_number || '#' + c.id)}</title>
+<style>
+    @page { size: A4; margin: 18mm 16mm; }
+    * { box-sizing: border-box; }
+    body { font-family: "Times New Roman", Georgia, serif; font-size: 11.5pt; line-height: 1.45; color: #111; margin: 0; }
+    h2, h3 { text-align: center; margin: 0.3em 0; }
+    h2 { font-size: 14pt; }
+    h3 { font-size: 12pt; margin-bottom: 1em; }
+    p { margin: 0.4em 0; text-align: justify; }
+    .meta { display:flex; justify-content:space-between; margin: 0.8em 0 1.2em; font-weight:600; }
+    .page-break { page-break-before: always; }
+    table.schedule, table.totals { width: 70%; margin: 1em auto; border-collapse: collapse; }
+    table.schedule th, table.schedule td, table.totals th, table.totals td { border: 1px solid #333; padding: 6px 10px; font-size: 11pt; font-weight: bold; }
+    table.schedule th { background: #f0f0f0; }
+    table.totals th { background: #f6f6f6; text-align:left; width: 45%; }
+    .sub-head { font-weight: bold; margin: 0.6em 0 0.2em; }
+    .meta { font-weight: bold; }
+    .signatures { display:grid; grid-template-columns:1fr 1fr; gap:2rem; margin-top:2.5em; }
+    .signatures > div { min-height: 120px; }
+    .requisites { margin-top: 1.5em; font-size: 10.5pt; }
+    .requisites .req-grid { display:grid; grid-template-columns: 1fr 1fr; gap:2rem; margin-top:1em; }
+    .print-controls {
+        position: fixed; top: 10px; right: 10px;
+        background: #1f2432; color: #fff; padding: 10px 14px; border-radius: 8px;
+        box-shadow: 0 6px 20px rgba(0,0,0,.3); font-family: sans-serif; font-size: 13px;
+        display: flex; gap: 8px;
+    }
+    .print-controls button {
+        background: #667eea; color: #fff; border: none; border-radius: 6px;
+        padding: 6px 12px; cursor: pointer; font-weight: 600;
+    }
+    .print-controls button:hover { background: #5468d4; }
+    @media print { .print-controls { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="print-controls">
+    <button onclick="window.print()">\u{1F5A8} Çap et / Напечатать</button>
+    <button onclick="window.close()">Закрыть</button>
+</div>
+
+<h2>DAŞINMAZ ƏMLAKIN<br>ALQI-SATQI MÜQAVİLƏSİ NN${isInstallment ? '-' : ''} ${contractNum}</h2>
+
+<div class="meta">
+    <span>${city}</span>
+    <span>${yearField} cı il</span>
+</div>
+
+<p style="text-indent:2em;">Bu Müqaviləni, bundan sonra \u201CSatıcı\u201D adlanacaq hüquqi ünvanı Bakı şəhəri Yasamal rayonu, Xarici Dairəvi yol, ev 10, korpus X18 olan \u201CNN QRUP\u201D MMC (VÖEN: 1500597761), onun Nizamnaməsi əsasında fəaliyyət göstərən Direktoru Nəsibov Xəyal Davud oğlunun şəxsində bir tərəfdən və bundan sonra \u201CAlıcı\u201D adlanacaq Azərbaycan Respublikasının vətəndaşı ${buyerName} (Ş/V:${idField}, Fin:${finField}) şəxsində, cəm şəkildə \u201CTərəflər\u201D adlanacaqlar, Bakı şəhəri, Yasamal rayonu, Xarici Dairəvi Yol  ünvanında yerləşən \u201CRoyal Park\u201D yaşayış massivində yaşayış sahəsi ${areaField} m2 olan  ${houseField} saylı yaşayış sahəsinin (bundan sonra \u201CYaşayış sahəsi\u201D) əsaslı tikilməsi və təhvil verilməsi haqqında aşağıdakı məzmunda Müqavilə bağlamışlar:</p>
+
+<h3>MÜQAVİLƏNİN TƏSVİRİ</h3>
+
+<p>1.1. Müqavilənin təsvirini \u201CSatıcı\u201Dnın Yaşayış sahəsinin əsaslı tikintisinin lazımi qaydada apararaq yaşayış sahəsinin gələcəkdə mülkiyyətçisi ola biləcək \u201CAlıcı\u201Dya əsaslı tikilmiş formada, lazımi qaydada və hazırki müqavilədə göstərilmiş müddətdə təhvil verməsi, \u201CAlıcı\u201Dnın isə yaşayış sahəsinin dəyərini bu Müqavilə ilə şərtləşdirilmiş müddət və məbləğlərdə \u201CSatıcı\u201Dya ödəməsi təşkil edir. \u201CYaşayış sahəsi\u201D təmirsiz şəkildə təqdim olunacaqdır.</p>
+
+<p>Yaşayış sahəsinin yerləşdiyi yer üzrə ərazi planı bu Müqavilənin ayrılmaz tərkib hissəsini təşkil edən <b>1 saylı Əlavədə</b> razılaşdırır.</p>
+
+<p>1.2. Satıcı \u201CYaşayış sahəsi\u201Dnin hər m2 ərazisi üçün <b>${pricePerM2} ABŞ dolları</b> təşkil etdiyinə görə, \u201CYaşayış sahəsi\u201Dnin ümumi dəyərini əhatə edən <b>${totalPrice} ABŞ dollarına</b> satır, \u201CAlıcı\u201D isə həmin qiymətə alır. Ödəniş \u201CSatıcı\u201Dnın bank hesabına nağdsız hesablaşmalar qaydasında ödəniləcəkdir.</p>
+
+<p>Bu Müqavilə üzrə \u201CSatıcı\u201Dya avans və hissə-hissə edilən ödənişlər Azərbaycan Respublikasının Mərkəzi Bankının ödəniş gününə təyin etdiyi ABŞ dollarının satış məzənnəsinə uyğun olaraq, ödəniləcək məbləğin Azərbaycan Manatı ekvivalentində həyata keçiriləcəkdir.</p>
+
+<p>1.3. \u201CAlıcı\u201Dnın tərəfindən fərdi yaşayış sahəsinə daha sonradan edilən tikintiyə dair kv.m artırmaları, dəyişikliklər və əlavələr həmin yaşayış sahəsinin bu müqavilədə göstərilən ümumi sahəsinə əlavə edilir. Bu zaman əlavə edilmiş hər kv.m üçün bu müqavilənin 1.2-ci yarımbəndində qeyd edilmiş vahid qiymət əsas götürülür və müqavilənin ümumi dəyəri yenidən hesablanır.</p>
+
+${clause1_4}
+
+<p>1.5. Tərəflər razılaşır ki, \u201CSatıcı\u201D \u201CAlıcı\u201Ddan bu Müqavilənin 1.4-cü bəndində nəzərdə tutulan ödənişin ödənilməsini Tərəflərin bu Müqaviləni imzaladıqdan və Azərbaycan Respublikasının Mülki Məcəlləsinə uyğun olaraq, torpaq-qazma işlərinin başlanılmasından sonra tələb etmək hüququ vardır.</p>
+
+<p>1.6. Tərəflər razılaşır ki, Yaşayış sahəsinin tikintisi tam başa çatdırıldıqdan sonra onlar öz aralarında Azərbaycan Respublikası Mülki Məcəlləsinə müvafiq olaraq, notariat qaydasında təsdiq olunmuş daşınmaz əmlakın alqı-satqı müqaviləsi bağlayırlar və müqavilə daşınmaz əmlakın dövlət reyestrində \u201CAlıcı\u201Dnın adına qeydiyyata alınır. Müqavilənin notariat və qeydiyyat xərcləri Alıcıya aid edilir.</p>
+
+<p>1.7. Hazırki \u201CMüqavilə\u201Dnin müddəaları \u201CTərəflər\u201D arasında \u201CYaşayış sahəsi\u201Dnin təmirsiz əsaslı inşasının həyata keçirilməsini tənzimləyir. \u201CAlıcı\u201D \u201CSatıcı\u201D tərəfindən \u201CYaşayış sahəsi\u201Dnin tam əsaslı yüksək təmirinin icra olunmasını sifariş etdikdə, təmir işlərinin ətraflı təsvirləri bu \u201CMüqavilə\u201Dyə \u201CƏlavə Razılaşma\u201D sənədlərində əks olunaraq, \u201CTərəflər\u201D arasında imzaları ilə təsdiq edillir və \u201CMüqavilə\u201Dyə əlavə olunaraq ayrılmaz tərkib hissəsini təşkil edir. Bu halda \u201CƏlavə Razılaşma\u201D sənədində bu \u201CMüqavilə\u201D ilə \u201CSatıcı\u201D tərəf \u201Cİcraçı\u201D adlanacaqdır.</p>
+
+${clause1_8}
+
+<h3>2. TƏRƏFLƏRİN HÜQUQ VƏ VƏZİFƏLƏRİ</h3>
+
+<p class="sub-head">2.1. Alıcının vəzifələri:</p>
+<p>2.1.1. \u201CYaşayış sahəsi\u201Dnin daxili interyeri və həmin yaşayış sahəsinə aid olan həyətyanı sahədə hər hansı növ bitkilərin əkilməsi istisna olmaqla, \u201CYaşayış sahəsi\u201Dnin xarici səthinə (fasadı daxil olmaqla), həmçinin həyətyanı sahələrin divarlarına hər hansı dəyişiklik etməmək. Dəyişiklik edildi halda, \u201CAlıcı\u201D Azərbaycan Respublikasının qüvvədə olan qanunvericiliyinə, habelə Şəhərsalma və Tikinti Məcəlləsinin müddəalarına əsaslanaraq müvafiq icra hakimiyyəti orqanlarından \u201CYaşayış sahəsi\u201Dnin xarici səthinə (fasadı daxil olmaqla), həmçinin həyətyanı sahələrin divarlarına hər hansı dəyişiklik edilməsinə dair xüsusi icazə aldıqdan, dəyişikliklə bağlı layihə sənədlərini təsdiq etdikdən sonra və dəyişikliklə bağlı icazə sənədini yeni təsdiq edilmiş layihə sənədləri ilə birgə rəsmi olaraq \u201CSatıcı\u201Dya təqdim etdikdən sonra, sözügüdən dəyişikliyi həyata keçirə bilər. \u201CAlıcı\u201D bu bəndin tələblərini pozduqda bu Müqavilənin 3.7-cı bəndinə əsasən məsuliyyət daşıyır.</p>
+<p>2.1.2. Tərəflərin bu Müqavilə üzrə razılaşdırdığı məbləği bu Müqavilə üzrə nəzərdə tutulan müddətdə ödəmək;</p>
+<p>2.1.3. \u201CAlıcı\u201D fərdi yaşayış sahəsi üçün  Bu müqavilə və onun ayrılmaz tərkib hissəsi olan Əlavədə göstərilən ödəniş şərtlərini tam şəkildə həyata keçirənədək fərdi yaşayış sahəsini özgəninkiləşdirə bilməz.</p>
+<p>2.1.4. \u201CYaşayış sahəsi\u201Dnə öz istifadə və mülkiyyət hüququnu həyata keçirərkən qonşunun mülkiyyətinə cürbəcür hədsiz təsirlərdən çəkinmək;</p>
+<p>2.1.5. \u201CSatıcı\u201D tərəfindən təsdiq edilən \u201CYaşayış sahəsi\u201Dnin ümumi istifadədə olan sahələrindən istifadə qaydalarına riayət etmək;</p>
+<p>2.1.6. \u201CYaşayış sahəsi\u201Dnin yanğın və ya digər hadisələr nəticəsində zədələnməsi, məhv olması, yaxud hər hansı formada itkisi nəticəsində yaşayış sahəsinin əvvəlki xarici görünüşünün bərpa edilməsini təmin etmək məqsədi ilə yaşayış sahəsinin icbari və könüllü sığortasını həyata keçirmək;</p>
+<p>2.1.7. Hazırki müqavilənin 1.8-ci bəndinə əsasən \u201CXidmət müqaviləsi\u201D bağlamaq;</p>
+<p>2.1.8. Bu Müqavilənin müddəalarına qeyri-şərtsiz əməl etmək.</p>
+
+<p class="sub-head">2.2. Satıcının vəzifələri:</p>
+<p>2.2.1. Tikinti fəaliyyətinin həyata keçirilməsi üçün layihə sənədlərini tərtib etmək;</p>
+<p>2.2.2. Tikinti fəaliyyətinin aparılması üçün lazımi işçi qüvvəsini cəlb etmək;</p>
+<p>2.2.3. Tikinti fəaliyyətini şəhərsalma haqqında Azərbaycan Respublikasının qanunvericiliyinin və normativ-hüquqi aktlarının tələblərinə, tərtib olunmuş layihə sənədlərinə uyğun aparılmasını təmin etmək;</p>
+<p>2.2.4. Tikinti fəaliyyətinin keyfiyyətini yoxlamaq və həmin fəaliyyətin icrası ilə bağlı texniki nəzarət funksiyasını həyata keçirmək;</p>
+<p>2.2.5. \u201CAlıcı\u201Dnın mülkiyyətinə təhvil verəcəyi yaşayış sahəsini vəziyyəti əvvəlcədən razılaşdırılmış və imzaladıqları Müqavilədə göstərilmiş şərtlərlə təhvil vermək;</p>
+<p>2.2.6. Üçüncü şəxslərin mülkiyyət və digər əmlak hüquqlarından azad olan yaşayış sahəsini təqdim etmək və buna dair təminat vermək;</p>
+<p>2.2.7. \u201CAlıcı\u201Dya  bu müqavilə üzrə nəzərdə tutulan yaşayış sahəsini <b>24 ay ərzində</b> təhvil vermək. Bu müddət yalnız tərəflərin qarşılıqlı yazılı razılığı ilə \u201CYaşayış sahəsi\u201Dnin <b>m2</b> ərazisi və ya zirzəmi hissəsi artırıldıqda uzadıla bilər. \u201CSatıcı\u201D tərəfindən \u201CYaşayış sahəsi\u201Dnin \u201CAlıcı\u201Dya təhvil verilməsi ikitərəfli qaydada imzalanmış və təsdiq edilmiş təhvil-təslim aktına uyğun olaraq həyata keçirilir.</p>
+<p>2.2.8. Bu Müqavilənin mahiyyətindən irəli gələn və qüvvədə olan qanunvericiliklə üzərinə düşən digər vəzifələri icra etmək.</p>
+
+<p class="sub-head">2.3. Alıcının hüquqları:</p>
+<p>2.3.1. \u201CYaşayış sahəsi\u201Dnin bu Müqavilə ilə nəzərdə tutulmuş satış qiymətini tam həcmdə ödədikdən və \u201CYaşayış sahəsi\u201Dnin dövlət qeydiyyatına alınması üçün bütün zəruri tədbirlər görüldükdən sonra onun öz mülkiyyətinə rəsmiləşdirilməsini \u201CSatıcı\u201Ddan tələb etmək;</p>
+<p>2.3.2. \u201CSatıcı\u201Ddan \u201CYaşayış sahəsi\u201Dni bu Müqavilədə nəzərdə tutulmuş müddətdə təhvil verilməsini tələb etmək;</p>
+<p>2.3.3. \u201CYaşayış sahəsi\u201Dnin daxili interyerini \u201CSatıcı\u201D və \u201CSatıcı\u201Dnın təyin etdiyi texniki ekspertlərlə razılaşdırmaqla dəyişdirmək;</p>
+<p>2.3.4. Bu Müqavilənin mahiyyətindən əmələ gələn və qüvvədə olan qanunvercilikdə təsbit olunmuş digər hüquqlardan vicdanla istifadə etmək.</p>
+
+<p class="sub-head">2.4. Satıcının hüquqları:</p>
+<p>2.4.1. \u201CYaşayış sahəsi\u201Dnin bu Müqavilə ilə nəzərdə tutulmuş satış qiymətinin tam həcmdə ödənilməsini \u201CAlıcı\u201Ddan tələb etmək;</p>
+<p>2.4.2. \u201CYaşayış sahəsi\u201Dnin bu Müqavilə ilə nəzərdə tutulmuş satış qiymətinin tam həcmdə ödənilmədiyi təqdirdə, onun \u201CAlıcı\u201Dnın mülkiyyətinə rəsmiləşdirilməsindən imtina etmək və bu Müqaviləni birtərəfli qaydada ləğv etmək;</p>
+<p>2.4.3. Bu Müqavilənin şərtlərinə əməl olunmadığı təqdirdə Müqavilədə nəzərdə tutulmuş məsuliyyət tədbirlərinin və həmçinin qüvvədə olan qanunvericiliklə nəzərdə tutulmuş zərərin tam həcmdə ödənilməsini \u201CAlıcı\u201Ddan tələb etmək;</p>
+<p>2.4.4. Bu Müqavilənin mahiyyətindən əmələ gələn və qüvvədə olan qanunvericilikdə təsbit olunmuş digər hüquqlardan vicdanla istifadə etmək.</p>
+
+<h3>3. TƏRƏFLƏRİN MƏSULİYYƏTİ</h3>
+
+<p>3.1. Bu Müqavilənin şərtlərinə əməl etməməyə və ya layiqincə əməl etməməyə görə, həmçinin bu Müqavilənin icrası zamanı Tərəflər bir-birinə vurduqları zərərə görə Azərbaycan Respublikasının qanunvericiliyinə uyğun surətdə tam məsuliyyət daşıyırlar.</p>
+<p>3.2. Bu Müqavilə imzalandıqdan sonra Tərəflərin biri öz müqavilə öhdəliklərini icra etmədikdə və ya lazımınca icra etmədikdə, o cümlədən icranı gecikdirdikdə o bununla bağlı digər tərəfə dəbbə pulu ödəməlidir.</p>
+<p>3.3. Tərəflər bununla razılaşırlar ki, \u201CAlıcı\u201D bu Müqavilənin 1.2-ci bəndində qeyd olunan ödəniş şərtlərini pozduqda bu zaman \u201CAlıcı\u201D ödənişin hər gecikdirildiyi gün üçün ödəniş məbləğinin 0,5 faizi məbləğində dəbbə pulu ödəməlidir.</p>
+<p>3.4. Bu Müqavilənin 1.2-ci bəndində razılaşdırılmış ödəniş qaydasına \u201CAlıcı\u201D tərəfindən riayət edilmədikdə, \u201CAlıcı\u201D bu Müqavilə üzrə öhdəliklərini yerinə yetirmədikdə və ya lazımınca yerinə yetirmədikdə \u201CSatıcı\u201D 15 (on beş) təqvim günü ərzində qabaqcadan \u201CAlıcı\u201Dya yazılı bildiriş göndərməklə ona xəbərdarlıq edir, \u201CAlıcı\u201D isə  xəbərdarlığı aldığı gündən  daha 15 (on beş) təqvim günü ərzində borcun ödənilməsi ilə bağlı hər hansı bir hərəkət etmədikdə  \u201CSatıcı\u201D bu Müqaviləyə birtərəfli qaydada xitam verə bilər.</p>
+<p>3.5. Bu müqavilənin 3.4-cü bəndində nəzərdə tutulmuş şərtlər əsasında və qaydada \u201CSatıcı\u201D bu Müqaviləyə xitam verildikdə, \u201CAlıcı\u201D tərəfindən bu Müqavilə üzrə yaşayış sahəsi ilə bağlı ödədiyi məbləğləri hesablanmış dəbbə pulu çıxılmaqla bu Müqaviləyə xitam verildiyi tarixdən 24 (iyirmi dörd) ay sonra \u201CSatıcı\u201D \u201CAlıcı\u201Dya köçürmə yolu ilə geri ödəyir.</p>
+<p>3.6. Bu müqavilənin 3.4-cü bəndində nəzərdə tutulmuş şərtlər əsasında və qaydada \u201CSatıcı\u201D bu Müqaviləyə xitam verdikdə, \u201CSatıcı\u201D \u201CAlıcı\u201Ddan əldən çıxmış faydanın (müqavilənin imzalandığı tarixdə  həmin \u201CYaşayış sahəsi\u201Dnə başqa şəxslər tərəfindən daha yüksək dəyərlə oferta (müqavilə bağlamaq təklifi) göndərildikdə) ödənilməsini də tələb edə bilər.</p>
+<p>3.7. \u201CAlıcı\u201D bu Müqavilənin 2.1.1-ci bəndinin tələbini pozduqda \u201CSatıcı\u201Dnın tələbi ilə 1000 (min) Azərbaycan manatı məbləğində cərimə ödəməlidir. Bundan əlavə, \u201CAlıcı\u201D \u201CSatıcı\u201Dnın tələbi ilə \u201CYaşayış sahəsi\u201Dnə edilmiş dəyişiklikləri öz hesabına aradan qaldırmalı və \u201CSatıcı\u201Dnın tələbinə uyğun formaya salmalıdır.</p>
+<p>3.8. \u201CYaşayış sahəsi\u201Dnin təhvil verilməsi bu Müqavilə üzrə nəzərdə tutulmuş müddətdən 12 (on iki) təqvim ayından çox gecikdirilərsə, \u201CAlıcı\u201D bu Müqaviləni birtərəfli qaydada ləğv edə bilər və həmin anadək ödədiyi məbləğlərin bu Müqavilənin ləğv edildiyi və \u201CSatıcı\u201Dya yazılı qaydada bildirdiyi tarixdən 3 (üç) təqvim ayı ərzində \u201CSatıcı\u201Ddan ödənilməsini tələb edə bilər. Belə halda bu Müqaviləyə xitam verilməsi \u201CSatıcı\u201Dnı \u201CAlıcı\u201D qarşısında ona vurduğu zərərə görə qanunvericiliklə nəzərdə tutulmuş məsuliyyətdən azad etmir.</p>
+<p>3.9. Azərbaycan Respublikası Əmlak Məsələləri Dövlət Komitəsinin yanında Daşınmaz Əmlakın Dövlət Reyestri Xidmətindən \u201CAlıcı\u201Dnın adına müvafiq çıxarış alınanadək bu müqavilə üzrə nəzərdə tutulmuş fərdi yaşayış sahəsi \u201CAlıcı\u201Dnın tələbi ilə üçüncü şəxslərin adına özgəninkiləşdirilmə prosesinin rəsmiləşdirilməsi üçün bu Müqavilənin ümumi dəyərinin 2%-i miqdarında xidmət haqqı ödənilməlidir.</p>
+${clause3_10}
+
+<h3>4. MÜBAHİSƏLƏRİN HƏLLİ</h3>
+
+<p>4.1. Tərəflər bu Müqavilədən irəli gələn istənilən mübahisələri danışıqlar yolu ilə həll etməyə çalışacaqlar. Tərəflər mübahisə yaranan gündən 30 (otuz) təqvim günü ərzində qarşılıqlı razılıq əldə edə bilməzlərsə, mübahisə, Azərbaycan Respublikasının qanunvericiliyinin tələblərinə müvafiq olaraq, Azərbaycan Respublikasının müvafiq məhkəməsində həll ediləcəkdir.</p>
+
+<h3>5. FORS MAJOR</h3>
+
+<p>5.1. Tərəflər bu Müqavilə üzrə nəzərdə tutulan öhdəliklərin qismən, yaxud da tam icra edilməməsinə görə həmin öhdəliklərin dəf edilə bilməyən qüvvənin, yaxud da həmin şəraitlərdə fövqəladə və qarşısıalınmaz nəticəsi olaraq baş verdiyi hallarda məsuliyyətdən azad edilirlər.</p>
+<p>Bu müqavilə çərçivəsində qarşısıalınmaz qüvvə anlayışına aşağıdakılar daxildir:</p>
+<p>— qarşısıalınmaz təbii fəlakətlər (yanğınlar, daşqınlar, zəlzələlər və s.);</p>
+<p>— ictimai həyatla bağlı fövqəladə vəziyyətlər (hərbi əməliyyatlar, epidemiyalar, pandemiyalar, tətillər və s.);</p>
+<p>— dövlət orqanlarının qadağanedici qərarları;</p>
+<p>— tərəflərin nəzarətindən kənarda olan digər vəziyyətlər.</p>
+<p>5.2. Bu Müqavilənin 5.1-ci bəndində göstərilən fors-major hallar bu Müqavilənin müddətinin həmin halların mövcud olduğu müddət qədər uzadılmasına səbəb olur.</p>
+<p>5.3. Fors-major halların 90 (doxsan) gündən artıq müddətdə davam etdiyi təqdirdə Tərəflərdən hər biri digər tərəfi yazılı qaydada xəbərdar etməklə hazırki Müqaviləyə xitam vermək hüququna malikdir və bu halda hər hansı bir kompensasiya ödənilmir.</p>
+
+<h3>6. DİGƏR ŞƏRTLƏR</h3>
+
+<p>6.1. Bu Müqavilə Tərəflərin tam razılığını əks edir və bu Müqavilədən əvvəl bütün yazılı və şifahi razılaşmalar etibarsız sayılır.</p>
+<p>6.2. Tərəflərin maliyyə vəziyyəti haqqında hər hansı bir məlumat və bu Müqavilənin şərtlərindən irəli gələn və üçüncü şəxslərlə bu Müqavilənin şərtləri daxilində hər hansı bir hərəkətin həyata keçirilməsi konfidensiallıq əhəmiyyəti daşıyır.</p>
+<p>6.3. Bu Müqaviləyə ediləcək bütün dəyişikliklər və əlavələr onların yazılı şəkildə həyata keçirildiyi, tərəflərin imzaladığı və möhürlə (mövcud olduğu təqdirdə) təsdiq edildiyi şərtlər çərçivəsində qüvvəyə minmiş olur. Tələb olunan qaydada rəsmiləşdirilmiş bütün dəyişikliklər və əlavələr bu Müqavilənin ayrılmaz tərkib hissəsi hesab edilir.</p>
+${clause6_4}
+${clause6_5}
+<p>6.6. Tərəflər özlərinin bu Müqavilədə göstərilən ünvanlarının və sair məlumatlarının dəyişməsi hallarında bu haqda digər tərəfə ağlabatan ən qısa zaman çərçivəsində hər bir halda 10 təqvim günündən gec olmamaqla məlumat verməlidir.</p>
+<p>6.7. Tərəflərdən hər biri bu Müqavilə bağlanarkən və bu Müqavilədən irəli gələn öhdəliklərin yerinə yetirilməsi zamanı onlara məlum olmuş məxfi məlumatları Azərbaycan Respublikasının mövcud qanunvericiliyi ilə nəzərdə tutulmuş hallar istisna olmaq şərtilə heç bir vəchlə yaymamaq barədə öz üzərinə öhdəlik götürürlər.</p>
+<p>6.8. Tərəflər bu Müqavilənin şərtlərinin yerinə yetirilməməsinə və ya lazımi qaydada icra olunmamasına görə Azərbaycan Respublikasının mövcud qanunvericiliyinə müvafiq məsuliyyət daşıyırlar.</p>
+<p>6.9. Bu Müqavilə imzalandığı tarixdən qüvvəyə minir və tərəflərin öz öhdəliklərinin yerinə yetirilməsinə qədər hüquqi qüvvəsini saxlayır.</p>
+
+<div class="requisites">
+    <p><b>Tərəflərin rekvizitləri və imzaları:</b></p>
+
+    <div class="req-grid">
+        <div>
+            <b>\u201CSatıcı\u201D</b><br>
+            <b>\u201CNN QRUP\u201D MMC</b><br>
+            <b>Ünvan:</b> Bakı şəhəri, Xarici Dairəvi yolu 10, Korpus 18<br>
+            <b>VÖEN:</b> 1500597761<br>
+            <b>Bank:</b> Yelo Bank ASC Baş ofis/MXM<br>
+            <b>VÖEN:</b> 9900014901<br>
+            <b>Kod:</b> 507064<br>
+            <b>H/H:</b> AZ43NICB00604543360001A40030<br>
+            <b>M/h:</b> AZ98NABZ01350100000000042944<br>
+            <b>SWIFT:</b> NICBAZ22<br><br>
+            <b>Direktor: Nəsibov Xəyal Davud oğlu</b><br><br>
+            ________________________________
+        </div>
+        <div>
+            <b>\u201CAlıcı\u201D</b><br>
+            ${esc(c.buyer_full_name || '')}<br>
+            <b>Şəxsiyyət vəsiqəsi seriyası: Ş\\V:</b> ${esc(idComposite)}<br>
+            <b>Fin:</b> ${esc(c.buyer_fin || '')}<br>
+            <b>Əlaqə nömrəsi:</b> ${esc(c.buyer_phone || '')}<br>
+            <b>Elektron poçt hesabı:</b> ${esc(c.buyer_email || '')}<br>
+            <b>Ünvan:</b> ${esc(c.buyer_address || '')}<br><br>
+            ________________________________
+        </div>
+    </div>
+</div>
+
+<div class="page-break"></div>
+<h3>DAŞINMAZ  ƏMLAKIN<br>ALQI-SATQI MÜQAVİLƏSİ NN ${contractNum}<br>ƏLAVƏ №: 1</h3>
+<p>Alqı-satqı müqaviləsində nəzərdə tutulan yaşayış sahəsi <b>${areaField}</b> m2 təşkil edən <b>${houseField}</b> saylı yaşayış sahəsi aşağıda göstərilmişdir:</p>
+<div style="height: 300px; border: 1px dashed #aaa; display:flex; align-items:center; justify-content:center; color:#888;">
+    (Ərazi planı / План объекта)
+</div>
+<div class="signatures">
+    <div><b>\u201CSatıcı\u201D</b><br><b>\u201CNN QRUP\u201D MMC</b><br><br>________________________________</div>
+    <div><b>\u201CAlıcı\u201D</b><br>${esc(c.buyer_full_name || '')}<br><br>________________________________</div>
+</div>
+
+${appendix2}
+
+</body>
+</html>`;
+};
+</script>

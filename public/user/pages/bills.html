@@ -1,0 +1,455 @@
+<section id="bills" class="user-bills-section">
+    <div class="user-bills-card">
+        <div class="user-bills-header">
+            <h2 data-i18n="user_bills_title">Мои счета</h2>
+            <div class="user-bills-filters">
+                <div class="user-bills-filter-group">
+                    <label data-i18n="user_bills_status_label">Статус</label>
+                    <div class="user-bills-status-multiselect" id="userBillsStatusMultiselect">
+                        <button type="button" class="status-multiselect-toggle" id="userBillsStatusToggle">
+                            <!-- Без data-i18n: иначе applyLanguage/reapplyAutoTranslations затирают подпись обратно в «Все» -->
+                            <span id="userBillsStatusLabel">Все</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="status-multiselect-dropdown" id="userBillsStatusGroup">
+                            <label class="status-checkbox">
+                                <input type="checkbox" class="user-status-checkbox" value="all" checked>
+                                <span data-i18n="user_bills_status_all">Все</span>
+                            </label>
+                            <label class="status-checkbox">
+                                <input type="checkbox" class="user-status-checkbox" value="DRAFT">
+                                <span data-i18n="status_draft" data-status-value="DRAFT">DRAFT</span>
+                            </label>
+                            <label class="status-checkbox">
+                                <input type="checkbox" class="user-status-checkbox" value="ISSUED" checked>
+                                <span data-i18n="status_issued" data-status-value="ISSUED">ISSUED</span>
+                            </label>
+                            <label class="status-checkbox">
+                                <input type="checkbox" class="user-status-checkbox" value="PARTIAL" checked>
+                                <span data-i18n="status_partial" data-status-value="PARTIAL">PARTIAL</span>
+                            </label>
+                            <label class="status-checkbox">
+                                <input type="checkbox" class="user-status-checkbox" value="PAID">
+                                <span data-i18n="status_paid" data-status-value="PAID">PAID</span>
+                            </label>
+                            <label class="status-checkbox">
+                                <input type="checkbox" class="user-status-checkbox" value="OVERPAID">
+                                <span data-i18n="status_overpaid" data-status-value="OVERPAID">OVERPAID</span>
+                            </label>
+                            <label class="status-checkbox">
+                                <input type="checkbox" class="user-status-checkbox" value="CANCELED">
+                                <span data-i18n="status_canceled" data-status-value="CANCELED">CANCELED</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="user-bills-table-wrapper">
+            <table class="user-bills-table">
+                <thead>
+                    <tr>
+                        <th data-i18n="user_bills_th_period">Период</th>
+                        <th data-i18n="user_bills_th_house">Дом</th>
+                        <th data-i18n="user_bills_th_number">№</th>
+                        <th data-i18n="user_bills_th_status">Статус</th>
+                        <th data-i18n="user_bills_th_total">Итого</th>
+                        <th data-i18n="user_bills_th_paid_remaining">Оплачено / Остаток</th>
+                        <th data-i18n="user_bills_th_due_date">Срок оплаты</th>
+                        <th data-i18n="user_bills_th_actions">Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="billsTableBody">
+                    <!-- Data will be loaded dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<script>
+    (function() {
+        'use strict';
+        const API_BASE_URL = window.getApiBase ? window.getApiBase() : (window.API_BASE_URL || window.BACKEND_API_BASE || 'http://localhost:8000');
+        
+        // Если пришли со страницы оплаты, там могли сохранить:
+        // - список id счетов, которые нужно показать (например, «Несколько счетов (3)»)
+        // - набор статусов, которые надо сразу отметить (ISSUED/PARTIAL)
+        let initialFilterInvoiceIds = null;
+        let initialFilterStatuses = null;
+        const SYSTEM_BILLS_FILTER_TTL_MS = 2 * 60 * 1000;
+        try {
+            const raw = sessionStorage.getItem('billsFilterInvoiceIds');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed) && parsed.length) {
+                    initialFilterInvoiceIds = parsed.map(id => Number(id)).filter(id => !Number.isNaN(id));
+                }
+            }
+            const rawStatuses = sessionStorage.getItem('billsFilterStatuses');
+            if (rawStatuses) {
+                const parsedStatuses = JSON.parse(rawStatuses);
+                if (Array.isArray(parsedStatuses) && parsedStatuses.length) {
+                    initialFilterStatuses = parsedStatuses.filter(Boolean);
+                }
+            }
+            const rawMeta = sessionStorage.getItem('billsSystemFilterMeta');
+            let isFreshSystemFilter = false;
+            if (rawMeta) {
+                try {
+                    const meta = JSON.parse(rawMeta);
+                    const ts = Number(meta?.ts || 0);
+                    if (Number.isFinite(ts) && ts > 0) {
+                        isFreshSystemFilter = (Date.now() - ts) <= SYSTEM_BILLS_FILTER_TTL_MS;
+                    }
+                } catch (_) {
+                    isFreshSystemFilter = false;
+                }
+            }
+
+            // Применяем предустановленный фильтр только если он свежий системный
+            // (например, переход со страницы оплаты), иначе сбрасываем к "Все".
+            if (!isFreshSystemFilter) {
+                initialFilterStatuses = null;
+                initialFilterInvoiceIds = null;
+            }
+
+            // Всегда очищаем после чтения — фильтр одноразовый.
+            sessionStorage.removeItem('billsFilterInvoiceIds');
+            sessionStorage.removeItem('billsFilterStatuses');
+            sessionStorage.removeItem('billsSystemFilterMeta');
+        } catch (e) {
+            console.warn('Failed to parse billsFilterInvoiceIds from sessionStorage', e);
+            sessionStorage.removeItem('billsFilterInvoiceIds');
+            sessionStorage.removeItem('billsFilterStatuses');
+            sessionStorage.removeItem('billsSystemFilterMeta');
+        }
+        
+        // Wait for DOM to be ready
+        function initBillsPage() {
+            const statusMultiselect = document.getElementById('userBillsStatusMultiselect');
+            const statusGroup = document.getElementById('userBillsStatusGroup');
+            const statusToggle = document.getElementById('userBillsStatusToggle');
+            const statusLabel = document.getElementById('userBillsStatusLabel');
+            const tableBody = document.getElementById('billsTableBody');
+            
+            if (!statusMultiselect || !statusGroup || !statusToggle || !statusLabel || !tableBody) {
+                console.error('Required elements not found');
+                return;
+            }
+            
+            function billsPageLang() {
+                if (typeof window.getUiLanguage === 'function') return window.getUiLanguage();
+                try {
+                    return localStorage.getItem('language') || 'az';
+                } catch (e) {
+                    return 'az';
+                }
+            }
+
+            function translateStatusKey(i18nKey) {
+                const lang = billsPageLang();
+                return (window.i18n && typeof window.i18n.translate === 'function')
+                    ? window.i18n.translate(i18nKey, lang)
+                    : i18nKey;
+            }
+
+            function getSelectedStatuses() {
+                const checked = Array.from(
+                    statusGroup.querySelectorAll('.user-status-checkbox:checked')
+                ).map(cb => cb.value);
+                if (!checked.length || checked.includes('all')) {
+                    return [];
+                }
+                return checked;
+            }
+
+            function updateStatusLabel() {
+                const checkedBoxes = Array.from(
+                    statusGroup.querySelectorAll('.user-status-checkbox:checked')
+                );
+                if (!checkedBoxes.length || checkedBoxes.some(cb => cb.value === 'all')) {
+                    statusLabel.textContent = translateStatusKey('user_bills_status_all');
+                    return;
+                }
+                const names = checkedBoxes.map(cb => {
+                    const span = cb.nextElementSibling;
+                    const key = span && span.getAttribute('data-i18n');
+                    if (key) return translateStatusKey(key);
+                    return (span && span.textContent ? span.textContent.trim() : '') || cb.value;
+                });
+                if (names.length <= 3) {
+                    statusLabel.textContent = names.join(', ');
+                } else {
+                    statusLabel.textContent = `${names.slice(0, 2).join(', ')} +${names.length - 2}`;
+                }
+            }
+
+            window._updateBillsStatusFilterLabel = updateStatusLabel;
+            if (!window.__billsStatusLabelLangListener) {
+                window.__billsStatusLabelLangListener = true;
+                window.addEventListener('languageChanged', () => {
+                    if (typeof window._updateBillsStatusFilterLabel === 'function') {
+                        window._updateBillsStatusFilterLabel();
+                    }
+                });
+            }
+
+            // Load invoices from backend
+            async function loadInvoices(statuses = []) {
+            try {
+                const url = `${API_BASE_URL}/api/resident/invoices`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/';
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                let list = data.invoices || [];
+
+                // Если пришёл предустановленный список id счетов из страницы оплаты —
+                // показываем только эти счета (например, «Несколько счетов (3)»).
+                // Применяем ОДИН раз, затем сбрасываем initialFilterInvoiceIds,
+                // чтобы при последующих переходах фильтр не залипал.
+                if (initialFilterInvoiceIds && initialFilterInvoiceIds.length) {
+                    list = list.filter(inv => initialFilterInvoiceIds.includes(inv.id));
+                    initialFilterInvoiceIds = null;
+                }
+
+                // Фильтр по множеству статусов на клиенте
+                if (statuses && statuses.length) {
+                    list = list.filter(inv => statuses.includes(inv.status));
+                }
+
+                renderInvoices(list);
+            } catch (error) {
+                console.error('Error loading invoices:', error);
+                tableBody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Не удалось загрузить данные. Проверьте подключение к серверу.</td></tr>';
+                }
+            }
+
+            // Render invoices in table
+            function renderInvoices(invoices) {
+            if (!invoices || invoices.length === 0) {
+                const lang = localStorage.getItem('language') || 'ru';
+                const emptyText = window.i18n?.translate?.('user_bills_empty', lang) || 'Счетов не найдено';
+                tableBody.innerHTML = `<tr><td colspan="8" class="text-center text-muted" data-i18n="user_bills_empty">${emptyText}</td></tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = invoices.map(inv => {
+                // Get current language
+                const lang = localStorage.getItem('language') || 'ru';
+                const locale = lang === 'az' ? 'az-AZ' : lang === 'en' ? 'en-US' : 'ru-RU';
+                
+                // Format period
+                const monthKeys = [
+                    'month_january', 'month_february', 'month_march', 'month_april',
+                    'month_may', 'month_june', 'month_july', 'month_august',
+                    'month_september', 'month_october', 'month_november', 'month_december'
+                ];
+                const monthName = window.i18n?.translate?.(monthKeys[inv.period_month - 1], lang) ||
+                    ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                     'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'][inv.period_month - 1];
+                let periodText = `${monthName} ${inv.period_year}`;
+                if (inv.period_dates && inv.period_dates.from && inv.period_dates.to) {
+                    periodText = inv.period_dates.from === inv.period_dates.to
+                        ? inv.period_dates.to
+                        : `${inv.period_dates.from} - ${inv.period_dates.to}`;
+                } else if (inv.period_dates && inv.period_dates.to) {
+                    periodText = inv.period_dates.to;
+                }
+
+                // Format status
+                const statusClass = getStatusClass(inv.status);
+                const statusKey = `status_${inv.status.toLowerCase()}`;
+                const statusText = window.i18n?.translate?.(statusKey, lang) || inv.status;
+
+                // Format amounts
+                const totalFormatted = formatCurrency(inv.amount_total);
+                const paidFormatted = formatCurrency(inv.paid_amount);
+                const remainingFormatted = formatCurrency(inv.remaining_amount);
+
+                // Format due date
+                const dueDateText = inv.due_date 
+                    ? new Date(inv.due_date).toLocaleDateString(locale)
+                    : '—';
+
+                // Invoice number
+                const invoiceNumber = inv.number || '—';
+                
+                // Get translations for paid and remaining
+                const paidLabel = window.i18n?.translate?.('user_bills_paid_label', lang) || 'Оплачено {amount}';
+                const remainingLabel = window.i18n?.translate?.('user_bills_remaining_label', lang) || 'Остаток {amount}';
+                const paidText = paidLabel.replace('{amount}', paidFormatted);
+                const remainingText = remainingLabel.replace('{amount}', remainingFormatted);
+
+                const periodAttrs = (inv.period_dates && inv.period_dates.from && inv.period_dates.to)
+                    ? `data-period-from="${inv.period_dates.from}" data-period-to="${inv.period_dates.to}"`
+                    : `data-period-month="${inv.period_month}" data-period-year="${inv.period_year}"`;
+
+                return `
+                    <tr>
+                        <td ${periodAttrs}>${periodText}</td>
+                        <td>${inv.resident_code}</td>
+                        <td>${invoiceNumber}</td>
+                        <td><span class="user-bill-status ${statusClass}" data-status="${inv.status}">${statusText}</span></td>
+                        <td class="user-bill-amount">${totalFormatted}</td>
+                        <td>
+                            <span class="user-bill-paid" data-paid-amount="${inv.paid_amount}">${paidText}</span>
+                            <span class="user-bill-remaining" data-remaining-amount="${inv.remaining_amount}">${remainingText}</span>
+                        </td>
+                        <td data-due-date="${inv.due_date || ''}">${dueDateText}</td>
+                        <td>
+                            <button class="user-bill-open-btn" data-user-route-target="invoice" data-invoice-id="${inv.id}" data-i18n="user_bills_open_btn">${window.i18n?.translate?.('user_bills_open_btn', lang) || 'Открыть'}</button>
+                            <button class="user-bill-pdf-btn" type="button" data-invoice-id="${inv.id}">PDF</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            }
+
+            // Get CSS class for status
+            function getStatusClass(status) {
+            const statusMap = {
+                'PAID': 'paid',
+                'ISSUED': 'issued',
+                'PARTIAL': 'partial',
+                'DRAFT': 'draft',
+                'OVERPAID': 'overpaid',
+                'CANCELED': 'canceled'
+            };
+            return statusMap[status] || '';
+            }
+
+            // Format currency
+            function formatCurrency(amount) {
+            const lang = localStorage.getItem('language') || 'ru';
+            const locale = lang === 'az' ? 'az-AZ' : lang === 'en' ? 'en-US' : 'ru-RU';
+            return new Intl.NumberFormat(locale, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+            }
+
+            // Handle status change - apply filter immediately
+            statusGroup.addEventListener('change', (e) => {
+                const target = e.target;
+                if (!(target instanceof HTMLInputElement) || target.type !== 'checkbox') return;
+
+                const allCb = statusGroup.querySelector('.user-status-checkbox[value="all"]');
+                const otherCbs = Array.from(
+                    statusGroup.querySelectorAll('.user-status-checkbox')
+                ).filter(cb => cb.value !== 'all');
+
+                if (target.value === 'all') {
+                    // Клик по чекбоксу "Все"
+                    if (target.checked) {
+                        // Если выбрали "Все" — отметить ВСЕ статусы
+                        statusGroup.querySelectorAll('.user-status-checkbox').forEach(cb => {
+                            cb.checked = true;
+                        });
+                    } else {
+                        // Если сняли "Все" — снять ВСЕ статусы
+                        statusGroup.querySelectorAll('.user-status-checkbox').forEach(cb => {
+                            cb.checked = false;
+                        });
+                    }
+                } else {
+                    // Если сняли какой‑то статус — снять "Все"
+                    if (!target.checked && allCb && allCb.checked) {
+                        allCb.checked = false;
+                    }
+                    // Если все конкретные статусы отмечены — автоматически отметить "Все"
+                    if (allCb && otherCbs.length && otherCbs.every(cb => cb.checked)) {
+                        allCb.checked = true;
+                    }
+                }
+
+                const statuses = getSelectedStatuses();
+                console.log('Status changed to:', statuses);
+                loadInvoices(statuses);
+                updateStatusLabel();
+            });
+
+            // Toggle dropdown open/close
+            statusToggle.addEventListener('click', () => {
+                statusMultiselect.classList.toggle('open');
+            });
+
+            // Close dropdown on outside click
+            document.addEventListener('click', (e) => {
+                if (!statusMultiselect.contains(e.target)) {
+                    statusMultiselect.classList.remove('open');
+                }
+            });
+
+            // Handle PDF button clicks (using event delegation)
+            document.addEventListener('click', (e) => {
+                const pdfBtn = e.target.closest('.user-bill-pdf-btn');
+                if (pdfBtn) {
+                    e.preventDefault();
+                    const invoiceId = pdfBtn.getAttribute('data-invoice-id');
+                    if (invoiceId) {
+                        // Store invoice ID in sessionStorage for print page
+                        sessionStorage.setItem('printInvoiceId', invoiceId);
+                        sessionStorage.setItem('currentInvoiceId', invoiceId);
+                        // Open print page with invoice ID in URL
+                        window.open(`/user/invoice-print.html?id=${invoiceId}`, '_blank', 'noopener');
+                    }
+                }
+            });
+
+            // Начальное состояние фильтра:
+            // 1) если пришли со страницы оплаты и есть initialFilterStatuses (ISSUED/PARTIAL),
+            //    отмечаем только их и сразу фильтруем;
+            // 2) во всех остальных случаях отмечена только "Все".
+
+            if (initialFilterStatuses && initialFilterStatuses.length) {
+                // Сначала снимаем "Все" и остальные
+                statusGroup.querySelectorAll('.user-status-checkbox').forEach(cb => {
+                    cb.checked = false;
+                });
+                // Отмечаем нужные статусы
+                statusGroup.querySelectorAll('.user-status-checkbox').forEach(cb => {
+                    if (initialFilterStatuses.includes(cb.value)) {
+                        cb.checked = true;
+                    }
+                });
+                const statuses = getSelectedStatuses();
+                loadInvoices(statuses);
+                initialFilterStatuses = null;
+                initialFilterInvoiceIds = null;
+            } else {
+                // По умолчанию только "Все" включено
+                statusGroup.querySelectorAll('.user-status-checkbox').forEach(cb => {
+                    cb.checked = (cb.value === 'all');
+                });
+                loadInvoices();
+            }
+
+            updateStatusLabel();
+        }
+        
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initBillsPage);
+        } else {
+            // DOM already loaded
+            setTimeout(initBillsPage, 100);
+        }
+    })();
+</script>

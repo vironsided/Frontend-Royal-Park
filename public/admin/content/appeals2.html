@@ -1,0 +1,1135 @@
+<link rel="stylesheet" href="/css/appeals2.css">
+<style>
+    /* Horizontal pagination buttons */
+    .pagination-controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .pagination-pages {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+</style>
+
+<div class="dashboard-content">
+    <div>
+        <div class="card">
+            <div class="card-body">
+                <div class="appeals-header">
+                    <h4 class="card-title mb-0" data-i18n="nav_appeals">Обращения жителей</h4>
+                    <div class="appeals-filter-group">
+                        <span data-i18n="status">Статус:</span>
+                        <select id="appealsStatusFilter" class="appeals-filter-select">
+                            <option value="all" data-i18n="all">Все</option>
+                            <option value="UNREAD" data-i18n="user_appeal_status_unread">Не прочитано</option>
+                            <option value="READ" data-i18n="user_appeal_status_read">Прочитано</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th data-i18n="date">Создано</th>
+                                <th data-i18n="residents_filter_block">Блок</th>
+                                <th data-i18n="residents_col_house">Дом</th>
+                                <th data-i18n="resident">Житель</th>
+                                <th data-i18n="phone">Телефон</th>
+                                <th data-i18n="email">E-mail</th>
+                                <th data-i18n="status">Статус</th>
+                                <th class="text-end" data-i18n="actions">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appealsTableBody">
+                            <tr>
+                                <td colspan="8" class="text-center" data-i18n="loading">Загрузка данных...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+
+
+                <div class="appeals-empty" id="appealsEmptyState" style="display: none;">
+                    <i class="bi bi-inbox" style="font-size:2rem;"></i>
+                    <p class="mt-3 mb-0">Обращений нет</p>
+                </div>
+            </div>
+            <!-- Pagination -->
+            <div class="table-pagination">
+                <div class="pagination-controls" id="appealPaginationControls">
+                    <button class="btn-pagination" onclick="goToAppealPage('prev')" disabled id="appealPrevBtn">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </button>
+                    <div id="appealPageButtons" class="pagination-pages"></div>
+                    <button class="btn-pagination" onclick="goToAppealPage('next')" disabled id="appealNextBtn">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </button>
+                </div>
+                <div class="pagination-info">
+                    <span><span data-i18n="pagination_page">Стр.</span> <span id="appealCurrentPage">1</span> <span data-i18n="pagination_of">из</span> <span id="appealTotalPages">1</span> · <span data-i18n="pagination_total">всего</span>
+                        <span id="appealTotalItems">0</span></span>
+                </div>
+                <div class="pagination-per-page">
+                    <span data-i18n="pagination_on">На</span>
+                    <span data-i18n="pagination_per_page">странице:</span>
+                    <div class="custom-pag-select" id="customAppealItemsPerPage">
+                        <select id="appealItemsPerPage" onchange="changeAppealItemsPerPage()" style="display: none;">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <div class="select-btn">
+                            <span class="select-text">25</span>
+                            <span class="arrow">▾</span>
+                        </div>
+                        <div class="select-options" style="background: rgba(36, 40, 49, 0.95) !important">
+                            <div class="select-option" data-value="10">10</div>
+                            <div class="select-option selected" data-value="25">25</div>
+                            <div class="select-option" data-value="50">50</div>
+                            <div class="select-option" data-value="100">100</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="appeal-modal-overlay" id="appealModal">
+    <div class="appeal-modal">
+        <div class="appeal-modal-header">
+            <h5 class="mb-0" data-i18n="user_appeal_modal_title">Обращение</h5>
+            <button type="button" class="btn-close btn-close-white" id="appealModalClose"></button>
+        </div>
+        <div class="appeal-modal-body">
+            <div class="appeal-info-row">
+                <span data-i18n="user_appeals_house">Дом</span>
+                <strong id="modalApartment">—</strong>
+            </div>
+            <div class="appeal-info-row">
+                <span data-i18n="resident">Житель</span>
+                <strong id="modalResident">—</strong>
+            </div>
+            <div class="appeal-info-row">
+                <span data-i18n="residents_col_contacts">Контакты</span>
+                <strong id="modalContacts">— / —</strong>
+            </div>
+            <div>
+                <small class="text-muted text-uppercase" data-i18n="invoices_description">Описание</small>
+                <p class="mb-0 mt-1" id="modalDescription">—</p>
+            </div>
+            <div id="appealWorkflowSection" class="mt-3 pt-3 border-top border-secondary" style="border-opacity: 0.2 !important;">
+                <p class="small text-muted mb-2" id="appealWorkflowHint" data-i18n="appeals_read_require_workflow">Чтобы отметить обращение прочитанным, выберите стадию и сохраните.</p>
+                <div class="mb-2">
+                    <label class="form-label small mb-1" for="appealWorkflowSelect" data-i18n="appeals_workflow_label">Стадия обработки</label>
+                    <select id="appealWorkflowSelect" class="form-select form-select-sm appeals-filter-select" style="max-width: 100%;"></select>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small mb-1" for="appealStaffMessage" data-i18n="appeals_staff_message_label">Сообщение для жителя</label>
+                    <textarea id="appealStaffMessage" class="form-control form-control-sm" rows="3" data-i18n-placeholder="appeals_staff_message_placeholder" placeholder="Кратко: что происходит дальше (необязательно)"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="appeal-modal-footer">
+            <button type="button" class="btn btn-primary" id="appealSaveWorkflow" data-i18n="appeals_save_workflow">Сохранить</button>
+            <button class="btn btn-outline-light" id="appealModalDismiss" data-i18n="close">Закрыть</button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно подтверждения удаления -->
+<div class="appeal-modal-overlay" id="deleteConfirmModal" style="display: none;">
+    <div class="appeal-modal" style="width: min(400px, 90vw);">
+        <div class="appeal-modal-header">
+            <h5 class="mb-0" data-i18n="confirm_action_title">Подтвердите действие</h5>
+            <button type="button" class="btn-close btn-close-white" id="deleteConfirmModalClose"></button>
+        </div>
+        <div class="appeal-modal-body">
+            <p class="mb-0" id="deleteConfirmMessage" data-i18n="appeals_delete_confirm">Вы уверены, что хотите удалить это обращение?</p>
+        </div>
+        <div class="appeal-modal-footer" style="justify-content: flex-end; gap: 0.75rem;">
+            <button class="btn btn-outline-light" id="deleteConfirmCancel" data-i18n="cancel">Отмена</button>
+            <button class="btn btn-primary" id="deleteConfirmOk">OK</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        'use strict';
+
+        const API_BASE = window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BASE || 'http://localhost:8000');
+        const state = {
+            notifications: [],
+            currentNotification: null,
+            notificationOpenedFromUrl: false // Флаг, что модальное окно уже было открыто из URL
+        };
+
+        const t = (key, fallback = '') =>
+            (window.i18n && typeof window.i18n.translate === 'function')
+                ? window.i18n.translate(key)
+                : (fallback || key);
+
+        // Pagination state
+        let paginationState = {
+            currentPage: 1,
+            itemsPerPage: 25,
+            totalItems: 0,
+            totalPages: 1
+        };
+
+        const statusStyles = {
+            READ: { textKey: 'user_appeal_status_read', className: 'bg-success' },
+            UNREAD: { textKey: 'user_appeal_status_unread', className: 'bg-warning text-dark' }
+        };
+
+        const APPEAL_WORKFLOW_CODES = [
+            'UNDER_REVIEW',
+            'AWAITING_CONTACT',
+            'TECH_DISPATCHED',
+            'IN_PROGRESS',
+            'AWAITING_RESIDENT',
+            'RESOLVED',
+            'CLOSED'
+        ];
+
+        let tableBody, emptyState, statusSelect, modalOverlay;
+        let modalResident, modalApartment, modalContacts, modalDescription;
+        let appealWorkflowSection, appealWorkflowHint, appealWorkflowSelect, appealStaffMessage, appealSaveWorkflow;
+        let deleteConfirmModal, deleteConfirmMessage, deleteConfirmOk, deleteConfirmCancel, deleteConfirmClose;
+        let pendingDeleteId = null;
+        let appealWorkflowSaveInProgress = false;
+        let _appealsTableClickHandler = null;
+        let _appealModalOverlayClickHandler = null;
+        let _appealModalCloseHandler = null;
+        let _appealModalDismissHandler = null;
+        let _appealsStatusFilterHandler = null;
+
+        function cacheDom() {
+            tableBody = document.getElementById('appealsTableBody');
+            emptyState = document.getElementById('appealsEmptyState');
+            statusSelect = document.getElementById('appealsStatusFilter');
+            modalOverlay = document.getElementById('appealModal');
+            modalResident = document.getElementById('modalResident');
+            modalApartment = document.getElementById('modalApartment');
+            modalContacts = document.getElementById('modalContacts');
+            modalDescription = document.getElementById('modalDescription');
+            appealWorkflowSection = document.getElementById('appealWorkflowSection');
+            appealWorkflowHint = document.getElementById('appealWorkflowHint');
+            appealWorkflowSelect = document.getElementById('appealWorkflowSelect');
+            appealStaffMessage = document.getElementById('appealStaffMessage');
+            appealSaveWorkflow = document.getElementById('appealSaveWorkflow');
+
+            // Элементы модального окна подтверждения удаления
+            deleteConfirmModal = document.getElementById('deleteConfirmModal');
+            deleteConfirmMessage = document.getElementById('deleteConfirmMessage');
+            deleteConfirmOk = document.getElementById('deleteConfirmOk');
+            deleteConfirmCancel = document.getElementById('deleteConfirmCancel');
+            deleteConfirmClose = document.getElementById('deleteConfirmModalClose');
+        }
+
+        async function loadNotifications() {
+            try {
+                const statusValue = statusSelect?.value || 'all';
+                const statusParam = statusValue !== 'all' ? `&status=${statusValue}` : '';
+                const url = `${API_BASE}/api/notifications?scope=appeals&page=${paginationState.currentPage}&per_page=${paginationState.itemsPerPage}${statusParam}`;
+
+                console.log('Loading notifications from:', url);
+                const response = await fetch(url, { credentials: 'include' });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Notifications data received:', data);
+
+                // Handle paginated response
+                if (data.notifications && data.pagination) {
+                    state.notifications = data.notifications || [];
+
+                    // Update pagination state
+                    paginationState.totalItems = data.pagination.total || 0;
+                    paginationState.totalPages = data.pagination.last_page || 1;
+                    paginationState.currentPage = data.pagination.page || 1;
+                } else {
+                    // Fallback for non-paginated response (backward compatibility)
+                    state.notifications = data.notifications || [];
+                    paginationState.totalItems = state.notifications.length;
+                    paginationState.totalPages = 1;
+                    paginationState.currentPage = 1;
+                }
+
+                renderTable();
+                updatePaginationUI();
+
+                // Возвращаем промис для возможности ожидания
+                return Promise.resolve();
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                if (typeof showError === 'function') {
+                    showError('Ошибка загрузки обращений: ' + error.message);
+                }
+                state.notifications = [];
+                paginationState.totalItems = 0;
+                paginationState.totalPages = 1;
+                paginationState.currentPage = 1;
+                renderTable();
+                updatePaginationUI();
+                return Promise.reject(error);
+            }
+        }
+
+        function workflowLabel(code) {
+            if (!code) return '';
+            const key = 'appeal_wf_' + String(code).toLowerCase();
+            return t(key, code);
+        }
+
+        function fillAppealWorkflowSelect(selected) {
+            if (!appealWorkflowSelect) return;
+            const sel = selected || 'UNDER_REVIEW';
+            appealWorkflowSelect.innerHTML = APPEAL_WORKFLOW_CODES.map((code) => {
+                const label = workflowLabel(code);
+                return `<option value="${code}">${label}</option>`;
+            }).join('');
+            if (APPEAL_WORKFLOW_CODES.includes(sel)) {
+                appealWorkflowSelect.value = sel;
+            } else {
+                appealWorkflowSelect.value = 'UNDER_REVIEW';
+            }
+        }
+
+        function localizeNotificationText(item) {
+            const text = String(item?.message || '—');
+            const type = String(item?.notification_type || '').toUpperCase();
+            if (type !== 'TARIFF_EXPIRED') return text;
+
+            const m = text.match(/["“](.+?)["”].*?(\d{2}\.\d{2}\.\d{4})/);
+            const name = (m && m[1]) ? m[1] : (item?.related_id ? `#${item.related_id}` : '');
+            const date = (m && m[2]) ? m[2] : '';
+            const purpose = t('tariffs_purpose_construction', 'Строительство');
+            const template = t(
+                'notifications_tariff_expired_template',
+                'Срок тарифа "{name}" ({purpose}) истёк {date}. Проверьте и обновите период действия.'
+            );
+            return template
+                .replace('{name}', name || '—')
+                .replace('{purpose}', purpose)
+                .replace('{date}', date || '—');
+        }
+
+        function renderTable() {
+            if (!tableBody) {
+                console.error('Table body not found!');
+                return;
+            }
+
+            const items = state.notifications;
+
+            if (!items.length) {
+                tableBody.innerHTML = '';
+                if (emptyState) emptyState.style.display = 'block';
+                return;
+            }
+
+            if (emptyState) emptyState.style.display = 'none';
+
+            tableBody.innerHTML = items.map(notif => {
+                const status = statusStyles[notif.status] || statusStyles.UNREAD;
+                const statusText = t(status.textKey, status.textKey === 'user_appeal_status_read' ? 'Прочитано' : 'Не прочитано');
+                const block = notif.block_name || '—';
+                const home = notif.unit_number || '—';
+                const resident = notif.user_full_name || '—';
+                const phone = notif.user_phone || '—';
+                const email = notif.user_email || '—';
+                const wfLine = notif.appeal_workflow
+                    ? `<div class="appeals-workflow-subtitle">${workflowLabel(notif.appeal_workflow)}</div>`
+                    : '';
+
+                // Форматируем дату как на фотографии: отдельно дата и время
+                const dateStr = formatDateTime(notif.created_at);
+                const [datePart, timePart] = dateStr.split(', ');
+
+                return `
+                <tr>
+                    <td>
+                        <div style="font-weight: 500;">${datePart || '—'}</div>
+                        <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 2px;">${timePart || ''}</div>
+                    </td>
+                    <td style="text-align: center; font-weight: 500;">${block}</td>
+                    <td style="text-align: center; font-weight: 500;">${home}</td>
+                    <td style="font-weight: 500;">${resident}</td>
+                    <td>${phone}</td>
+                    <td>${email}</td>
+                    <td style="text-align: center;">
+                        <span class="appeals-status-badge ${status.className}" data-i18n="${status.textKey}">${statusText}</span>
+                        ${wfLine}
+                    </td>
+                    <td style="text-align: right; white-space: nowrap;">
+                        <button class="btn btn-outline-primary btn-sm" data-action="view" data-id="${notif.id}" data-i18n="action_view" style="margin-right: 0.5rem;">
+                            ${t('action_view', 'Просмотр')}
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" data-action="delete" data-id="${notif.id}" data-i18n="action_delete">
+                            ${t('action_delete', 'Удалить')}
+                        </button>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        async function viewNotification(id) {
+            try {
+                console.log('Opening notification modal for ID:', id);
+                const response = await fetch(`${API_BASE}/api/notifications/${id}?mark_read=false`, {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const notif = await response.json();
+                console.log('Notification data received:', notif);
+                state.currentNotification = notif;
+
+                const nType = String(notif.notification_type || '').toUpperCase();
+                const isAppealLike = !nType || nType === 'APPEAL';
+                if (!isAppealLike) {
+                    await fetch(`${API_BASE}/api/notifications/${id}`, { credentials: 'include' });
+                }
+
+                let block = '—';
+                let home = '—';
+                let residentName = '—';
+                let phone = '—';
+                let email = '—';
+                let message = '—';
+
+                if (notif.resident) {
+                    block = notif.resident.block || '—';
+                    home = notif.resident.unit_number || '—';
+                } else {
+                    block = notif.block_name || '—';
+                    home = notif.unit_number || '—';
+                }
+
+                if (notif.user) {
+                    residentName = notif.user.full_name || '—';
+                    phone = notif.user.phone || '—';
+                    email = notif.user.email || '—';
+                } else {
+                    residentName = notif.user_full_name || '—';
+                    phone = notif.user_phone || '—';
+                    email = notif.user_email || '—';
+                }
+
+                message = localizeNotificationText(notif);
+
+                if (modalApartment) modalApartment.textContent = `${block} / ${home}`;
+                if (modalResident) modalResident.textContent = residentName;
+                if (modalContacts) modalContacts.textContent = `${phone} / ${email}`;
+                if (modalDescription) modalDescription.textContent = message;
+
+                if (appealWorkflowSection) {
+                    const showWf = isAppealLike;
+                    appealWorkflowSection.style.display = showWf ? '' : 'none';
+                    if (showWf) {
+                        fillAppealWorkflowSelect(notif.appeal_workflow || 'UNDER_REVIEW');
+                        if (appealStaffMessage) appealStaffMessage.value = notif.staff_message || '';
+                        if (appealWorkflowHint) {
+                            appealWorkflowHint.style.display = notif.status === 'UNREAD' ? '' : 'none';
+                        }
+                        if (appealSaveWorkflow) appealSaveWorkflow.style.display = '';
+                    }
+                }
+
+                if (modalOverlay) {
+                    modalOverlay.classList.add('show');
+                    modalOverlay.style.display = 'flex';
+                } else {
+                    cacheDom();
+                    if (modalOverlay) {
+                        modalOverlay.classList.add('show');
+                        modalOverlay.style.display = 'flex';
+                    }
+                }
+
+                clearNotificationIdFromUrl();
+
+                await loadNotifications();
+            } catch (error) {
+                console.error('Error loading notification:', error);
+                if (typeof showError === 'function') {
+                    showError('Ошибка загрузки обращения: ' + error.message);
+                } else {
+                    alert('Ошибка загрузки обращения: ' + error.message);
+                }
+            }
+        }
+
+        function formatApiErrorDetail(detail) {
+            if (detail == null || detail === '') return '';
+            if (typeof detail === 'string') return detail;
+            if (Array.isArray(detail)) {
+                return detail
+                    .map((part) => {
+                        if (typeof part === 'string') return part;
+                        if (part && typeof part === 'object') {
+                            const loc = Array.isArray(part.loc) ? part.loc.join(' → ') : '';
+                            const msg = part.msg || '';
+                            return loc ? `${loc}: ${msg}` : (msg || JSON.stringify(part));
+                        }
+                        return String(part);
+                    })
+                    .filter(Boolean)
+                    .join('; ');
+            }
+            if (typeof detail === 'object') return detail.msg || JSON.stringify(detail);
+            return String(detail);
+        }
+
+        async function saveAppealWorkflowFromModal() {
+            if (appealWorkflowSaveInProgress) return;
+            const notif = state.currentNotification;
+            if (!notif || !appealWorkflowSelect) return;
+            const nType = String(notif.notification_type || '').toUpperCase();
+            const isAppealLike = !nType || nType === 'APPEAL';
+            if (!isAppealLike) return;
+
+            const wf = (appealWorkflowSelect.value || '').trim();
+            const msg = appealStaffMessage ? (appealStaffMessage.value || '').trim() : '';
+
+            appealWorkflowSaveInProgress = true;
+            if (appealSaveWorkflow) {
+                appealSaveWorkflow.disabled = true;
+            }
+            try {
+                const body = {
+                    appeal_workflow: wf,
+                    staff_message: msg || null
+                };
+                const nid = Number(notif.id);
+                if (!nid) {
+                    throw new Error(t('error_loading_data', 'Invalid notification'));
+                }
+                const resp = await fetch(`${API_BASE}/api/notifications/${nid}`, {
+                    method: 'PATCH',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                if (!resp.ok) {
+                    const errData = await resp.json().catch(() => ({}));
+                    const text = formatApiErrorDetail(errData.detail) || resp.statusText || 'HTTP ' + resp.status;
+                    throw new Error(text);
+                }
+                const updated = await resp.json();
+                state.currentNotification = updated;
+                if (typeof showSuccess === 'function') {
+                    showSuccess(t('account_profile_saved_success', 'Сохранено'));
+                }
+                await loadNotifications();
+            } catch (e) {
+                console.error(e);
+                const errMsg = e && e.message ? e.message : String(e);
+                if (typeof showError === 'function') {
+                    showError(errMsg);
+                } else {
+                    alert(errMsg);
+                }
+            } finally {
+                appealWorkflowSaveInProgress = false;
+                if (appealSaveWorkflow) {
+                    appealSaveWorkflow.disabled = false;
+                }
+            }
+        }
+
+        function showDeleteConfirm(id) {
+            pendingDeleteId = id;
+            if (deleteConfirmModal) {
+                deleteConfirmModal.style.display = 'flex';
+            }
+        }
+
+        function hideDeleteConfirm() {
+            pendingDeleteId = null;
+            if (deleteConfirmModal) {
+                deleteConfirmModal.style.display = 'none';
+            }
+        }
+
+        async function deleteNotification(id) {
+            try {
+                const url = `${API_BASE}/api/notifications/${id}`;
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                if (typeof showSuccess === 'function') {
+                    showSuccess('Обращение успешно удалено!');
+                }
+
+                hideDeleteConfirm();
+                // Reload current page to see updated list
+                await loadNotifications();
+
+                // If current page is now empty (beyond last page), go to last page
+                if (paginationState.currentPage > paginationState.totalPages && paginationState.totalPages > 0) {
+                    paginationState.currentPage = paginationState.totalPages;
+                    await loadNotifications();
+                }
+            } catch (error) {
+                console.error('Error deleting notification:', error);
+                if (typeof showError === 'function') {
+                    showError('Ошибка удаления обращения: ' + error.message);
+                }
+                hideDeleteConfirm();
+            }
+        }
+
+        function closeModal() {
+            if (modalOverlay) {
+                modalOverlay.classList.remove('show');
+                modalOverlay.style.display = 'none';
+            }
+        }
+
+        function parseAppealServerDate(value) {
+            if (!value) return null;
+            let s = String(value).trim();
+            if (!s) return null;
+
+            if (s.indexOf('T') === -1 && s.indexOf(' ') !== -1) {
+                s = s.replace(' ', 'T');
+            }
+
+            const hasTimezone = /Z$|[+-]\d{2}:?\d{2}$/.test(s);
+            if (!hasTimezone) {
+                s = `${s}Z`;
+            }
+
+            let d = new Date(s);
+            if (!isNaN(d.getTime())) {
+                return d;
+            }
+
+            const m = s.match(/(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/);
+            if (m) {
+                const year = parseInt(m[1], 10);
+                const month = parseInt(m[2], 10) - 1;
+                const day = parseInt(m[3], 10);
+                const hour = parseInt(m[4], 10);
+                const minute = parseInt(m[5], 10);
+                const second = m[6] ? parseInt(m[6], 10) : 0;
+                d = new Date(Date.UTC(year, month, day, hour, minute, second));
+            }
+
+            return isNaN(d.getTime()) ? null : d;
+        }
+
+        function formatDateTime(value) {
+            const date = parseAppealServerDate(value);
+            if (!date) return '—';
+            const lang = (localStorage.getItem('language') || 'az').toLowerCase();
+            const locale = lang === 'ru' ? 'ru-RU' : (lang === 'en' ? 'en-US' : 'az-AZ');
+            return date.toLocaleString(locale, {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function bindEvents() {
+            // Снимаем старые слушатели — иначе при повторном initAppealsPage (SPA) срабатывают дважды
+            if (tableBody && _appealsTableClickHandler) {
+                tableBody.removeEventListener('click', _appealsTableClickHandler);
+            }
+            _appealsTableClickHandler = function (event) {
+                const viewBtn = event.target.closest('[data-action="view"]');
+                const deleteBtn = event.target.closest('[data-action="delete"]');
+                if (viewBtn) {
+                    const id = parseInt(viewBtn.dataset.id, 10);
+                    viewNotification(id);
+                } else if (deleteBtn) {
+                    const id = parseInt(deleteBtn.dataset.id, 10);
+                    showDeleteConfirm(id);
+                }
+            };
+            if (tableBody) {
+                tableBody.addEventListener('click', _appealsTableClickHandler);
+            }
+
+            const closeBtn = document.getElementById('appealModalClose');
+            const dismissBtn = document.getElementById('appealModalDismiss');
+            if (closeBtn && _appealModalCloseHandler) {
+                closeBtn.removeEventListener('click', _appealModalCloseHandler);
+            }
+            if (dismissBtn && _appealModalDismissHandler) {
+                dismissBtn.removeEventListener('click', _appealModalDismissHandler);
+            }
+            _appealModalCloseHandler = closeModal;
+            _appealModalDismissHandler = closeModal;
+            if (closeBtn) closeBtn.addEventListener('click', _appealModalCloseHandler);
+            if (dismissBtn) dismissBtn.addEventListener('click', _appealModalDismissHandler);
+
+            if (appealSaveWorkflow) {
+                const newSave = appealSaveWorkflow.cloneNode(true);
+                appealSaveWorkflow.parentNode.replaceChild(newSave, appealSaveWorkflow);
+                appealSaveWorkflow = newSave;
+                appealSaveWorkflow.addEventListener('click', () => saveAppealWorkflowFromModal());
+            }
+
+            if (modalOverlay && _appealModalOverlayClickHandler) {
+                modalOverlay.removeEventListener('click', _appealModalOverlayClickHandler);
+            }
+            _appealModalOverlayClickHandler = function (event) {
+                if (event.target === modalOverlay) closeModal();
+            };
+            if (modalOverlay) {
+                modalOverlay.addEventListener('click', _appealModalOverlayClickHandler);
+            }
+
+            // Обработчики для модального окна подтверждения удаления
+            // Clone and replace elements to remove old event listeners
+            if (deleteConfirmOk) {
+                const newOk = deleteConfirmOk.cloneNode(true);
+                deleteConfirmOk.parentNode.replaceChild(newOk, deleteConfirmOk);
+                deleteConfirmOk = newOk;
+                deleteConfirmOk.addEventListener('click', () => {
+                    if (pendingDeleteId !== null) {
+                        deleteNotification(pendingDeleteId);
+                    }
+                });
+            }
+            if (deleteConfirmCancel) {
+                const newCancel = deleteConfirmCancel.cloneNode(true);
+                deleteConfirmCancel.parentNode.replaceChild(newCancel, deleteConfirmCancel);
+                deleteConfirmCancel = newCancel;
+                deleteConfirmCancel.addEventListener('click', hideDeleteConfirm);
+            }
+            if (deleteConfirmClose) {
+                const newClose = deleteConfirmClose.cloneNode(true);
+                deleteConfirmClose.parentNode.replaceChild(newClose, deleteConfirmClose);
+                deleteConfirmClose = newClose;
+                deleteConfirmClose.addEventListener('click', hideDeleteConfirm);
+            }
+            if (deleteConfirmModal) {
+                deleteConfirmModal.addEventListener('click', (event) => {
+                    if (event.target === deleteConfirmModal) {
+                        hideDeleteConfirm();
+                    }
+                });
+            }
+        }
+
+        function applyDarkThemeToSelect() {
+            const selectElement = document.getElementById('appealsStatusFilter');
+            if (selectElement) {
+                // Применить темные стили к select
+                selectElement.style.setProperty('background-color', 'rgba(31, 35, 48, 0.9)', 'important');
+                selectElement.style.setProperty('background', 'rgba(31, 35, 48, 0.9)', 'important');
+                selectElement.style.setProperty('color', '#ffffff', 'important');
+                selectElement.style.setProperty('border-color', 'rgba(102, 126, 234, 0.5)', 'important');
+
+                // Применить темные стили к option элементам
+                const options = selectElement.querySelectorAll('option');
+                options.forEach(option => {
+                    option.style.setProperty('background', '#1f2330', 'important');
+                    option.style.setProperty('background-color', '#1f2330', 'important');
+                    option.style.setProperty('color', '#ffffff', 'important');
+                });
+            }
+
+            // Инъекция CSS для темных option элементов
+            const styleId = 'appeals-select-dark-theme';
+            if (!document.getElementById(styleId)) {
+                const style = document.createElement('style');
+                style.id = styleId;
+                style.textContent = `
+                #appealsStatusFilter {
+                    background-color: rgba(31, 35, 48, 0.9) !important;
+                    background: rgba(31, 35, 48, 0.9) !important;
+                    color: #ffffff !important;
+                }
+                #appealsStatusFilter option {
+                    background: #1f2330 !important;
+                    background-color: #1f2330 !important;
+                    color: #ffffff !important;
+                }
+                #appealsStatusFilter option:checked {
+                    background: #667eea !important;
+                    background-color: #667eea !important;
+                    color: #ffffff !important;
+                }
+            `;
+                document.head.appendChild(style);
+            }
+        }
+
+        function getNotificationIdFromUrl() {
+            // Если модальное окно уже было открыто из URL, не открываем снова
+            if (state.notificationOpenedFromUrl) {
+                return null;
+            }
+
+            // Сначала проверяем глобальную переменную, установленную spa-router
+            if (window.__currentNotificationId) {
+                return window.__currentNotificationId;
+            }
+
+            // Проверяем hash для SPA роутера
+            const hash = window.location.hash;
+            if (hash.includes('?')) {
+                const hashParts = hash.split('?');
+                if (hashParts.length > 1) {
+                    const params = new URLSearchParams(hashParts[1]);
+                    const id = params.get('id');
+                    if (id) return parseInt(id);
+                }
+            }
+
+            // Проверяем обычный query string
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            if (id) return parseInt(id);
+
+            return null;
+        }
+
+        function clearNotificationIdFromUrl() {
+            // Очищаем глобальную переменную
+            if (window.__currentNotificationId) {
+                delete window.__currentNotificationId;
+            }
+
+            // Очищаем параметр id из hash
+            const hash = window.location.hash;
+            if (hash.includes('?')) {
+                const hashParts = hash.split('?');
+                const baseRoute = hashParts[0];
+                const params = new URLSearchParams(hashParts[1]);
+                params.delete('id');
+
+                // Формируем новый hash без параметра id
+                const newHash = params.toString() ? `${baseRoute}?${params.toString()}` : baseRoute;
+
+                // Обновляем URL без перезагрузки страницы
+                if (window.spaRouter) {
+                    // Используем navigate без параметра id
+                    window.spaRouter.navigate(baseRoute.slice(1)); // Убираем #
+                } else {
+                    window.location.hash = baseRoute;
+                }
+            }
+
+            // Устанавливаем флаг, что модальное окно было открыто
+            state.notificationOpenedFromUrl = true;
+        }
+
+        // Pagination Functions
+        function buildAppealPageList(current, total) {
+            if (total <= 5) {
+                return Array.from({ length: total }, (_, i) => i + 1);
+            }
+
+            const pages = new Set([1, total]);
+
+            if (current <= 3) {
+                [2, 3, 4, 5].forEach(p => pages.add(p));
+            } else if (current >= total - 2) {
+                [total - 1, total - 2, total - 3, total - 4].forEach(p => pages.add(p));
+            } else {
+                [current - 2, current - 1, current, current + 1, current + 2].forEach(p => pages.add(p));
+            }
+
+            const sorted = Array.from(pages).filter(p => p >= 1 && p <= total).sort((a, b) => a - b);
+            const result = [];
+
+            for (let i = 0; i < sorted.length; i++) {
+                const page = sorted[i];
+                result.push(page);
+                const next = sorted[i + 1];
+                if (next && next - page > 1) {
+                    result.push('dots');
+                }
+            }
+
+            return result;
+        }
+
+        function updatePaginationUI() {
+            const currentPageEl = document.getElementById('appealCurrentPage');
+            const totalPagesEl = document.getElementById('appealTotalPages');
+            const totalItemsEl = document.getElementById('appealTotalItems');
+            const prevBtn = document.getElementById('appealPrevBtn');
+            const nextBtn = document.getElementById('appealNextBtn');
+            const pagesContainer = document.getElementById('appealPageButtons');
+
+            if (currentPageEl) currentPageEl.textContent = paginationState.currentPage;
+            if (totalPagesEl) totalPagesEl.textContent = paginationState.totalPages;
+            if (totalItemsEl) totalItemsEl.textContent = paginationState.totalItems;
+            if (prevBtn) prevBtn.disabled = paginationState.currentPage <= 1;
+            if (nextBtn) nextBtn.disabled = paginationState.currentPage >= paginationState.totalPages;
+
+            if (!pagesContainer) return;
+            pagesContainer.innerHTML = '';
+
+            const pages = buildAppealPageList(paginationState.currentPage, paginationState.totalPages);
+            pages.forEach(p => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-pagination';
+
+                if (p === 'dots') {
+                    btn.textContent = '...';
+                    btn.disabled = true;
+                    btn.classList.add('dots');
+                } else {
+                    btn.textContent = p;
+                    if (p > paginationState.totalPages) {
+                        btn.disabled = true;
+                    } else {
+                        btn.onclick = () => {
+                            if (p !== paginationState.currentPage) {
+                                goToAppealPage(p);
+                            }
+                        };
+                    }
+                    if (p === paginationState.currentPage) {
+                        btn.classList.add('active');
+                        btn.setAttribute('aria-current', 'page');
+                    }
+                }
+
+                pagesContainer.appendChild(btn);
+            });
+        }
+
+        window.goToAppealPage = function (page) {
+            if (page === 'prev') {
+                if (paginationState.currentPage > 1) {
+                    paginationState.currentPage--;
+                    loadNotifications();
+                }
+            } else if (page === 'next') {
+                if (paginationState.currentPage < paginationState.totalPages) {
+                    paginationState.currentPage++;
+                    loadNotifications();
+                }
+            } else if (typeof page === 'number') {
+                paginationState.currentPage = page;
+                loadNotifications();
+            }
+        };
+
+        window.changeAppealItemsPerPage = function () {
+            const select = document.getElementById('appealItemsPerPage');
+            if (select) {
+                paginationState.itemsPerPage = parseInt(select.value);
+                paginationState.currentPage = 1;
+                loadNotifications();
+                updateCustomAppealPaginationDropdown();
+            }
+        };
+
+        function updateCustomAppealPaginationDropdown() {
+            const select = document.getElementById('appealItemsPerPage');
+            const customSelect = document.getElementById('customAppealItemsPerPage');
+            if (!select || !customSelect) return;
+
+            const value = select.value;
+            const selectText = customSelect.querySelector('.select-text');
+            const options = customSelect.querySelectorAll('.select-option');
+
+            if (selectText) selectText.textContent = value;
+            options.forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.getAttribute('data-value') === value) {
+                    opt.classList.add('selected');
+                }
+            });
+        }
+
+        function initCustomAppealPaginationDropdown() {
+            const customSelect = document.getElementById('customAppealItemsPerPage');
+            if (!customSelect) return;
+
+            const selectBtn = customSelect.querySelector('.select-btn');
+            const selectOptions = customSelect.querySelector('.select-options');
+
+            if (!selectBtn || !selectOptions) {
+                console.warn('Custom pagination select elements not found');
+                return;
+            }
+
+            const options = selectOptions.querySelectorAll('.select-option');
+
+            // Удаляем старый обработчик, если он существует
+            if (selectBtn._appealClickHandler) {
+                selectBtn.removeEventListener('click', selectBtn._appealClickHandler);
+            }
+
+            selectBtn._appealClickHandler = function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+                customSelect.classList.toggle('open');
+            };
+
+            selectBtn.addEventListener('click', selectBtn._appealClickHandler);
+
+            options.forEach(opt => {
+                // Удаляем старый обработчик, если он существует
+                if (opt._appealOptionClickHandler) {
+                    opt.removeEventListener('click', opt._appealOptionClickHandler);
+                }
+
+                opt._appealOptionClickHandler = function (e) {
+                    e.stopPropagation();
+                    const value = this.getAttribute('data-value');
+                    const select = document.getElementById('appealItemsPerPage');
+                    if (select) {
+                        select.value = value;
+                        changeAppealItemsPerPage();
+                    }
+                    customSelect.classList.remove('open');
+                };
+
+                opt.addEventListener('click', opt._appealOptionClickHandler);
+            });
+
+            // Удаляем старый обработчик клика на документе, если он существует
+            if (window._appealPaginationClickHandler) {
+                document.removeEventListener('click', window._appealPaginationClickHandler);
+            }
+
+            window._appealPaginationClickHandler = function (e) {
+                if (!customSelect.contains(e.target)) {
+                    customSelect.classList.remove('open');
+                }
+            };
+
+            document.addEventListener('click', window._appealPaginationClickHandler);
+
+            updateCustomAppealPaginationDropdown();
+        }
+
+        function initAppealsPage() {
+            console.log('Initializing appeals2 page...');
+
+            // Сбрасываем флаг при каждой инициализации страницы
+            // Это позволяет открывать модальное окно при переходе с параметром id
+            state.notificationOpenedFromUrl = false;
+
+            cacheDom();
+            bindEvents();
+            initCustomAppealPaginationDropdown();
+
+            // Применить темные стили к выпадающему списку
+            applyDarkThemeToSelect();
+
+            // Применить стили при открытии select (без дублирования обработчиков при повторном init)
+            if (statusSelect) {
+                if (_appealsStatusFilterHandler) {
+                    statusSelect.removeEventListener('change', _appealsStatusFilterHandler);
+                }
+                statusSelect.addEventListener('mousedown', function () {
+                    setTimeout(applyDarkThemeToSelect, 10);
+                });
+                statusSelect.addEventListener('focus', function () {
+                    setTimeout(applyDarkThemeToSelect, 10);
+                });
+                _appealsStatusFilterHandler = function () {
+                    setTimeout(applyDarkThemeToSelect, 10);
+                    paginationState.currentPage = 1;
+                    loadNotifications();
+                };
+                statusSelect.addEventListener('change', _appealsStatusFilterHandler);
+            }
+
+            // Проверяем, есть ли id в URL - если есть, значит это переход с уведомления
+            const notificationId = getNotificationIdFromUrl();
+            if (notificationId) {
+                console.log('Found notification ID in URL:', notificationId);
+                // Загружаем список, затем открываем нужное уведомление
+                loadNotifications().then(() => {
+                    // Увеличиваем задержку, чтобы DOM точно был готов
+                    setTimeout(() => {
+                        console.log('Attempting to open notification:', notificationId);
+                        // Повторно кешируем DOM элементы перед открытием
+                        cacheDom();
+                        if (modalOverlay) {
+                            viewNotification(notificationId);
+                        } else {
+                            console.error('Modal overlay not found, retrying...');
+                            setTimeout(() => {
+                                cacheDom();
+                                if (modalOverlay) {
+                                    viewNotification(notificationId);
+                                }
+                            }, 200);
+                        }
+                    }, 500);
+                }).catch(err => {
+                    console.error('Error loading notifications:', err);
+                });
+            } else {
+                loadNotifications();
+            }
+
+            // Повторно применить стили через небольшую задержку
+            setTimeout(applyDarkThemeToSelect, 100);
+            setTimeout(applyDarkThemeToSelect, 500);
+        }
+
+        // Удаляем старый обработчик, если он существует
+        if (window._appeals2ContentLoadedHandler) {
+            window.removeEventListener('spa:contentLoaded', window._appeals2ContentLoadedHandler);
+        }
+
+        window._appeals2ContentLoadedHandler = function (e) {
+            console.log('SPA content loaded event:', e.detail);
+            const route = e.detail?.route || window.location.hash.split('?')[0].slice(1);
+            console.log('Current route:', route);
+            if (!route || route === '/appeals2' || route.startsWith('/appeals2')) {
+                console.log('Loading appeals2 from spa:contentLoaded');
+                // Инициализируем страницу - она сама проверит URL на наличие id
+                setTimeout(() => {
+                    initAppealsPage();
+                }, 100);
+            }
+        };
+
+        window.addEventListener('spa:contentLoaded', window._appeals2ContentLoadedHandler);
+
+        if (window._appeals2LanguageChangedHandler) {
+            window.removeEventListener('languageChanged', window._appeals2LanguageChangedHandler);
+        }
+        window._appeals2LanguageChangedHandler = function () {
+            if (state.notifications && state.notifications.length) renderTable();
+        };
+        window.addEventListener('languageChanged', window._appeals2LanguageChangedHandler);
+
+        // Загрузка при первой загрузке (если не через SPA)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAppealsPage);
+        } else {
+            initAppealsPage();
+        }
+
+    })();
+</script>

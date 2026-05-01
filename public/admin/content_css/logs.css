@@ -1,0 +1,362 @@
+/* Logs Page Styles */
+
+.logs-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.logs-table thead th {
+    background-color: rgba(102, 126, 234, 0.1);
+    color: #e4e6eb;
+    font-weight: 600;
+    padding: 12px;
+    text-align: left;
+    border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+}
+
+.logs-table tbody td {
+    padding: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e4e6eb;
+}
+
+.logs-table tbody tr:hover {
+    background-color: rgba(102, 126, 234, 0.05);
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-success {
+    background-color: #10b981;
+    color: white;
+}
+
+.badge-danger {
+    background-color: #ef4444;
+    color: white;
+}
+
+.badge-warning {
+    background-color: #f59e0b;
+    color: white;
+}
+
+.badge-info {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.logs-filters {
+    background-color: rgba(255, 255, 255, 0.02);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.logs-filters .form-label {
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+/*
+ * Нативные <select> скрыты (Chromium на Windows рисует popup белым, обойти
+ * это CSS невозможно). Всё визуальное рисует .lcd-* custom dropdown ниже,
+ * а native <select> остаётся как value-хранилище для существующего JS.
+ */
+.logs-filters .form-select {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+/* ===== Custom dark dropdown (logs filters) ===== */
+.lcd {
+    position: relative;
+    width: 100%;
+}
+
+.lcd-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background-color: #1f2432;
+    border: 1px solid #3a3f4a;
+    color: #e4e6eb;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s, border 0.2s, box-shadow 0.2s;
+    text-align: left;
+}
+
+.lcd-trigger:hover {
+    background-color: #252a39;
+}
+
+.lcd-trigger:focus-visible,
+.lcd.is-open .lcd-trigger {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.25);
+}
+
+.lcd-value {
+    flex: 1;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lcd-caret {
+    font-size: 0.85rem;
+    opacity: 0.7;
+    transition: transform 0.2s;
+}
+
+.lcd.is-open .lcd-caret {
+    transform: rotate(180deg);
+}
+
+/*
+ * Меню выносится в document.body → глобальный класс .lcd-menu (не .logs-filters .lcd-menu),
+ * чтобы стили применялись вне родительского контейнера.
+ */
+.lcd-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    background-color: #1a1d24;
+    border: 1px solid #3a3f4a;
+    border-radius: 10px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+    z-index: 99999;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.lcd-menu[hidden] {
+    display: none;
+}
+
+.lcd-option {
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    color: #e4e6eb;
+    cursor: pointer;
+    font-size: 0.95rem;
+    line-height: 1.35;
+    transition: background 0.12s, color 0.12s;
+    user-select: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lcd-option:hover {
+    background-color: rgba(102, 126, 234, 0.2);
+    color: #ffffff;
+}
+
+.lcd-option.is-selected {
+    background-color: rgba(102, 126, 234, 0.35);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.lcd-menu::-webkit-scrollbar {
+    width: 8px;
+}
+
+.lcd-menu::-webkit-scrollbar-track {
+    background: #1f2432;
+    border-radius: 6px;
+}
+
+.lcd-menu::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.55);
+    border-radius: 6px;
+}
+
+/* Pagination styles */
+.table-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0 0 15px 15px;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-pagination {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+}
+
+.btn-pagination:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+.btn-pagination:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-pagination.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.pagination-info {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+.pagination-per-page {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+.custom-pag-select {
+    position: relative;
+    display: inline-block;
+    min-width: 60px;
+}
+
+.custom-pag-select .select-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 60px;
+    user-select: none;
+}
+
+.custom-pag-select .select-options {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    background: #1f2432 !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+    overflow: hidden;
+    display: none;
+    z-index: 10000;
+    min-width: 100%;
+}
+
+.custom-pag-select.open .select-options {
+    display: block;
+}
+
+.custom-pag-select .select-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    color: #f6f7ff !important;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    background: #1f2432 !important;
+}
+
+.custom-pag-select .select-option:hover {
+    background: #3b4261 !important;
+    color: #ffffff !important;
+}
+
+.custom-pag-select .select-option.selected {
+    background: #667eea !important;
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .table-pagination {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px;
+        align-items: flex-start;
+    }
+
+    .pagination-controls {
+        order: 1;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 4px;
+        scrollbar-width: thin;
+    }
+
+    .pagination-pages {
+        display: flex;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+    }
+
+    .pagination-info {
+        order: 2;
+        font-size: 0.82rem;
+        line-height: 1.25;
+    }
+
+    .pagination-per-page {
+        order: 3;
+        margin-left: auto;
+        font-size: 0.82rem;
+    }
+}
+

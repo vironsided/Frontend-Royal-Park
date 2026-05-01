@@ -1,0 +1,2053 @@
+<link rel="stylesheet" href="/admin/content_css/residents.css">
+<div class="content-wrapper">
+                <h2 class="mb-4" data-i18n="residents_page_title">Список резидентов (владельцы квартир)</h2>
+                
+                <!-- Filters -->
+                <div class="filters-container">
+                    <div class="filters-row">
+                        <div class="filter-group">
+                            <label data-i18n="residents_filter_block">Блок</label>
+                            <select id="filterBlock">
+                                <option value="all" data-i18n="all">Все</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label data-i18n="residents_filter_house">Номер дома</label>
+                            <input type="text" id="filterHouse" placeholder="Например, 205 или 101-105" data-i18n-placeholder="residents_filter_house_placeholder">
+                        </div>
+                    </div>
+
+                    <div class="filters-row">
+                        <div class="filter-group">
+                            <label data-i18n="residents_filter_status">Статус</label>
+                            <select id="filterStatus">
+                                <option value="all" data-i18n="all">Все</option>
+                                <option value="ACTIVE" data-i18n="status_active">Активен</option>
+                                <option value="INACTIVE" data-i18n="status_inactive">Не активен</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label data-i18n="residents_filter_type">Тип</label>
+                            <select id="filterType">
+                                <option value="all" data-i18n="all">Все</option>
+                                <option value="OWNER" data-i18n="residents_type_owner">Частный дом</option>
+                                <option value="TENANT" data-i18n="residents_type_tenant">Арендатор</option>
+                                <option value="SUBTENANT" data-i18n="residents_type_subtenant">Субарендатор</option>
+                                <option value="OFFICE" data-i18n="residents_type_office">Офис</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="filters-actions">
+                        <button class="btn btn-outline-secondary" onclick="applyFilters()">
+                            <i class="bi bi-funnel"></i> <span data-i18n="user_resident_filter_btn">Фильтр</span>
+                        </button>
+                        <button class="btn btn-outline-warning" onclick="clearFilters()">
+                            <i class="bi bi-x-circle"></i> <span data-i18n="reset">Очистить</span>
+                        </button>
+                        <select id="residentExportFormat" class="form-select form-select-sm" style="max-width: 170px;">
+                            <option value="xls" data-i18n="residents_export_excel_styled">Excel (Styled)</option>
+                            <option value="pdf" data-i18n="residents_export_pdf_print">PDF (печать)</option>
+                        </select>
+                        <select id="exportCustomerType" class="form-select form-select-sm" style="max-width: 190px;">
+                            <option value="all" data-i18n="residents_export_customer_all">Клиент: все</option>
+                            <option value="INDIVIDUAL" data-i18n="residents_export_customer_individual">Клиент: физ. лицо</option>
+                            <option value="LEGAL" data-i18n="residents_export_customer_legal">Клиент: юр. лицо</option>
+                        </select>
+                        <select id="exportContactsFilter" class="form-select form-select-sm" style="max-width: 210px;">
+                            <option value="all" data-i18n="residents_export_contacts_all">Контакты: все</option>
+                            <option value="has_phone" data-i18n="residents_export_contacts_phone">Только с телефоном</option>
+                            <option value="has_email" data-i18n="residents_export_contacts_email">Только с email</option>
+                            <option value="has_any" data-i18n="residents_export_contacts_any">Только с контактами</option>
+                            <option value="no_contacts" data-i18n="residents_export_contacts_none">Без контактов</option>
+                        </select>
+                        <button class="btn btn-success" type="button" onclick="exportResidents()">
+                            <i class="bi bi-box-arrow-down"></i> <span data-i18n="export">Экспорт</span>
+                        </button>
+                        <button class="btn btn-primary" onclick="openCreateModal()">
+                            <i class="bi bi-plus-lg"></i> <span data-i18n="create">Создать</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3 data-i18n="nav_residents">Резиденты</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover residents-table">
+                                    <thead>
+                                        <tr>
+                                            <th data-i18n="id">ID</th>
+                                            <th data-i18n="residents_col_block">Блок</th>
+                                            <th data-i18n="residents_col_house">Дом/№</th>
+                                            <th class="text-center" data-i18n="residents_col_type">Тип</th>
+                                            <th class="text-center" data-i18n="residents_col_customer">Клиент</th>
+                                            <th data-i18n="residents_col_name">ФИО</th>
+                                            <th class="text-center" data-i18n="residents_filter_status">Статус</th>
+                                            <th data-i18n="residents_col_contacts">Контакты</th>
+                                            <th data-i18n="residents_col_meters">Счётчики</th>
+                                            <th class="text-center" data-i18n="tariffs_col_actions">Действия</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="residentsTableBody">
+                                        <!-- rows rendered via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                                                                <!-- Pagination -->
+                                                                <div class="table-pagination">
+                                                                    <div class="pagination-controls" id="residentPaginationControls">
+                                                                            <button class="btn-pagination" onclick="goToResidentPage('prev')" disabled id="residentPrevBtn">
+                                                                                <i class="bi bi-chevron-double-left"></i>
+                                                                            </button>
+                                                                            <div id="residentPageButtons" class="pagination-pages"></div>
+                                                                            <button class="btn-pagination" onclick="goToResidentPage('next')" disabled id="residentNextBtn">
+                                                                                <i class="bi bi-chevron-double-right"></i>
+                                                                            </button>
+                                                                        </div>
+                                                                        <div class="pagination-info">
+                                                                            <span><span data-i18n="residents_pagination_page_short">Стр.</span> <span id="residentCurrentPage">1</span> <span data-i18n="residents_pagination_of">из</span> <span id="residentTotalPages">1</span> · <span data-i18n="residents_pagination_total">всего</span> <span id="residentTotalItems">0</span></span>
+                                                                        </div>
+                                                                        <div class="pagination-per-page">
+                                                                            <span data-i18n="residents_pagination_on">На</span>
+                                                                            <span data-i18n="residents_pagination_per_page">странице:</span>
+                                                                            <div class="custom-pag-select" id="customResidentItemsPerPage">
+                                                                                <select id="residentItemsPerPage" onchange="changeResidentItemsPerPage()" style="display: none;">
+                                                                                    <option value="10">10</option>
+                                                                                    <option value="25" selected>25</option>
+                                                                                    <option value="50">50</option>
+                                                                                    <option value="100">100</option>
+                                                                                </select>
+                                                                                <div class="select-btn">
+                                                                                    <span class="select-text">25</span>
+                                                                                    <span class="arrow">▾</span>
+                                                                                </div>
+                                                                                <div class="select-options" style="background: rgba(36, 40, 49, 0.95) !important">
+                                                                                    <div class="select-option" data-value="10">10</div>
+                                                                                    <div class="select-option selected" data-value="25">25</div>
+                                                                                    <div class="select-option" data-value="50">50</div>
+                                                                                    <div class="select-option" data-value="100">100</div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create Resident Modal -->
+    <div class="modal-overlay" id="createResidentModal">
+        <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="residentModalTitle" data-i18n="residents_modal_create_title">Создать резидента</h2>
+                <button class="modal-close" onclick="closeCreateModal()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            
+            <form id="createResidentForm" onsubmit="createResident(event)">
+                <!-- Block Information -->
+                <div class="form-section">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label data-i18n="residents_filter_block">Блок</label>
+                            <select id="residentBlock" required>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="K">K</option>
+                                <option value="X" selected>X</option>
+                                <option value="Z">Z</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label data-i18n="residents_modal_unit_label">№ резидента/дома в блоке</label>
+                            <input type="text" id="residentNumber" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label data-i18n="residents_filter_status">Статус</label>
+                            <select id="residentStatus" required>
+                                <option value="ACTIVE" selected data-i18n="status_active">Активен</option>
+                                <option value="INACTIVE" data-i18n="status_inactive">Не активен</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label data-i18n="residents_filter_type">Тип</label>
+                            <select id="residentType" required>
+                                <option value="OWNER" selected data-i18n="residents_type_owner">Частный дом</option>
+                                <option value="TENANT" data-i18n="residents_type_tenant">Арендатор</option>
+                                <option value="SUBTENANT" data-i18n="residents_type_subtenant">Субарендатор</option>
+                                <option value="OFFICE" data-i18n="residents_type_office">Офис</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label data-i18n="residents_modal_customer_label">Оформлено</label>
+                            <select id="residentRegistration" required>
+                                <option value="INDIVIDUAL" selected data-i18n="tariffs_client_individual">Индивидуальный</option>
+                                <option value="LEGAL" data-i18n="tariffs_client_legal">Юр. лицо</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Personal Information -->
+                <div class="form-section">
+                    <h4 data-i18n="residents_personal_info">Личная информация</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label data-i18n="residents_col_name">И.Ф.О.</label>
+                            <input type="text" id="residentName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label data-i18n="phone">Телефон</label>
+                            <input type="tel" id="residentPhone" placeholder="+994">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label data-i18n="email">E-mail</label>
+                            <input type="email" id="residentEmail">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Opening Debt (only on create) -->
+                <div class="form-section" id="residentDebtSection">
+                    <h4 data-i18n="residents_initial_data">Начальные данные</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label data-i18n="residents_debt_utility_label">Долг Utility (на момент запуска системы), ₼</label>
+                            <input type="number" id="residentDebtUtility" min="0" step="0.01" value="0" placeholder="0.00" data-i18n-placeholder="residents_debt_placeholder">
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="residents_debt_service_label">Долг Сервис (на момент запуска системы), ₼</label>
+                            <input type="number" id="residentDebtService" min="0" step="0.01" value="0" placeholder="0.00" data-i18n-placeholder="residents_debt_placeholder">
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="residents_debt_rent_label">Долг Аренда (на момент запуска системы), ₼</label>
+                            <input type="number" id="residentDebtRent" min="0" step="0.01" value="0" placeholder="0.00" data-i18n-placeholder="residents_debt_placeholder">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <small class="text-muted" data-i18n="residents_debt_help">Если у резидента уже был долг до внедрения системы — укажите его здесь.</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Services -->
+                <div class="form-section">
+                    <div class="services-section">
+                        <div class="services-header">
+                            <h4 style="margin: 0;" data-i18n="services">Услуги</h4>
+                            <button type="button" class="btn btn-sm btn-primary" onclick="addService()">
+                                <i class="bi bi-plus-lg"></i> <span data-i18n="residents_add_service">Добавить услугу</span>
+                            </button>
+                        </div>
+                        
+                        <div id="servicesContainer">
+                            <!-- Счётчики будут добавлены динамически -->
+                                </div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateModal()">
+                        <span data-i18n="cancel">Отмена</span>
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="residentSubmitBtn">
+                        <span data-i18n="create">Создать</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Delete Resident Confirmation Modal -->
+    <div class="modal-overlay" id="deleteResidentModal">
+        <div class="modal-content confirmation-modal">
+            <div class="modal-header">
+                <h2 data-i18n="residents_delete_title">Удалить резидента</h2>
+                <button class="modal-close" onclick="closeDeleteModal()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><span data-i18n="residents_delete_prompt_prefix">Вы уверены, что хотите удалить</span> <strong id="deleteResidentName">этого резидента</strong>? <span data-i18n="residents_delete_prompt_suffix">Это действие нельзя отменить.</span></p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" type="button" onclick="closeDeleteModal()" data-i18n="cancel">Отмена</button>
+                <button class="btn btn-danger" type="button" onclick="confirmDeleteResident()" data-i18n="action_delete">Удалить</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+        const API_BASE = window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BASE || 'http://localhost:8000');
+        const t = (key, fallback = '') => window.i18n?.translate?.(key) || fallback || key;
+        const tr = (key, params = {}, fallback = '') => {
+            const base = t(key, fallback);
+            return Object.entries(params).reduce((txt, [p, v]) => txt.replace(new RegExp(`\\{${p}\\}`, 'g'), String(v)), base);
+        };
+        let residents = [];
+        let blocks = [];
+        let tariffs = [];
+        let isEditMode = false;
+        let editingResidentId = null;
+        let pendingDelete = null;
+        
+        // Pagination state
+        let paginationState = {
+            currentPage: 1,
+            itemsPerPage: 25,
+            totalItems: 0,
+            totalPages: 1
+        };
+        
+        let residentsData = {
+            items: [],
+            total: 0,
+            page: 1,
+            per_page: 25,
+            last_page: 1
+        };
+        
+        // Загрузка блоков и тарифов для фильтров и форм
+        async function loadBlocksAndTariffs() {
+            try {
+                // Загружаем блоки
+                let blocksResp = await fetch(`${API_BASE}/api/blocks`, { credentials: 'include' });
+                if (blocksResp.ok) {
+                    blocks = await blocksResp.json();
+                    // Обновляем фильтр блоков
+                    const filterBlock = document.getElementById('filterBlock');
+                    if (filterBlock) {
+                        filterBlock.innerHTML = `<option value="all">${t('all', 'Все')}</option>`;
+                        blocks.forEach(block => {
+                            const option = document.createElement('option');
+                            option.value = block.id;
+                            option.textContent = block.name;
+                            filterBlock.appendChild(option);
+                        });
+                    }
+                    // Обновляем select в модалке
+                    const residentBlock = document.getElementById('residentBlock');
+                    if (residentBlock) {
+                        residentBlock.innerHTML = '';
+                        blocks.forEach(block => {
+                            const option = document.createElement('option');
+                            option.value = block.id;
+                            option.textContent = block.name;
+                            residentBlock.appendChild(option);
+                        });
+                    }
+                }
+                
+                // Загружаем тарифы (включая архивные), чтобы при редактировании
+                // можно было отобразить уже назначенный (даже если он деактивирован).
+                let tariffsResp = await fetch(`${API_BASE}/api/tariffs?include_inactive=1`, { credentials: 'include' });
+                if (tariffsResp.ok) {
+                    tariffs = await tariffsResp.json();
+                }
+            } catch (e) {
+                console.error('Error loading blocks/tariffs:', e);
+            }
+        }
+        
+        // Загрузка резидентов из API
+        async function loadResidents() {
+            const tbody = document.getElementById('residentsTableBody');
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center text-muted">${t('loading', 'Загрузка...')}</td></tr>`;
+            }
+            
+            try {
+                const blockId = document.getElementById('filterBlock')?.value;
+                const status = document.getElementById('filterStatus')?.value;
+                const rtype = document.getElementById('filterType')?.value;
+                const houseNumber = document.getElementById('filterHouse')?.value?.trim();
+                
+                const params = new URLSearchParams();
+                params.append('page', paginationState.currentPage);
+                params.append('per_page', paginationState.itemsPerPage);
+                
+                // blockId может быть строкой (имя блока) или числом (ID блока)
+                // Если это имя блока, находим ID
+                if (blockId && blockId !== 'all') {
+                    // Проверяем, является ли blockId числом
+                    const blockIdNum = parseInt(blockId);
+                    if (!isNaN(blockIdNum)) {
+                        params.append('block_id', blockIdNum);
+                    } else {
+                        // Это имя блока, находим ID
+                        const block = blocks.find(b => b.name === blockId || b.id === blockId);
+                        if (block) {
+                            params.append('block_id', block.id);
+                        }
+                    }
+                }
+                if (status && status !== 'all') params.append('status', status);
+                if (rtype && rtype !== 'all') {
+                    params.append('rtype', rtype);
+                }
+                if (houseNumber) {
+                    params.append('unit_number', houseNumber);
+                }
+                
+                let url = `${API_BASE}/api/residents?${params.toString()}`;
+                
+                let resp = await fetch(url, { credentials: 'include' });
+                
+                if (!resp.ok) {
+                    throw new Error(`Failed to load residents: ${resp.status}`);
+                }
+                
+                const data = await resp.json();
+                residentsData = data;
+                residents = data.items || [];
+                
+                // Update pagination state
+                paginationState.totalItems = data.total || 0;
+                paginationState.totalPages = data.last_page || 1;
+                paginationState.currentPage = data.page || 1;
+                
+                renderResidentsTable();
+                updatePaginationUI();
+            } catch (e) {
+                console.error('Error loading residents:', e);
+                if (tbody) {
+                    tbody.innerHTML = `<tr><td colspan="10" class="text-center text-danger">${t('residents_error_load_data', 'Ошибка загрузки данных')}</td></tr>`;
+                }
+                if (typeof showError === 'function') {
+                    showError(`${t('residents_error_load', 'Ошибка загрузки резидентов')}: ${e.message}`);
+                }
+            }
+        }
+
+        async function fetchAllResidentsForExport() {
+            const params = new URLSearchParams();
+            params.append('page', '1');
+            params.append('per_page', '100');
+
+            let page = 1;
+            let lastPage = 1;
+            const out = [];
+            do {
+                params.set('page', String(page));
+                const resp = await fetch(`${API_BASE}/api/residents?${params.toString()}`, { credentials: 'include' });
+                if (!resp.ok) throw new Error(`${t('residents_error_load', 'Ошибка загрузки резидентов')}: ${resp.status}`);
+                const data = await resp.json();
+                const items = Array.isArray(data?.items) ? data.items : [];
+                out.push(...items);
+                lastPage = Number(data?.last_page || 1);
+                page += 1;
+            } while (page <= lastPage);
+            return out;
+        }
+
+        function getMainResidentFilters() {
+            return {
+                blockId: document.getElementById('filterBlock')?.value || 'all',
+                status: document.getElementById('filterStatus')?.value || 'all',
+                rtype: document.getElementById('filterType')?.value || 'all',
+                house: document.getElementById('filterHouse')?.value?.trim() || '',
+            };
+        }
+
+        function residentMatchesMainFilters(resident, filters) {
+            if (filters.blockId !== 'all') {
+                const selected = parseInt(filters.blockId, 10);
+                const residentBlockId = Number(resident?.block_id || 0);
+                if (!isNaN(selected) && selected > 0 && residentBlockId !== selected) {
+                    return false;
+                }
+            }
+
+            if (filters.status !== 'all') {
+                if (String(resident?.status || '').toUpperCase() !== String(filters.status).toUpperCase()) {
+                    return false;
+                }
+            }
+
+            if (filters.rtype !== 'all') {
+                if (String(resident?.resident_type || '').toUpperCase() !== String(filters.rtype).toUpperCase()) {
+                    return false;
+                }
+            }
+
+            const unit = String(resident?.unit_number || '').trim();
+            const house = String(filters.house || '').trim();
+            if (house) {
+                if (house.includes('-')) {
+                    const parts = house.split('-');
+                    if (parts.length === 2) {
+                        const start = parseInt(parts[0].trim(), 10);
+                        const end = parseInt(parts[1].trim(), 10);
+                        const unitNum = parseInt(unit, 10);
+                        if (Number.isFinite(start) && Number.isFinite(end) && Number.isFinite(unitNum)) {
+                            if (unitNum < start || unitNum > end) return false;
+                        } else if (!unit.toLowerCase().includes(house.toLowerCase())) {
+                            return false;
+                        }
+                    } else if (!unit.toLowerCase().includes(house.toLowerCase())) {
+                        return false;
+                    }
+                } else if (!unit.toLowerCase().includes(house.toLowerCase())) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function getResidentExportFilters() {
+            return {
+                customerType: document.getElementById('exportCustomerType')?.value || 'all',
+                contacts: document.getElementById('exportContactsFilter')?.value || 'all',
+            };
+        }
+
+        function hasActiveMeters(resident) {
+            const meters = Array.isArray(resident?.meters) ? resident.meters : [];
+            return meters.some((m) => m?.is_active !== false);
+        }
+
+        function residentMatchesExportFilters(resident, filters) {
+            if (filters.customerType !== 'all' && String(resident?.customer_type || '') !== filters.customerType) {
+                return false;
+            }
+            const phone = String(resident?.owner_phone || '').trim();
+            const email = String(resident?.owner_email || '').trim();
+            if (filters.contacts === 'has_phone' && !phone) return false;
+            if (filters.contacts === 'has_email' && !email) return false;
+            if (filters.contacts === 'has_any' && !phone && !email) return false;
+            if (filters.contacts === 'no_contacts' && (phone || email)) return false;
+
+            return true;
+        }
+
+        function meterTypeLabel(meterType) {
+            const map = {
+                ELECTRIC: t('meter_electricity', 'Электричество'),
+                GAS: t('meter_gas', 'Газ'),
+                WATER: t('meter_cold_water', 'Вода'),
+                SEWERAGE: t('residents_meter_sewerage', 'Канализация'),
+                SERVICE: t('tariffs_purpose_service', 'Сервис'),
+                RENT: t('tariffs_purpose_rent', 'Аренда'),
+                CONSTRUCTION: t('tariffs_purpose_construction', 'Строительство'),
+            };
+            return map[String(meterType || '').toUpperCase()] || String(meterType || '—');
+        }
+
+        function buildResidentExportRows(items) {
+            return items.map((resident) => {
+                const activeMeters = (Array.isArray(resident?.meters) ? resident.meters : [])
+                    .filter((m) => m?.is_active !== false)
+                    .map((m) => {
+                        const tariffName = m?.tariff_name ? ` (${m.tariff_name})` : '';
+                        const serial = m?.serial_number ? ` №${m.serial_number}` : '';
+                        return `${meterTypeLabel(m?.meter_type)}${serial}${tariffName}`;
+                    });
+                return {
+                    block: resident?.block_name || '—',
+                    unit: resident?.unit_number || '—',
+                    residentType: String(resident?.resident_type || '—'),
+                    customerType: String(resident?.customer_type || '—'),
+                    owner: resident?.owner_full_name || '—',
+                    status: String(resident?.status || '—'),
+                    phone: String(resident?.owner_phone || '—'),
+                    email: resident?.owner_email || '—',
+                    metersList: activeMeters.length ? activeMeters : ['—'],
+                };
+            });
+        }
+
+        function toResidentTypeText(v) {
+            const map = {
+                OWNER: t('residents_type_owner_full', 'Собственник'),
+                TENANT: t('residents_type_tenant', 'Арендатор'),
+                SUBTENANT: t('residents_type_subtenant', 'Субарендатор'),
+                OFFICE: t('residents_type_office', 'Офис')
+            };
+            return map[String(v || '').toUpperCase()] || (v || '—');
+        }
+
+        function toCustomerTypeText(v) {
+            const map = {
+                INDIVIDUAL: t('residents_customer_individual_short', 'Физ. лицо'),
+                LEGAL: t('residents_customer_legal_short', 'Юр. лицо')
+            };
+            return map[String(v || '').toUpperCase()] || (v || '—');
+        }
+
+        function toStatusText(v) {
+            return String(v || '').toUpperCase() === 'ACTIVE'
+                ? t('status_active', 'Активен')
+                : t('status_inactive', 'Не активен');
+        }
+
+        function buildResidentFiltersText(filters) {
+            const chunks = [];
+            const block = document.getElementById('filterBlock');
+            const status = document.getElementById('filterStatus');
+            const type = document.getElementById('filterType');
+            const house = document.getElementById('filterHouse')?.value?.trim();
+            if (block?.value && block.value !== 'all') chunks.push(`${t('residents_filter_block', 'Блок')}: ${block.options[block.selectedIndex]?.text || block.value}`);
+            if (status?.value && status.value !== 'all') chunks.push(`${t('residents_filter_status', 'Статус')}: ${status.options[status.selectedIndex]?.text || status.value}`);
+            if (type?.value && type.value !== 'all') chunks.push(`${t('residents_filter_type', 'Тип')}: ${type.options[type.selectedIndex]?.text || type.value}`);
+            if (house) chunks.push(`${t('residents_col_house', 'Дом/№')}: ${house}`);
+
+            const customerSelect = document.getElementById('exportCustomerType');
+            const contactsSelect = document.getElementById('exportContactsFilter');
+            if (filters.customerType !== 'all') chunks.push(customerSelect?.options[customerSelect.selectedIndex]?.text || filters.customerType);
+            if (filters.contacts !== 'all') chunks.push(contactsSelect?.options[contactsSelect.selectedIndex]?.text || filters.contacts);
+            return chunks.length ? chunks.join(' | ') : t('residents_filters_none', 'Без фильтров');
+        }
+
+        function exportResidentsToStyledExcel(rows, filtersText) {
+            const esc = (v) => String(v === null || v === undefined ? '' : v)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const toExcelText = (value) => {
+                const raw = String(value === null || value === undefined ? '' : value).trim();
+                if (!raw || raw === '—') return '—';
+                return raw;
+            };
+
+            const bodyRows = rows.map((r) => `
+                <tr>
+                    <td>${esc(r.block)}</td>
+                    <td>${esc(r.unit)}</td>
+                    <td>${esc(toResidentTypeText(r.residentType))}</td>
+                    <td>${esc(toCustomerTypeText(r.customerType))}</td>
+                    <td>${esc(r.owner)}</td>
+                    <td>${esc(toStatusText(r.status))}</td>
+                    <td class="phone-cell">${esc(toExcelText(r.phone))}</td>
+                    <td>${esc(r.email)}</td>
+                    <td class="meters-cell">${(Array.isArray(r.metersList) ? r.metersList : ['—']).map((meter, idx) => `<div class="meter-line">${esc(`${idx + 1}) ${meter}`)}</div>`).join('')}</td>
+                </tr>
+            `).join('');
+
+            const html = `
+                <html>
+                <head>
+                    <meta charset="utf-8" />
+                    <style>
+                        body { font-family: Calibri, Arial, sans-serif; color: #111827; }
+                        .title-table { border-collapse: collapse; width: 100%; margin-bottom: 10px; }
+                        .title-cell { border: 2px solid #1f2937; padding: 12px; background: #f8fafc; }
+                        .title-main { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+                        .title-sub { font-size: 12px; color: #4b5563; }
+                        table { border-collapse: collapse; width: 100%; }
+                        .meta td { border: 1px solid #9ca3af; padding: 6px 8px; font-size: 12px; }
+                        .meta td:first-child { width: 180px; background: #eef2ff; font-weight: 700; }
+                        .data { margin-top: 12px; }
+                        .data th, .data td { border: 1px solid #9ca3af; padding: 6px 8px; font-size: 12px; vertical-align: top; }
+                        .data th { background: #dbeafe; font-weight: 700; text-align: center; }
+                        .phone-cell { mso-number-format: "\\@"; }
+                        .meters-cell { white-space: normal; line-height: 1.25; }
+                        .meter-line { padding: 1px 0; border-bottom: 1px dashed #e5e7eb; }
+                        .meter-line:last-child { border-bottom: none; }
+                    </style>
+                </head>
+                <body>
+                    <table class="title-table">
+                        <tr><td class="title-cell"><div class="title-main">${t('residents_export_report_title', 'Отчет по резидентам')}</div><div class="title-sub">${t('residents_export_report_subtitle', 'Royal Park - Экспорт для учета')}</div></td></tr>
+                    </table>
+                    <table class="meta">
+                        <tr><td>${t('tariffs_export_generated', 'Сформировано')}</td><td>${esc(new Date().toLocaleString())}</td></tr>
+                        <tr><td>${t('tariffs_export_filters', 'Фильтры')}</td><td>${esc(filtersText)}</td></tr>
+                        <tr><td>${t('residents_export_count', 'Количество резидентов')}</td><td>${esc(rows.length)}</td></tr>
+                    </table>
+                    <table class="data">
+                        <thead>
+                            <tr>
+                                <th>${t('residents_col_block', 'Блок')}</th>
+                                <th>${t('residents_col_house', 'Дом/№')}</th>
+                                <th>${t('residents_col_type', 'Тип')}</th>
+                                <th>${t('residents_col_customer', 'Клиент')}</th>
+                                <th>${t('residents_col_name', 'ФИО')}</th>
+                                <th>${t('residents_filter_status', 'Статус')}</th>
+                                <th>${t('phone', 'Телефон')}</th>
+                                <th>${t('email', 'E-mail')}</th>
+                                <th>${t('residents_col_meters_active', 'Счётчики (активные)')}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${bodyRows || `<tr><td colspan="9">${t('tariffs_no_data', 'Нет данных')}</td></tr>`}
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob(['\ufeff' + html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `residents_export_${new Date().toISOString().slice(0, 10)}.xls`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function exportResidentsToPdf(rows, filtersText) {
+            const esc = (v) => String(v === null || v === undefined ? '' : v)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const tableRows = rows.map((r) => `
+                <tr>
+                    <td>${esc(r.block)}</td>
+                    <td>${esc(r.unit)}</td>
+                    <td>${esc(toResidentTypeText(r.residentType))}</td>
+                    <td>${esc(toCustomerTypeText(r.customerType))}</td>
+                    <td>${esc(r.owner)}</td>
+                    <td>${esc(toStatusText(r.status))}</td>
+                    <td>${esc(r.phone)}</td>
+                    <td>${esc(r.email)}</td>
+                    <td>${(Array.isArray(r.metersList) ? r.metersList : ['—']).map((meter, idx) => `<div>${esc(`${idx + 1}) ${meter}`)}</div>`).join('')}</td>
+                </tr>
+            `).join('');
+            const html = `
+                <html><head><title>${t('residents_export_title', 'Экспорт резидентов')}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 24px; color: #111; }
+                    h2 { margin: 0 0 8px; }
+                    p { margin: 0 0 12px; color: #555; }
+                    table { width: 100%; border-collapse: collapse; font-size: 11px; }
+                    th, td { border: 1px solid #ccc; padding: 6px; text-align: left; vertical-align: top; }
+                    th { background: #f3f4f6; }
+                </style></head>
+                <body>
+                    <h2>${t('residents_export_report_title', 'Отчет по резидентам')}</h2>
+                    <p><strong>${t('tariffs_export_generated', 'Сформировано')}:</strong> ${esc(new Date().toLocaleString())}</p>
+                    <p><strong>${t('tariffs_export_filters', 'Фильтры')}:</strong> ${esc(filtersText)}</p>
+                    <p><strong>${t('tariffs_export_count', 'Количество')}:</strong> ${rows.length}</p>
+                    <table>
+                        <thead>
+                            <tr><th>${t('residents_col_block', 'Блок')}</th><th>${t('residents_col_house', 'Дом/№')}</th><th>${t('residents_col_type', 'Тип')}</th><th>${t('residents_col_customer', 'Клиент')}</th><th>${t('residents_col_name', 'ФИО')}</th><th>${t('residents_filter_status', 'Статус')}</th><th>${t('phone', 'Телефон')}</th><th>${t('email', 'E-mail')}</th><th>${t('residents_col_meters', 'Счётчики')}</th></tr>
+                        </thead>
+                        <tbody>${tableRows || `<tr><td colspan="9">${t('tariffs_no_data', 'Нет данных')}</td></tr>`}</tbody>
+                    </table>
+                </body></html>
+            `;
+
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0';
+            iframe.style.bottom = '0';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = '0';
+            iframe.setAttribute('aria-hidden', 'true');
+            document.body.appendChild(iframe);
+            const doc = iframe.contentWindow?.document;
+            if (!doc || !iframe.contentWindow) {
+                iframe.remove();
+                throw new Error(t('residents_export_print_prepare_error', 'Не удалось подготовить печать.'));
+            }
+            doc.open();
+            doc.write(html);
+            doc.close();
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            setTimeout(() => iframe.remove(), 1000);
+        }
+
+        window.exportResidents = async function exportResidents() {
+            const exportBtn = document.querySelector('.filters-actions .btn-success');
+            const format = document.getElementById('residentExportFormat')?.value || 'xls';
+            if (exportBtn) {
+                exportBtn.disabled = true;
+                exportBtn.textContent = t('tariffs_export_in_progress', 'Экспорт...');
+            }
+            try {
+                const allItems = await fetchAllResidentsForExport();
+                const mainFilters = getMainResidentFilters();
+                const exportFilters = getResidentExportFilters();
+                const filtered = allItems
+                    .filter((r) => residentMatchesMainFilters(r, mainFilters))
+                    .filter((r) => residentMatchesExportFilters(r, exportFilters));
+                if (!filtered.length) {
+                    if (typeof showWarning === 'function') showWarning(t('tariffs_export_no_data', 'Нет данных для экспорта по выбранным фильтрам.'));
+                    return;
+                }
+                const rows = buildResidentExportRows(filtered);
+                const filtersText = buildResidentFiltersText(exportFilters);
+                if (format === 'pdf') {
+                    exportResidentsToPdf(rows, filtersText);
+                } else {
+                    exportResidentsToStyledExcel(rows, filtersText);
+                }
+                if (typeof showSuccess === 'function') showSuccess(t('export_completed', 'Экспорт выполнен.'));
+            } catch (e) {
+                console.error('Residents export error:', e);
+                if (typeof showError === 'function') showError(`${t('residents_export_error', 'Ошибка экспорта')}: ${e.message}`);
+            } finally {
+                if (exportBtn) {
+                    exportBtn.disabled = false;
+                    exportBtn.innerHTML = `<i class="bi bi-box-arrow-down"></i> ${t('export', 'Экспорт')}`;
+                }
+            }
+        };
+        
+        // Отображение таблицы резидентов
+        function renderResidentsTable() {
+            const tbody = document.getElementById('residentsTableBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            if (residents.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center text-muted">${t('residents_empty', 'Нет резидентов')}</td></tr>`;
+                return;
+            }
+            
+            residents.forEach(resident => {
+                const row = document.createElement('tr');
+                
+                // Маппинг типов резидента
+                const residentTypeMap = {
+                    'OWNER': { text: t('residents_type_owner_full', 'Собственник'), class: 'bg-success' },
+                    'TENANT': { text: t('residents_type_tenant', 'Арендатор'), class: 'bg-warning' },
+                    'SUBTENANT': { text: t('residents_type_subtenant', 'Субарендатор'), class: 'bg-info' },
+                    'OFFICE': { text: t('residents_type_office', 'Офис'), class: 'bg-primary' }
+                };
+                const residentTypeInfo = residentTypeMap[resident.resident_type] || { text: resident.resident_type, class: 'bg-secondary' };
+                const residentTypeBadge = `<span class="badge ${residentTypeInfo.class}">${residentTypeInfo.text}</span>`;
+                
+                // Маппинг типа клиента
+                const customerTypeBadge = resident.customer_type === 'INDIVIDUAL' 
+                    ? `<span class="badge bg-success">${t('residents_customer_individual_short', 'Физ. лицо')}</span>`
+                    : `<span class="badge bg-primary">${t('residents_customer_legal_short', 'Юр. лицо')}</span>`;
+                
+                const statusBadge = resident.status === 'ACTIVE'
+                    ? `<span class="badge bg-success">${t('status_active', 'Активен')}</span>`
+                    : `<span class="badge bg-secondary">${t('status_inactive', 'Не активен')}</span>`;
+                
+                // Счётчики
+                // Показываем только активные счётчики в таблице
+                const activeMeters = resident.meters.filter(m => m.is_active !== false);
+                const metersHtml = activeMeters.map(m => {
+                    const meterTypeMap = {
+                        'ELECTRIC': t('residents_meter_short_electricity', 'Эл'),
+                        'GAS': t('residents_meter_short_gas', 'Газ'),
+                        'WATER': t('residents_meter_short_water', 'Вод'),
+                        'SEWERAGE': t('residents_meter_short_sewerage', 'Кан'),
+                        'SERVICE': t('tariffs_purpose_service', 'Сервис'),
+                        'RENT': t('tariffs_purpose_rent', 'Аренда'),
+                        'CONSTRUCTION': t('tariffs_purpose_construction', 'Строительство')
+                    };
+                    const meterTypeLabel = meterTypeMap[m.meter_type] || m.meter_type;
+                    const tariffName = m.tariff_name ? ` ${t('residents_meter_tariff_prefix', 'тариф')}: ${m.tariff_name}` : '';
+                    return `<span class="badge bg-info">${meterTypeLabel}:${tariffName}</span>`;
+                }).join(' ') || `<span class="text-muted">${t('residents_no', 'Нет')}</span>`;
+                
+                row.innerHTML = `
+                    <td>${resident.id}</td>
+                    <td>${resident.block_name || '-'}</td>
+                    <td>${resident.unit_number}</td>
+                    <td class="text-center">${residentTypeBadge}</td>
+                    <td class="text-center">${customerTypeBadge}</td>
+                    <td>${resident.owner_full_name || '-'}</td>
+                    <td class="text-center">${statusBadge}</td>
+                    <td>
+                        ${resident.owner_phone ? `<div>${resident.owner_phone}</div>` : ''}
+                        ${resident.owner_email ? `<div class="text-muted small">${resident.owner_email}</div>` : ''}
+                    </td>
+                    <td>${metersHtml}</td>
+                    <td class="text-center actions-column">
+                        <button class="btn btn-sm btn-outline-primary"
+                            onclick="openEditResident(${resident.id})">
+                            ${t('action_edit', 'Редактировать')}
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger"
+                            onclick="openDeleteModal(${resident.id}, '${(resident.owner_full_name || t('resident', 'Резидент')).replace(/'/g, "\\'")}')">
+                            ${t('action_delete', 'Удалить')}
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Build pagination page list with ellipsis
+        function buildPageList(current, total) {
+            if (total <= 5) {
+                return Array.from({ length: total }, (_, i) => i + 1);
+            }
+
+            const pages = new Set([1, total]);
+
+            if (current <= 3) {
+                [2, 3, 4, 5].forEach(p => pages.add(p));
+            } else if (current >= total - 2) {
+                [total - 1, total - 2, total - 3, total - 4].forEach(p => pages.add(p));
+            } else {
+                [current - 2, current - 1, current, current + 1, current + 2].forEach(p => pages.add(p));
+            }
+
+            const sorted = Array.from(pages).filter(p => p >= 1 && p <= total).sort((a, b) => a - b);
+            const result = [];
+
+            for (let i = 0; i < sorted.length; i++) {
+                const page = sorted[i];
+                result.push(page);
+                const next = sorted[i + 1];
+                if (next && next - page > 1) {
+                    result.push('dots');
+                }
+            }
+
+            return result;
+        }
+
+        // Update pagination UI
+        function updatePaginationUI() {
+            const currentPageEl = document.getElementById('residentCurrentPage');
+            const totalPagesEl = document.getElementById('residentTotalPages');
+            const totalItemsEl = document.getElementById('residentTotalItems');
+            const prevBtn = document.getElementById('residentPrevBtn');
+            const nextBtn = document.getElementById('residentNextBtn');
+            const pagesContainer = document.getElementById('residentPageButtons');
+            
+            if (currentPageEl) currentPageEl.textContent = paginationState.currentPage;
+            if (totalPagesEl) totalPagesEl.textContent = paginationState.totalPages;
+            if (totalItemsEl) totalItemsEl.textContent = paginationState.totalItems;
+
+            if (prevBtn) prevBtn.disabled = paginationState.currentPage <= 1;
+            if (nextBtn) nextBtn.disabled = paginationState.currentPage >= paginationState.totalPages;
+
+            if (!pagesContainer) return;
+            pagesContainer.innerHTML = '';
+
+            const pages = buildPageList(paginationState.currentPage, paginationState.totalPages);
+            pages.forEach(p => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-pagination';
+
+                if (p === 'dots') {
+                    btn.textContent = '...';
+                    btn.disabled = true;
+                    btn.classList.add('dots');
+                } else {
+                    btn.textContent = p;
+                    if (p > paginationState.totalPages) {
+                        btn.disabled = true;
+                    } else {
+                        btn.onclick = () => {
+                            if (p !== paginationState.currentPage) {
+                                goToResidentPage(p);
+                            }
+                        };
+                    }
+                    if (p === paginationState.currentPage) {
+                        btn.classList.add('active');
+                        btn.setAttribute('aria-current', 'page');
+                    }
+                }
+
+                pagesContainer.appendChild(btn);
+            });
+        }
+        
+        // Pagination functions
+        window.goToResidentPage = function(page) {
+            if (page === 'prev') {
+                if (paginationState.currentPage > 1) {
+                    paginationState.currentPage--;
+                    loadResidents();
+                }
+            } else if (page === 'next') {
+                if (paginationState.currentPage < paginationState.totalPages) {
+                    paginationState.currentPage++;
+                    loadResidents();
+                }
+            } else if (typeof page === 'number') {
+                paginationState.currentPage = page;
+                loadResidents();
+            }
+        };
+        
+        window.changeResidentItemsPerPage = function() {
+            const select = document.getElementById('residentItemsPerPage');
+            if (select) {
+                paginationState.itemsPerPage = parseInt(select.value);
+                paginationState.currentPage = 1;
+                loadResidents();
+                updateCustomResidentPaginationDropdown();
+            }
+        };
+        
+        // Filter Functions
+        async function applyFilters() {
+            paginationState.currentPage = 1;
+            await loadResidents();
+            if (typeof showSuccess === 'function') {
+            showSuccess(t('filters_applied', 'Фильтры применены!'));
+            }
+        }
+        
+        window.clearFilters = async function clearFilters() {
+            document.getElementById('filterBlock').value = 'all';
+            document.getElementById('filterStatus').value = 'all';
+            document.getElementById('filterType').value = 'all';
+            document.getElementById('filterHouse').value = '';
+            paginationState.currentPage = 1;
+            await loadResidents();
+            if (typeof showSuccess === 'function') {
+                showSuccess(t('filters_reset', 'Фильтры очищены!'));
+            }
+        };
+        
+        // Modal Functions
+        function setResidentModalMode(mode) {
+            const titleEl = document.getElementById('residentModalTitle');
+            const submitBtn = document.getElementById('residentSubmitBtn');
+            const debtSection = document.getElementById('residentDebtSection');
+            
+            if (!titleEl || !submitBtn) {
+                console.warn('Modal elements not found, skipping mode set');
+                return;
+            }
+            
+            if (mode === 'edit') {
+                titleEl.textContent = t('residents_modal_edit_title', 'Редактировать резидента');
+                submitBtn.textContent = t('save', 'Сохранить');
+                // Долг можно редактировать тоже
+                if (debtSection) debtSection.style.display = '';
+            } else {
+                titleEl.textContent = t('residents_modal_create_title', 'Создать резидента');
+                submitBtn.textContent = t('create', 'Создать');
+                if (debtSection) debtSection.style.display = '';
+            }
+        }
+        
+        function openCreateModal() {
+            console.log('=== openCreateModal called ===');
+            
+            // Принудительно сбрасываем режим редактирования
+            isEditMode = false;
+            editingResidentId = null;
+            console.log('Reset - isEditMode:', isEditMode, 'editingResidentId:', editingResidentId);
+            
+            setResidentModalMode('create');
+            
+            // Полная очистка формы
+            const form = document.getElementById('createResidentForm');
+            if (form) {
+                form.reset();
+            }
+            
+            // Очищаем все поля вручную на случай, если reset() не сработал
+            // Используем setTimeout, чтобы убедиться, что DOM обновлен
+            setTimeout(() => {
+                const residentBlock = document.getElementById('residentBlock');
+                if (residentBlock) {
+                    if (blocks.length > 0) {
+                        residentBlock.value = blocks[0].id || '';
+                    } else {
+                        // Если блоки еще не загружены, загружаем их
+                        loadBlocksAndTariffs().then(() => {
+                            if (blocks.length > 0) {
+                                residentBlock.value = blocks[0].id || '';
+                            }
+                        });
+                    }
+                }
+                
+                const residentNumber = document.getElementById('residentNumber');
+                if (residentNumber) residentNumber.value = '';
+                
+                const residentStatus = document.getElementById('residentStatus');
+                if (residentStatus) residentStatus.value = 'ACTIVE';
+                
+                const residentType = document.getElementById('residentType');
+                if (residentType) residentType.value = 'OWNER';
+                
+                const residentRegistration = document.getElementById('residentRegistration');
+                if (residentRegistration) residentRegistration.value = 'INDIVIDUAL';
+                
+                const residentName = document.getElementById('residentName');
+                if (residentName) residentName.value = '';
+                
+                const residentPhone = document.getElementById('residentPhone');
+                if (residentPhone) residentPhone.value = '';
+                
+                const residentEmail = document.getElementById('residentEmail');
+                if (residentEmail) residentEmail.value = '';
+
+                const residentDebtUtility = document.getElementById('residentDebtUtility');
+                if (residentDebtUtility) residentDebtUtility.value = '0';
+                const residentDebtService = document.getElementById('residentDebtService');
+                if (residentDebtService) residentDebtService.value = '0';
+                const residentDebtRent = document.getElementById('residentDebtRent');
+                if (residentDebtRent) residentDebtRent.value = '0';
+                
+                // Очищаем счётчики
+                const servicesContainer = document.getElementById('servicesContainer');
+                if (servicesContainer) {
+                    servicesContainer.innerHTML = '';
+                    // Добавляем один счётчик по умолчанию
+                    addService();
+                }
+            }, 0);
+            
+            document.getElementById('createResidentModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        let isLoadingResident = false; // Флаг для предотвращения двойной загрузки
+        let lastLoadedResidentId = null; // ID последнего загруженного резидента
+        
+        async function openEditResident(residentId) {
+            // Защита от двойного вызова
+            if (isLoadingResident) {
+                console.log('Already loading resident, skipping...');
+                return;
+            }
+            
+            // Если уже загружаем того же резидента, пропускаем
+            if (lastLoadedResidentId === residentId && document.getElementById('createResidentModal').classList.contains('active')) {
+                console.log('Resident', residentId, 'already loaded and modal is open, skipping...');
+                return;
+            }
+            
+            try {
+                isLoadingResident = true;
+                lastLoadedResidentId = residentId;
+                console.log('=== openEditResident called with ID:', residentId);
+                isEditMode = true;
+                editingResidentId = residentId;
+                console.log('editingResidentId set to:', editingResidentId);
+                setResidentModalMode('edit');
+                
+                // Загружаем данные резидента из API
+                let resp = await fetch(`${API_BASE}/api/residents/${residentId}`, { credentials: 'include' });
+                if (!resp.ok) {
+                    throw new Error(t('residents_error_load_single', 'Не удалось загрузить резидента'));
+                }
+                const resident = await resp.json();
+                console.log('Loaded resident data:', resident);
+                console.log('Meters count:', resident.meters?.length || 0);
+            
+                // Reset form before populating
+                document.getElementById('createResidentForm').reset();
+                
+                // Полностью очищаем контейнер услуг - делаем это дважды для надежности
+                const servicesContainer = document.getElementById('servicesContainer');
+                if (servicesContainer) {
+                    // Удаляем все дочерние элементы
+                    while (servicesContainer.firstChild) {
+                        servicesContainer.removeChild(servicesContainer.firstChild);
+                    }
+                    // Также очищаем innerHTML для полной очистки
+                    servicesContainer.innerHTML = '';
+                    console.log('Services container cleared completely');
+                }
+                
+                // Убеждаемся, что блоки загружены перед заполнением формы
+                if (blocks.length === 0) {
+                    await loadBlocksAndTariffs();
+                }
+                
+                // Заполняем форму
+                const blockSelect = document.getElementById('residentBlock');
+                if (blockSelect) {
+                    // Устанавливаем block_id (число), а не имя блока
+                    blockSelect.value = resident.block_id || '';
+                    console.log('Set residentBlock value to:', resident.block_id);
+                }
+                document.getElementById('residentNumber').value = resident.unit_number || '';
+                document.getElementById('residentStatus').value = resident.status;
+                document.getElementById('residentType').value = resident.resident_type;
+                document.getElementById('residentRegistration').value = resident.customer_type;
+                document.getElementById('residentName').value = resident.owner_full_name || '';
+                document.getElementById('residentPhone').value = resident.owner_phone || '';
+                document.getElementById('residentEmail').value = resident.owner_email || '';
+                let debtUtility = Number(resident.debt_utility ?? 0);
+                let debtService = Number(resident.debt_service ?? 0);
+                let debtRent = Number(resident.debt_rent ?? 0);
+                const debtTotal = Number(resident.debt ?? 0);
+                // Backward compatibility: older residents may have only total debt without split fields.
+                if (debtTotal > 0 && (debtUtility + debtService + debtRent) <= 0) {
+                    debtUtility = debtTotal;
+                }
+                document.getElementById('residentDebtUtility').value = debtUtility;
+                document.getElementById('residentDebtService').value = debtService;
+                document.getElementById('residentDebtRent').value = debtRent;
+                
+                // Загружаем счётчики - проверяем на дубликаты
+                if (resident.meters && Array.isArray(resident.meters)) {
+                    console.log('Total meters from API:', resident.meters.length);
+                    
+                    // Убираем дубликаты по ID счётчика и по комбинации serial_number + meter_type
+                    const uniqueMeters = [];
+                    const seenIds = new Set();
+                    const seenCombinations = new Set();
+                    
+                    resident.meters.forEach(meter => {
+                        // Проверяем по ID
+                        if (meter.id) {
+                            if (!seenIds.has(meter.id)) {
+                                seenIds.add(meter.id);
+                                uniqueMeters.push(meter);
+                                console.log('Added meter by ID:', meter.id, meter.meter_type);
+                            } else {
+                                console.log('Skipped duplicate meter by ID:', meter.id);
+                            }
+                        } else {
+                            // Если нет ID, проверяем по комбинации serial_number + meter_type
+                            const combination = `${meter.serial_number || ''}_${meter.meter_type || ''}`;
+                            if (!seenCombinations.has(combination)) {
+                                seenCombinations.add(combination);
+                                uniqueMeters.push(meter);
+                                console.log('Added meter by combination:', combination);
+                            } else {
+                                console.log('Skipped duplicate meter by combination:', combination);
+                            }
+                        }
+                    });
+                    
+                    console.log('Unique meters count after filtering:', uniqueMeters.length);
+                    
+                    // Проверяем, что контейнер все еще пуст перед добавлением
+                    const currentServices = servicesContainer.querySelectorAll('.service-row');
+                    if (currentServices.length > 0) {
+                        console.warn('WARNING: Services container is not empty before adding meters! Clearing again...');
+                        servicesContainer.innerHTML = '';
+                    }
+                    
+                    // Добавляем уникальные счётчики с дополнительной проверкой
+                    uniqueMeters.forEach((meter, index) => {
+                        console.log(`Adding meter ${index + 1}/${uniqueMeters.length}:`, meter.id, meter.meter_type, meter.serial_number);
+                        
+                        // Дополнительная проверка перед добавлением
+                        if (meter.id) {
+                            const existing = servicesContainer.querySelector(`[data-meter-id="${meter.id}"]`);
+                            if (existing) {
+                                console.warn(`WARNING: Meter with ID ${meter.id} already exists in container, skipping!`);
+                                return;
+                            }
+                        }
+                        
+                        addServiceRow(meter);
+                        
+                        // Проверяем после каждого добавления
+                        const currentCount = servicesContainer.querySelectorAll('.service-row').length;
+                        console.log(`After adding meter ${index + 1}, total services in container: ${currentCount}`);
+                    });
+                    
+                    // Финальная проверка и удаление дубликатов, если они все еще есть
+                    const finalServices = servicesContainer.querySelectorAll('.service-row');
+                    console.log('Final services count in container:', finalServices.length);
+                    
+                    // Если все еще есть дубликаты, удаляем их
+                    if (finalServices.length > uniqueMeters.length) {
+                        console.warn(`WARNING: Found ${finalServices.length} services but expected ${uniqueMeters.length}. Removing duplicates...`);
+                        const seenIds = new Set();
+                        finalServices.forEach((service, index) => {
+                            const meterId = service.getAttribute('data-meter-id');
+                            if (meterId) {
+                                if (seenIds.has(meterId)) {
+                                    console.log(`Removing duplicate service with meter ID: ${meterId}`);
+                                    service.remove();
+                                } else {
+                                    seenIds.add(meterId);
+                                }
+                            } else {
+                                // Для услуг без ID проверяем по содержимому
+                                const serialInput = service.querySelector('.serial-number-input');
+                                const typeSelect = service.querySelector('select:first-of-type');
+                                if (serialInput && typeSelect) {
+                                    const combination = `${serialInput.value}_${typeSelect.value}`;
+                                    if (seenIds.has(combination)) {
+                                        console.log(`Removing duplicate service with combination: ${combination}`);
+                                        service.remove();
+                                    } else {
+                                        seenIds.add(combination);
+                                    }
+                                }
+                            }
+                        });
+                        
+                        const afterCleanup = servicesContainer.querySelectorAll('.service-row').length;
+                        console.log('Services count after cleanup:', afterCleanup);
+                    }
+                } else {
+                    console.log('No meters found in resident data');
+                }
+            
+                document.getElementById('createResidentModal').classList.add('active');
+                document.body.style.overflow = 'hidden';
+            } catch (e) {
+                console.error('Error loading resident:', e);
+                if (typeof showError === 'function') {
+                    showError(`${t('residents_error_load_single', 'Ошибка загрузки резидента')}: ${e.message}`);
+                }
+            } finally {
+                isLoadingResident = false;
+            }
+        }
+        
+        function closeCreateModal() {
+            console.log('=== closeCreateModal called ===');
+            console.log('Resetting isEditMode and editingResidentId');
+            document.getElementById('createResidentModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+            
+            // Полная очистка формы
+            const form = document.getElementById('createResidentForm');
+            if (form) {
+                form.reset();
+            }
+            
+            // Очищаем все поля вручную
+            const residentBlock = document.getElementById('residentBlock');
+            if (residentBlock && blocks.length > 0) {
+                residentBlock.value = blocks[0].id || '';
+            }
+            document.getElementById('residentNumber').value = '';
+            document.getElementById('residentStatus').value = 'ACTIVE';
+            document.getElementById('residentType').value = 'OWNER';
+            document.getElementById('residentRegistration').value = 'INDIVIDUAL';
+            document.getElementById('residentName').value = '';
+            document.getElementById('residentPhone').value = '';
+            document.getElementById('residentEmail').value = '';
+            document.getElementById('servicesContainer').innerHTML = '';
+            
+            isEditMode = false;
+            editingResidentId = null;
+            console.log('After reset - isEditMode:', isEditMode, 'editingResidentId:', editingResidentId);
+            setResidentModalMode('create');
+        }
+        
+        function openDeleteModal(residentId, residentName) {
+            pendingDelete = {
+                id: residentId,
+                name: residentName || t('residents_delete_target_fallback', 'резидента')
+            };
+            
+            document.getElementById('deleteResidentName').textContent = pendingDelete.name;
+            document.getElementById('deleteResidentModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeDeleteModal() {
+            document.getElementById('deleteResidentModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+            pendingDelete = null;
+        }
+        
+        // Do not close modals on overlay click
+        
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const deleteModal = document.getElementById('deleteResidentModal');
+                if (deleteModal.classList.contains('active')) {
+                    closeDeleteModal();
+                } else {
+                    closeCreateModal();
+                }
+            }
+        });
+        
+        // Service Type Change Handler (обновляет тарифы и единицы измерения)
+        function handleServiceTypeChange(selectElement) {
+            updateTariffSelect(selectElement);
+            updateUnitLabel(selectElement);
+        }
+        
+        // Service Functions
+        function addService(meterData = null) {
+            const container = document.getElementById('servicesContainer');
+            if (!container) {
+                console.error('servicesContainer not found!');
+                return;
+            }
+            
+            // Строгая проверка на дубликаты
+            if (meterData && meterData.id) {
+                const existingService = container.querySelector(`[data-meter-id="${meterData.id}"]`);
+                if (existingService) {
+                    console.warn('⚠️ Service with ID', meterData.id, 'already exists, skipping addService call');
+                    return;
+                }
+            }
+            
+            // Дополнительная проверка по комбинации serial_number + meter_type для услуг без ID
+            if (meterData && !meterData.id && meterData.serial_number && meterData.meter_type) {
+                const allServices = container.querySelectorAll('.service-row');
+                for (const service of allServices) {
+                    const serialInput = service.querySelector('.serial-number-input');
+                    const typeSelect = service.querySelector('select:first-of-type');
+                    if (serialInput && typeSelect && 
+                        serialInput.value === meterData.serial_number && 
+                        typeSelect.value === meterData.meter_type.toLowerCase()) {
+                        console.warn('⚠️ Service with serial', meterData.serial_number, 'and type', meterData.meter_type, 'already exists, skipping');
+                        return;
+                    }
+                }
+            }
+            
+            console.log('✅ Adding new service:', meterData?.id || 'new', meterData?.meter_type, meterData?.serial_number);
+            const newService = document.createElement('div');
+            newService.className = 'service-row';
+            
+            // Добавляем data-атрибут для отслеживания дубликатов
+            if (meterData && meterData.id) {
+                newService.setAttribute('data-meter-id', meterData.id);
+            }
+            
+            // Определяем тип счётчика - может прийти из backend в верхнем регистре (SERVICE, WATER) или из формы в нижнем (service, water)
+            let meterType = 'electricity';
+            if (meterData?.meter_type) {
+                const backendType = meterData.meter_type.toUpperCase();
+                const typeMap = {
+                    'ELECTRIC': 'electricity',
+                    'GAS': 'gas',
+                    'WATER': 'water',
+                    'SERVICE': 'service',
+                    'RENT': 'rent',
+                    'CONSTRUCTION': 'construction'
+                };
+                meterType = typeMap[backendType] || meterData.meter_type.toLowerCase();
+            }
+                // Legacy SEWERAGE-meter rows переводим в WATER UI, т.к. канализация теперь только авто.
+            if (meterType === 'sewerage') {
+                meterType = 'water';
+            }
+            
+            const serial = meterData?.serial_number || '';
+            const used = meterData ? (parseFloat(meterData.initial_reading || 0) > 0) : false;
+            const initial = meterData ? parseFloat(meterData.initial_reading || 0) : 0;
+            const tariffId = meterData?.tariff_id || '';
+            
+            // Получаем тарифы для выбранного типа
+            const meterTypeMap = {
+                'electricity': 'ELECTRIC',
+                'gas': 'GAS',
+                'water': 'WATER',
+                'service': 'SERVICE',
+                'rent': 'RENT',
+                'construction': 'CONSTRUCTION'
+            };
+            const apiMeterType = meterTypeMap[meterType] || 'WATER';
+            const availableTariffs = tariffs.filter(t => t.meter_type === apiMeterType && t.is_active);
+            const selectedTariffObj = tariffs.find(t => t.id === tariffId);
+            
+            let tariffSelectHtml = `<option value="">${t('tariffs_form_tariff_placeholder', 'Выберите тариф')}</option>`;
+            
+            // Если у редактируемого счётчика выбран архивный тариф — покажем его как выбранный вариант,
+            // но не будем предлагать архивные тарифы для выбора.
+            if (tariffId && selectedTariffObj && !selectedTariffObj.is_active) {
+                tariffSelectHtml += `<option value="${selectedTariffObj.id}" selected>${selectedTariffObj.name} (${t('residents_tariff_archived', 'архив')})</option>`;
+            }
+            
+            availableTariffs.forEach(tariff => {
+                tariffSelectHtml += `<option value="${tariff.id}" ${tariff.id === tariffId ? 'selected' : ''}>${tariff.name}</option>`;
+            });
+            
+            // Получаем единицу измерения для типа счётчика
+            const unitMap = {
+                'electricity': t('unit_kwh', 'кВт-ч'),
+                'gas': 'м³',
+                'water': 'м³',
+                'service': '', // Фикс цена
+                'rent': '', // Фикс цена
+                'construction': '' // Фикс цена
+            };
+            const unit = unitMap[meterType] || '';
+            
+            // Для SERVICE, RENT, CONSTRUCTION скрываем поля "Б/У?" и "Опорное", показываем только тариф
+            const isFixedPrice = ['service', 'rent', 'construction'].includes(meterType);
+            
+            newService.innerHTML = `
+                <div class="service-input-group">
+                    <label>${t('residents_filter_type', 'Тип')}</label>
+                    <select onchange="handleServiceTypeChange(this)">
+                        <option value="electricity" ${meterType === 'electricity' ? 'selected' : ''}>${t('meter_electricity', 'Электричество')}</option>
+                        <option value="gas" ${meterType === 'gas' ? 'selected' : ''}>${t('meter_gas', 'Газ')}</option>
+                        <option value="water" ${meterType === 'water' ? 'selected' : ''}>${t('meter_cold_water', 'Вода')}</option>
+                        <option value="service" ${meterType === 'service' ? 'selected' : ''}>${t('tariffs_purpose_service', 'Сервис')}</option>
+                        <option value="rent" ${meterType === 'rent' ? 'selected' : ''}>${t('tariffs_purpose_rent', 'Аренда')}</option>
+                        <option value="construction" ${meterType === 'construction' ? 'selected' : ''}>${t('tariffs_purpose_construction', 'Строительство')}</option>
+                    </select>
+                </div>
+                <div class="service-input-group" ${isFixedPrice ? 'style="display: none;"' : ''}>
+                    <label>${t('residents_serial_number', 'Серийный №')} <span style="color: #ff6b6b;">*</span></label>
+                    <input type="text" class="serial-number-input" placeholder="${t('residents_serial_placeholder', 'например, АВ123')}" value="${serial}" ${isFixedPrice ? '' : 'required'}>
+                </div>
+                <div class="service-input-group" ${isFixedPrice ? 'style="display: none;"' : ''}>
+                    <label>${t('residents_used_meter', 'Б/У?')}</label>
+                    <input type="checkbox" class="used-checkbox" ${used ? 'checked' : ''} onchange="toggleInitialReading(this)">
+                </div>
+                <div class="service-input-group" ${isFixedPrice ? 'style="display: none;"' : ''}>
+                    <label>${t('residents_initial_reading', 'Опорное')}</label>
+                    <input type="number" class="initial-reading" value="${initial}" step="0.0001" ${!used ? 'disabled' : ''}>
+                </div>
+                <div class="service-input-group" ${isFixedPrice ? 'style="display: none;"' : ''}>
+                    <label>${t('unit', 'Ед.')}</label>
+                    <input type="text" class="unit-label" value="${unit}" readonly style="background-color: #2a2a2a; color: #ccc; cursor: not-allowed;">
+                </div>
+                <div class="service-input-group">
+                    <label>${t('tariff', 'Тариф')}</label>
+                    <select class="tariff-select">
+                        ${tariffSelectHtml}
+                    </select>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeService(this)" style="height: 38px; white-space: nowrap; min-width: 120px; padding: 10px 16px;">
+                    <i class="bi bi-trash"></i> ${t('action_delete', 'Удалить')}
+                </button>
+            `;
+            container.appendChild(newService);
+            
+            // Инициализируем состояние полей в зависимости от типа
+            const typeSelect = newService.querySelector('select:first-of-type');
+            if (typeSelect) {
+                updateUnitLabel(typeSelect);
+                if (!isFixedPrice) {
+                    const checkbox = newService.querySelector('.used-checkbox');
+                    if (checkbox) {
+                        toggleInitialReading(checkbox);
+                    }
+                }
+            }
+        }
+        
+        function addServiceRow(meterData) {
+            addService(meterData);
+        }
+        
+        function updateTariffSelect(selectElement) {
+            const row = selectElement.closest('.service-row');
+            const tariffSelect = row.querySelector('.tariff-select');
+            if (!tariffSelect) return;
+            
+            const meterType = selectElement.value;
+            const meterTypeMap = {
+                'electricity': 'ELECTRIC',
+                'gas': 'GAS',
+                'water': 'WATER',
+                'service': 'SERVICE',
+                'rent': 'RENT',
+                'construction': 'CONSTRUCTION'
+            };
+            const apiMeterType = meterTypeMap[meterType] || 'ELECTRIC';
+            const availableTariffs = tariffs.filter(t => t.meter_type === apiMeterType && t.is_active);
+            const currentSelectedId = parseInt(tariffSelect.value || 0);
+            const selectedTariffObj = tariffs.find(t => t.id === currentSelectedId);
+            
+            tariffSelect.innerHTML = `<option value="">${t('tariffs_form_tariff_placeholder', 'Выберите тариф')}</option>`;
+            
+            if (currentSelectedId && selectedTariffObj && !selectedTariffObj.is_active) {
+                const opt = document.createElement('option');
+                opt.value = String(selectedTariffObj.id);
+                opt.textContent = `${selectedTariffObj.name} (${t('residents_tariff_archived', 'архив')})`;
+                opt.selected = true;
+                tariffSelect.appendChild(opt);
+            }
+            
+            availableTariffs.forEach(tariff => {
+                const option = document.createElement('option');
+                option.value = tariff.id;
+                option.textContent = tariff.name;
+                tariffSelect.appendChild(option);
+            });
+        }
+        
+        function updateUnitLabel(selectElement) {
+            const row = selectElement.closest('.service-row');
+            const meterType = selectElement.value;
+            const isFixedPrice = ['service', 'rent', 'construction'].includes(meterType);
+            
+            // Находим все группы полей
+            const allGroups = row.querySelectorAll('.service-input-group');
+            const serialGroup = allGroups[1]; // Серийный №
+            const usedGroup = allGroups[2]; // Б/У?
+            const initialGroup = allGroups[3]; // Опорное
+            const unitGroup = allGroups[4]; // Ед.
+            
+            if (isFixedPrice) {
+                // Для фикс-услуг скрываем серийный номер, Б/У, Опорное, Ед.
+                if (serialGroup) serialGroup.style.display = 'none';
+                if (usedGroup) usedGroup.style.display = 'none';
+                if (initialGroup) initialGroup.style.display = 'none';
+                if (unitGroup) unitGroup.style.display = 'none';
+                // Убираем required у скрытого поля серийного номера
+                const serialInput = row.querySelector('.serial-number-input');
+                if (serialInput) {
+                    serialInput.removeAttribute('required');
+                }
+            } else {
+                // Для обычных счётчиков показываем все поля
+                if (serialGroup) serialGroup.style.display = '';
+                if (usedGroup) usedGroup.style.display = '';
+                if (initialGroup) initialGroup.style.display = '';
+                if (unitGroup) unitGroup.style.display = '';
+                // Добавляем required к полю серийного номера
+                const serialInput = row.querySelector('.serial-number-input');
+                if (serialInput) {
+                    serialInput.setAttribute('required', '');
+                }
+                
+                // Обновляем единицу измерения
+                const unitLabel = row.querySelector('.unit-label');
+                if (unitLabel) {
+                    const unitMap = {
+                        'electricity': t('unit_kwh', 'кВт-ч'),
+                        'gas': 'м³',
+                        'water': 'м³'
+                    };
+                    unitLabel.value = unitMap[meterType] || '';
+                }
+            }
+        }
+        
+        function toggleInitialReading(checkbox) {
+            const row = checkbox.closest('.service-row');
+            const initialInput = row.querySelector('.initial-reading');
+            if (!initialInput) return;
+            
+            if (checkbox.checked) {
+                initialInput.disabled = false;
+                initialInput.value = initialInput.value || '0.0000';
+            } else {
+                initialInput.disabled = true;
+                initialInput.value = '0.0000';
+            }
+        }
+        
+        function removeService(button) {
+            const servicesContainer = document.getElementById('servicesContainer');
+            const services = servicesContainer.querySelectorAll('.service-row');
+            
+            if (services.length > 1) {
+                button.closest('.service-row').remove();
+            } else {
+                showWarning(t('residents_min_one_service', 'Должна быть хотя бы одна услуга!'));
+            }
+        }
+        
+        // Create Resident Function
+        window.createResident = async function(event) {
+            event.preventDefault();
+            
+            // Убираем required у скрытых полей перед валидацией формы
+            const form = event.target;
+            const hiddenRequiredInputs = [];
+            const allRequiredInputs = form.querySelectorAll('input[required]');
+            allRequiredInputs.forEach(input => {
+                const parentGroup = input.closest('.service-input-group');
+                if (parentGroup && (parentGroup.style.display === 'none' || window.getComputedStyle(parentGroup).display === 'none')) {
+                    input.removeAttribute('required');
+                    hiddenRequiredInputs.push({input, parentGroup});
+                }
+            });
+            
+            try {
+                const blockId = parseInt(document.getElementById('residentBlock').value);
+                const unitNumber = document.getElementById('residentNumber').value.trim();
+                const status = document.getElementById('residentStatus').value;
+                const residentType = document.getElementById('residentType').value;
+                const customerType = document.getElementById('residentRegistration').value;
+                const ownerFullName = document.getElementById('residentName').value.trim();
+                const ownerPhone = document.getElementById('residentPhone').value.trim();
+                const ownerEmail = document.getElementById('residentEmail').value.trim();
+                const debtUtilityRaw = document.getElementById('residentDebtUtility')?.value ?? '0';
+                const debtServiceRaw = document.getElementById('residentDebtService')?.value ?? '0';
+                const debtRentRaw = document.getElementById('residentDebtRent')?.value ?? '0';
+
+                const openingDebtUtility = parseFloat(String(debtUtilityRaw).replace(',', '.')) || 0;
+                const openingDebtService = parseFloat(String(debtServiceRaw).replace(',', '.')) || 0;
+                const openingDebtRent = parseFloat(String(debtRentRaw).replace(',', '.')) || 0;
+                const openingDebt = openingDebtUtility + openingDebtService + openingDebtRent;
+
+                if (openingDebtUtility < 0 || openingDebtService < 0 || openingDebtRent < 0) {
+                    if (typeof showError === 'function') showError(t('residents_debt_negative_error', 'Долг не может быть отрицательным'));
+                    if (openingDebtUtility < 0) {
+                        document.getElementById('residentDebtUtility')?.focus();
+                    } else if (openingDebtService < 0) {
+                        document.getElementById('residentDebtService')?.focus();
+                    } else {
+                        document.getElementById('residentDebtRent')?.focus();
+                    }
+                    return;
+                }
+                
+                // Собираем счётчики
+                const meters = [];
+            const serviceRows = document.querySelectorAll('#servicesContainer .service-row');
+            serviceRows.forEach(row => {
+                    const meterTypeSelect = row.querySelector('select:first-of-type');
+                    const tariffSelect = row.querySelector('.tariff-select');
+                    
+                    if (!meterTypeSelect || !tariffSelect) return;
+                    
+                    const meterType = meterTypeSelect.value;
+                    const meterTypeMap = {
+                        'electricity': 'ELECTRIC',
+                        'gas': 'GAS',
+                        'water': 'WATER',
+                        'service': 'SERVICE',
+                        'rent': 'RENT',
+                        'construction': 'CONSTRUCTION'
+                    };
+                    const apiMeterType = meterTypeMap[meterType] || 'ELECTRIC';
+                    const isFixedPrice = ['service', 'rent', 'construction'].includes(meterType);
+                    
+                    // Для фикс-услуг серийный номер не обязателен
+                    // Ищем поле серийного номера по классу
+                    const serialInput = row.querySelector('.serial-number-input') || 
+                                       Array.from(row.querySelectorAll('input[type="text"]')).find(input => 
+                                           !input.classList.contains('unit-label')
+                                       );
+                    const usedCheckbox = row.querySelector('.used-checkbox');
+                    const initialInput = row.querySelector('.initial-reading');
+                    
+                    let serial = '';
+                    if (isFixedPrice) {
+                        // Для фикс-услуг серийный номер не обязателен, можно отправить "-"
+                        serial = serialInput?.value.trim() || '-';
+                    } else {
+                        // Для обычных счётчиков серийный номер обязателен
+                        serial = serialInput?.value.trim() || '';
+                        if (!serial) {
+                            if (typeof showError === 'function') {
+                                const meterTypeNames = {
+                                    'electricity': t('meter_electricity', 'Электричество'),
+                                    'gas': t('meter_gas', 'Газ'),
+                                    'water': t('meter_cold_water', 'Вода')
+                                };
+                                const meterTypeName = meterTypeNames[meterType] || meterType;
+                                showError(tr('residents_serial_required_for_meter', { meter: meterTypeName }, 'Заполните серийный номер для счётчика "{meter}"'));
+                            }
+                            // Подсвечиваем поле
+                            if (serialInput) {
+                                serialInput.style.borderColor = '#ff6b6b';
+                                serialInput.focus();
+                                serialInput.addEventListener('input', function() {
+                                    this.style.borderColor = '';
+                                }, { once: true });
+                            }
+                            return;
+                        }
+                    }
+                    
+                    const used = usedCheckbox ? usedCheckbox.checked : false;
+                    const initial = initialInput ? parseFloat(initialInput.value || 0) : 0;
+                    const tariffId = parseInt(tariffSelect.value || 0);
+                    
+                    if (apiMeterType && tariffId) {
+                        
+                        const meterIdAttr = row.getAttribute('data-meter-id');
+                        const meterId = meterIdAttr ? parseInt(meterIdAttr) : null;
+                        const meterPayload = {
+                            // id нужен бэку, чтобы не удалять счётчик (и его показания) при редактировании
+                            ...(meterId ? { id: meterId } : {}),
+                            meter_type: apiMeterType,
+                            serial: serial,
+                            used: used,
+                            initial: initial,
+                            tariff_id: tariffId
+                        };
+                        meters.push(meterPayload);
+                    }
+                });
+                
+                if (meters.length === 0) {
+                    if (typeof showWarning === 'function') {
+                        showWarning(t('residents_add_one_meter', 'Добавьте хотя бы один счётчик'));
+                    }
+                    return;
+                }
+                
+                const payload = {
+                    block_id: blockId,
+                    unit_number: unitNumber,
+                    resident_type: residentType,
+                    customer_type: customerType,
+                    status: status,
+                    owner_full_name: ownerFullName || null,
+                    owner_phone: ownerPhone || null,
+                    owner_email: ownerEmail || null,
+                    meters: meters,
+                    // total debt kept for backward compatibility with old API consumers
+                    debt: openingDebt,
+                    debt_utility: openingDebtUtility,
+                    debt_service: openingDebtService,
+                    debt_rent: openingDebtRent
+                };
+                
+                let url, method;
+                // Дополнительная проверка: убеждаемся, что editingResidentId действительно установлен
+                if (isEditMode && editingResidentId) {
+                    url = `${API_BASE}/api/residents/${editingResidentId}`;
+                    method = 'PUT';
+                    console.log('PUT request to:', url);
+                    console.log('Updating resident ID:', editingResidentId);
+                    console.log('Payload will update resident with ID:', editingResidentId);
+                } else {
+                    if (isEditMode && !editingResidentId) {
+                        console.error('ERROR: isEditMode is true but editingResidentId is null/undefined!');
+                        if (typeof showError === 'function') {
+                            showError(t('residents_error_missing_id', 'Ошибка: ID резидента не установлен. Закройте модальное окно и попробуйте снова.'));
+                        }
+                        return;
+                    }
+                    url = `${API_BASE}/api/residents`;
+                    method = 'POST';
+                    console.log('POST request to:', url);
+                    console.log('Creating new resident');
+                }
+                
+                let resp = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!resp.ok) {
+                    const errorData = await resp.json().catch(() => ({ detail: t('residents_error_save', 'Ошибка сохранения') }));
+                    throw new Error(errorData.detail || 'Failed to save resident');
+                }
+                
+                if (typeof showSuccess === 'function') {
+                    showSuccess(isEditMode
+                        ? tr('residents_update_success', { name: ownerFullName }, 'Резидент "{name}" успешно обновлён!')
+                        : tr('residents_create_success', { name: ownerFullName }, 'Резидент "{name}" успешно создан!'));
+                }
+                
+                // Закрываем модальное окно и очищаем форму
+                closeCreateModal();
+                // Небольшая задержка перед загрузкой, чтобы модальное окно успело закрыться
+                setTimeout(async () => {
+                    await loadResidents();
+                }, 100);
+            } catch (e) {
+                console.error('Error saving resident:', e);
+                if (typeof showError === 'function') {
+                    showError(`${t('residents_error_save', 'Ошибка сохранения резидента')}: ${e.message}`);
+                }
+            } finally {
+                // Восстанавливаем required у скрытых полей после валидации
+                if (typeof hiddenRequiredInputs !== 'undefined' && hiddenRequiredInputs.length > 0) {
+                    hiddenRequiredInputs.forEach(({input, parentGroup}) => {
+                        if (parentGroup && parentGroup.style.display === 'none') {
+                            // Поле все еще скрыто, не восстанавливаем required
+                        } else {
+                            // Поле стало видимым, восстанавливаем required
+                            input.setAttribute('required', '');
+                        }
+                    });
+                }
+            }
+        }
+
+        async function confirmDeleteResident() {
+            if (!pendingDelete || !pendingDelete.id) return;
+            
+            try {
+                let resp = await fetch(`${API_BASE}/api/residents/${pendingDelete.id}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                
+                if (!resp.ok) {
+                    throw new Error(t('residents_error_delete_failed', 'Не удалось удалить резидента'));
+                }
+                
+                if (typeof showSuccess === 'function') {
+            showSuccess(tr('residents_delete_success', { name: pendingDelete.name }, 'Резидент "{name}" удалён'));
+                }
+                
+            closeDeleteModal();
+                await loadResidents();
+            } catch (e) {
+                console.error('Error deleting resident:', e);
+                if (typeof showError === 'function') {
+                    showError(`${t('residents_error_delete', 'Ошибка удаления резидента')}: ${e.message}`);
+                }
+            }
+        }
+        
+        // Делаем функции глобальными для использования в onclick
+        window.applyFilters = applyFilters;
+        window.clearFilters = clearFilters;
+        window.openCreateModal = openCreateModal;
+        window.closeCreateModal = closeCreateModal;
+        // Экспортируем функцию с защитой от двойного вызова
+        window.openEditResident = function(residentId) {
+            // Проверяем, не загружается ли уже резидент
+            if (isLoadingResident) {
+                console.log('Already loading resident, skipping duplicate call');
+                return;
+            }
+            // Проверяем, не открыт ли уже модал для этого резидента
+            const modal = document.getElementById('createResidentModal');
+            if (modal && modal.classList.contains('active') && editingResidentId === residentId) {
+                console.log('Modal already open for this resident, skipping');
+                return;
+            }
+            return openEditResident(residentId);
+        };
+        window.openDeleteModal = openDeleteModal;
+        window.closeDeleteModal = closeDeleteModal;
+        window.confirmDeleteResident = confirmDeleteResident;
+        window.addService = addService;
+        window.removeService = removeService;
+        window.handleServiceTypeChange = handleServiceTypeChange;
+        window.updateTariffSelect = updateTariffSelect;
+        window.updateUnitLabel = updateUnitLabel;
+        window.toggleInitialReading = toggleInitialReading;
+        
+        // Initialize custom pagination dropdown
+        function updateCustomResidentPaginationDropdown() {
+            const customSelect = document.getElementById('customResidentItemsPerPage');
+            if (!customSelect) return;
+            
+            const nativeSelect = document.getElementById('residentItemsPerPage');
+            const selectText = customSelect.querySelector('.select-text');
+            const options = customSelect.querySelectorAll('.select-option');
+            
+            if (nativeSelect && selectText) {
+                const selectedValue = nativeSelect.value;
+                selectText.textContent = selectedValue;
+                options.forEach(opt => {
+                    opt.classList.remove('selected');
+                    if (opt.dataset.value === selectedValue) {
+                        opt.classList.add('selected');
+                    }
+                });
+            }
+        }
+        
+        function initCustomResidentPaginationDropdown() {
+            const customSelect = document.getElementById('customResidentItemsPerPage');
+            if (!customSelect || customSelect.dataset.initialized === 'true') return;
+            customSelect.dataset.initialized = 'true';
+            
+            const nativeSelect = document.getElementById('residentItemsPerPage');
+            const selectBtn = customSelect.querySelector('.select-btn');
+            const selectText = customSelect.querySelector('.select-text');
+            const options = customSelect.querySelectorAll('.select-option');
+            
+            if (nativeSelect) {
+                const selectedValue = nativeSelect.value;
+                selectText.textContent = selectedValue;
+                options.forEach(opt => {
+                    opt.classList.remove('selected');
+                    if (opt.dataset.value === selectedValue) {
+                        opt.classList.add('selected');
+                    }
+                });
+            }
+            
+            selectBtn.onclick = function(e) {
+                e.stopPropagation();
+                customSelect.classList.toggle('open');
+            };
+            
+            options.forEach(option => {
+                option.onclick = function(e) {
+                    e.stopPropagation();
+                    const value = option.dataset.value;
+                    if (nativeSelect) {
+                        nativeSelect.value = value;
+                        nativeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    selectText.textContent = value;
+                    options.forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+                    customSelect.classList.remove('open');
+                };
+            });
+            
+            document.addEventListener('click', function(e) {
+                if (!customSelect.contains(e.target)) {
+                    customSelect.classList.remove('open');
+                }
+            });
+        }
+        
+        // Загрузка при открытии страницы
+        function initResidentsPage() {
+            console.log('Initializing residents page...');
+            setTimeout(async () => {
+                await loadBlocksAndTariffs();
+                await loadResidents();
+                
+                // Add Enter key support for filters
+                const filterInputs = ['filterBlock', 'filterHouse', 'filterStatus', 'filterType'];
+                filterInputs.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.addEventListener('keydown', function(e) {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                applyFilters();
+                            }
+                        });
+                    }
+                });
+
+                // Initialize pagination dropdown
+                setTimeout(() => {
+                    initCustomResidentPaginationDropdown();
+                }, 200);
+            }, 100);
+        }
+
+        window.refreshPageTranslations = function () {
+            const route = window.location.hash.split('?')[0].slice(1);
+            if (!route || route === '/residents' || route.startsWith('/residents')) {
+                renderResidentsTable();
+                updatePaginationUI();
+                setResidentModalMode(isEditMode ? 'edit' : 'create');
+            }
+        };
+        
+        // Слушаем событие от роутера
+        // Удаляем старый обработчик, если он существует
+        if (window._residentsContentLoadedHandler) {
+            window.removeEventListener('spa:contentLoaded', window._residentsContentLoadedHandler);
+        }
+        
+        window._residentsContentLoadedHandler = (e) => {
+            console.log('SPA content loaded event:', e.detail);
+            const route = e.detail?.route || window.location.hash.split('?')[0].slice(1);
+            console.log('Current route:', route);
+            if (!route || route === '/residents' || route.startsWith('/residents')) {
+                console.log('Loading residents from spa:contentLoaded');
+                initResidentsPage();
+            }
+        };
+        
+        window.addEventListener('spa:contentLoaded', window._residentsContentLoadedHandler);
+        
+        // Загрузка при первой загрузке (если не через SPA)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initResidentsPage);
+        } else {
+            initResidentsPage();
+        }
+</script>
+
+
+
+
+
+

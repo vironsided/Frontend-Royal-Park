@@ -1,0 +1,3742 @@
+<link rel="stylesheet" href="/admin/content_css/readings.css">
+<div class="content-wrapper">
+    <h2 class="mb-4" data-i18n="readings_page_title">Показатели по квартирам</h2>
+
+    <!-- Filters -->
+    <div class="filters-container">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label data-i18n="residents_filter_block">Блок</label>
+                <select id="filterBlock">
+                    <option value="all" data-i18n="all">Все</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label data-i18n="resident">Резидент</label>
+                <select id="filterResident">
+                    <option value="all" data-i18n="all">Все</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label data-i18n="readings_meter_type">Тип счётчика</label>
+                <details class="multi-filter" id="filterMeterTypeDetails">
+                    <summary class="multi-filter-summary" id="filterMeterTypeSummary" data-i18n="all">Все</summary>
+                    <div class="multi-filter-panel">
+                        <label class="multi-filter-item">
+                            <input type="checkbox" id="meterTypeAll" checked>
+                            <span data-i18n="all">Все</span>
+                        </label>
+                        <label class="multi-filter-item">
+                            <input type="checkbox" class="meter-type-checkbox" value="utility" checked>
+                            <span>Utility</span>
+                        </label>
+                        <label class="multi-filter-item">
+                            <input type="checkbox" class="meter-type-checkbox" value="ELECTRIC" checked>
+                            <span data-i18n="meter_electricity">Электричество</span>
+                        </label>
+                        <label class="multi-filter-item">
+                            <input type="checkbox" class="meter-type-checkbox" value="GAS" checked>
+                            <span data-i18n="meter_gas">Газ</span>
+                        </label>
+                        <label class="multi-filter-item">
+                            <input type="checkbox" class="meter-type-checkbox" value="WATER" checked>
+                            <span data-i18n="meter_cold_water">Вода</span>
+                        </label>
+                        <label class="multi-filter-item">
+                            <input type="checkbox" class="meter-type-checkbox" value="SEWERAGE" checked>
+                            <span data-i18n="readings_meter_sewerage">Канализация</span>
+                        </label>
+                        <label class="multi-filter-item">
+                            <input type="checkbox" class="meter-type-checkbox" value="SERVICE" checked>
+                            <span data-i18n="tariffs_purpose_service">Сервис</span>
+                        </label>
+                        <label class="multi-filter-item">
+                            <input type="checkbox" class="meter-type-checkbox" value="RENT" checked>
+                            <span data-i18n="tariffs_purpose_rent">Аренда</span>
+                        </label>
+                        <label class="multi-filter-item">
+                            <input type="checkbox" class="meter-type-checkbox" value="CONSTRUCTION" checked>
+                            <span data-i18n="tariffs_purpose_construction">Строительство</span>
+                        </label>
+                    </div>
+                </details>
+            </div>
+
+            <div class="filter-group">
+                <label data-i18n="year">Год</label>
+                <select id="filterYear">
+                    <option value="2028">2028</option>
+                    <option value="2027">2027</option>
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label data-i18n="month">Месяц</label>
+                <select id="filterMonth">
+                    <option value="1" data-i18n="month_january">Январь</option>
+                    <option value="2" data-i18n="month_february">Февраль</option>
+                    <option value="3" data-i18n="month_march">Март</option>
+                    <option value="4" data-i18n="month_april">Апрель</option>
+                    <option value="5" data-i18n="month_may">Май</option>
+                    <option value="6" data-i18n="month_june">Июнь</option>
+                    <option value="7" data-i18n="month_july">Июль</option>
+                    <option value="8" data-i18n="month_august">Август</option>
+                    <option value="9" data-i18n="month_september">Сентябрь</option>
+                    <option value="10" data-i18n="month_october">Октябрь</option>
+                    <option value="11" data-i18n="month_november">Ноябрь</option>
+                    <option value="12" data-i18n="month_december">Декабрь</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label data-i18n="tenants_filter_search">Поиск</label>
+                <input type="text" id="filterSearch" placeholder="№ дома, ФИО, телефон, email" data-i18n-placeholder="readings_search_placeholder">
+            </div>
+        </div>
+
+        <div class="filters-actions">
+            <button class="btn btn-outline-secondary" onclick="applyFilters()">
+                <i class="bi bi-funnel"></i> <span data-i18n="user_resident_filter_btn">Фильтр</span>
+            </button>
+            <button class="btn btn-primary" onclick="openRecordModal()">
+                <i class="bi bi-plus-lg"></i> <span data-i18n="readings_record_button">Запись показателя</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="readings-export-toolbar">
+        <button class="btn btn-outline-success" id="readingsExportToggleBtn" type="button">
+            <i class="bi bi-box-arrow-down"></i> <span data-i18n="export">Экспорт</span>
+        </button>
+    </div>
+
+    <div class="readings-export-panel" id="readingsExportPanel" style="display: none;">
+        <div class="readings-export-grid">
+            <div class="filter-group">
+                <label data-i18n="residents_filter_block">Блок</label>
+                <select id="exportFilterBlock">
+                    <option value="all" data-i18n="all">Все</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label data-i18n="resident">Резидент</label>
+                <select id="exportFilterResident">
+                    <option value="all" data-i18n="all">Все</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label data-i18n="readings_meter_type">Тип счётчика</label>
+                <details class="multi-filter service-filter-details" id="exportFilterMeterTypeDetails">
+                    <summary class="multi-filter-summary" id="exportFilterMeterTypeSummary" data-i18n="readings_all_types">Все типы</summary>
+                    <div class="multi-filter-panel service-filter-dropdown">
+                        <div class="service-filter-options" id="exportMeterTypeOptions">
+                        <label class="multi-filter-item">
+                            <input type="checkbox" id="exportMeterTypeAll" checked>
+                            <span data-i18n="all">Все</span>
+                        </label>
+                        <label class="multi-filter-item">
+                            <input type="checkbox" class="export-meter-type-checkbox" value="utility" checked>
+                            <span>Utility</span>
+                        </label>
+                        <label class="multi-filter-item">
+                            <input type="checkbox" class="export-meter-type-checkbox" value="ELECTRIC" checked>
+                            <span data-i18n="meter_electricity">Электричество</span>
+                        </label>
+                        <label class="multi-filter-item">
+                            <input type="checkbox" class="export-meter-type-checkbox" value="GAS" checked>
+                            <span data-i18n="meter_gas">Газ</span>
+                        </label>
+                        <label class="multi-filter-item">
+                            <input type="checkbox" class="export-meter-type-checkbox" value="WATER" checked>
+                            <span data-i18n="meter_cold_water">Вода</span>
+                        </label>
+                        <label class="multi-filter-item">
+                            <input type="checkbox" class="export-meter-type-checkbox" value="SEWERAGE" checked>
+                            <span data-i18n="readings_meter_sewerage">Канализация</span>
+                        </label>
+                        <label class="multi-filter-item">
+                            <input type="checkbox" class="export-meter-type-checkbox" value="SERVICE" checked>
+                            <span data-i18n="tariffs_purpose_service">Сервис</span>
+                        </label>
+                        <label class="multi-filter-item">
+                            <input type="checkbox" class="export-meter-type-checkbox" value="RENT" checked>
+                            <span data-i18n="tariffs_purpose_rent">Аренда</span>
+                        </label>
+                        <label class="multi-filter-item">
+                            <input type="checkbox" class="export-meter-type-checkbox" value="CONSTRUCTION" checked>
+                            <span data-i18n="tariffs_purpose_construction">Строительство</span>
+                        </label>
+                        </div>
+                        <div class="service-filter-actions">
+                            <button type="button" class="btn-filter-mini" id="exportMeterSelectAllBtn" data-i18n="readings_select_all">Выбрать все</button>
+                            <button type="button" class="btn-filter-mini" id="exportMeterOkBtn">OK</button>
+                            <button type="button" class="btn-filter-mini" id="exportMeterClearBtn" data-i18n="user_resident_reset_btn">Очистить</button>
+                        </div>
+                    </div>
+                </details>
+            </div>
+
+            <div class="filter-group">
+                <label data-i18n="readings_month_from">Месяц от</label>
+                <input type="month" id="exportFilterDateFrom">
+            </div>
+
+            <div class="filter-group">
+                <label data-i18n="readings_month_to">Месяц до</label>
+                <input type="month" id="exportFilterDateTo">
+            </div>
+        </div>
+
+        <div class="readings-export-actions">
+            <select id="readingsExportFormat" class="form-select form-select-sm" style="max-width: 170px;">
+                <option value="xls" data-i18n="residents_export_excel_styled">Excel (Styled)</option>
+                <option value="pdf" data-i18n="residents_export_pdf_print">PDF (печать)</option>
+            </select>
+            <button class="btn btn-outline-warning" type="button" onclick="resetReadingsExportFilters()">
+                <i class="bi bi-x-circle"></i> <span data-i18n="reset">Сброс</span>
+            </button>
+            <button class="btn btn-success" type="button" onclick="exportReadings()">
+                <i class="bi bi-box-arrow-down"></i> <span data-i18n="export">Экспорт</span>
+            </button>
+        </div>
+    </div>
+
+    <div style="position: relative;">
+        <!-- Readings Table -->
+        <div class="card readings-card">
+            <div class="readings-head">
+                <div data-i18n="resident">Резидент</div>
+                <div data-i18n="readings_consumption_by_meters">Расход по счётчикам</div>
+                <div data-i18n="readings_amount_by_meters">Сумма по счётчикам</div>
+                <div data-i18n="tariffs_col_actions">Действия</div>
+            </div>
+
+            <div class="readings-list" id="readingsTableBody">
+                <div class="text-muted text-center" style="padding: 40px;">
+                    <span data-i18n="loading">Загрузка данных...</span>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="table-pagination">
+                <div class="pagination-controls" id="readingPaginationControls">
+                    <button class="btn-pagination" onclick="goToReadingPage('prev')" disabled id="readingPrevBtn">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </button>
+                    <div id="readingPageButtons" class="pagination-pages"></div>
+                    <button class="btn-pagination" onclick="goToReadingPage('next')" disabled id="readingNextBtn">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </button>
+                </div>
+                <div class="pagination-info">
+                    <span><span data-i18n="residents_pagination_page_short">Стр.</span> <span id="readingCurrentPage">1</span> <span data-i18n="residents_pagination_of">из</span> <span id="readingTotalPages">1</span> · <span data-i18n="residents_pagination_total">всего</span>
+                        <span id="readingTotalItems">0</span></span>
+                </div>
+                <div class="pagination-per-page">
+                    <span data-i18n="residents_pagination_on">На</span>
+                    <span data-i18n="residents_pagination_per_page">странице:</span>
+                    <div class="custom-pag-select" id="customReadingItemsPerPage">
+                        <select id="readingItemsPerPage" onchange="changeReadingItemsPerPage()" style="display: none;">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <div class="select-btn">
+                            <span class="select-text">25</span>
+                            <span class="arrow">▾</span>
+                        </div>
+                        <div class="select-options" style="background: rgba(36, 40, 49, 0.95) !important">
+                            <div class="select-option" data-value="10">10</div>
+                            <div class="select-option selected" data-value="25">25</div>
+                            <div class="select-option" data-value="50">50</div>
+                            <div class="select-option" data-value="100">100</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</main>
+</div>
+
+<!-- Record Reading Modal -->
+<div class="modal-overlay" id="recordReadingModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="recordReadingTitle" data-i18n="readings_modal_record_title">Запись показателя</h2>
+            <button class="modal-close" onclick="closeRecordModal()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <form id="recordReadingForm" onsubmit="recordReading(event)">
+            <div class="record-form-grid">
+                <div class="form-group">
+                    <label data-i18n="residents_filter_block">Блок</label>
+                    <select id="modalBlock" required onchange="window.loadResidents()">
+                        <option value="" data-i18n="readings_select_placeholder">— выберите —</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="resident">Резидент</label>
+                    <select id="modalResident" required disabled>
+                        <option value="" data-i18n="readings_select_block_first">— выберите блок —</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="readings_date_label">Дата показаний</label>
+                    <input type="date" id="modalDate" required>
+                </div>
+            </div>
+
+            <div id="meterDetailsSection" class="meter-details hidden">
+                <div class="meter-table-wrapper">
+                    <table class="meter-table">
+                        <thead>
+                            <tr>
+                                <th data-i18n="residents_col_type">Тип</th>
+                                <th data-i18n="tariff">Тариф</th>
+                                <th data-i18n="meter_previous">Предыдущее</th>
+                                <th data-i18n="readings_new_or_mark">Новое / Отметить</th>
+                                <th data-i18n="user_resident_table_usage">Расход</th>
+                                <th data-i18n="amount">Сумма</th>
+                                <th data-i18n="readings_photo">Фото</th>
+                                <th data-i18n="readings_delete_last">Удалить последнее</th>
+                            </tr>
+                        </thead>
+                        <tbody id="meterTableBody">
+                            <tr>
+                                <td colspan="8" class="text-muted text-center" data-i18n="readings_select_resident_to_see_tariffs">Выберите резидента, чтобы увидеть тарифы
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="user_resident_table_comment">Комментарий</label>
+                    <textarea id="modalComment" rows="2" placeholder="Например, показания снял охранник..." data-i18n-placeholder="readings_comment_placeholder"></textarea>
+                </div>
+            </div>
+
+            <div class="photo-picker-modal" id="photoPickerModal">
+                <div class="photo-picker-sheet">
+                    <div class="photo-picker-title" data-i18n="readings_add_photo">Добавить фото</div>
+                    <button type="button" class="photo-picker-btn" data-source="camera">
+                        <i class="bi bi-camera"></i> <span data-i18n="readings_take_photo">Сфотографировать</span>
+                    </button>
+                    <button type="button" class="photo-picker-btn" data-source="gallery">
+                        <i class="bi bi-image"></i> <span data-i18n="readings_upload_from_gallery">Загрузить из галереи</span>
+                    </button>
+                    <button type="button" class="photo-picker-cancel" data-i18n="cancel">Отмена</button>
+                </div>
+            </div>
+            <input type="file" id="meterPhotoInputCamera" accept="image/*" capture="environment" class="hidden-file-input">
+            <input type="file" id="meterPhotoInputGallery" accept="image/*" class="hidden-file-input">
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeRecordModal()">
+                    <span data-i18n="cancel">Отмена</span>
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <span data-i18n="readings_record_submit">Записать</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Reading Details Modal -->
+<div class="modal-overlay" id="readingDetailsModal">
+    <div class="modal-content readings-detail-modal">
+        <div class="modal-header">
+            <h2 id="readingDetailsTitle" data-i18n="resident">Резидент</h2>
+            <button class="modal-close" onclick="closeReadingDetails()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="reading-details-filter" style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <label style="color: #fff; font-size: 14px;" data-i18n="readings_filter_by_months">Фильтр по месяцам:</label>
+                <span style="color: #fff; font-size: 13px;" data-i18n="readings_month_from">Месяц от</span>
+                <input type="month" id="readingDetailsFromMonth" style="padding: 6px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; font-size: 14px;" placeholder="С месяца" data-i18n-placeholder="readings_from_month_placeholder">
+                <span style="color: #fff;">—</span>
+                <span style="color: #fff; font-size: 13px;" data-i18n="readings_month_to">Месяц до</span>
+                <input type="month" id="readingDetailsToMonth" style="padding: 6px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; font-size: 14px;" placeholder="По месяц" data-i18n-placeholder="readings_to_month_placeholder">
+                <button onclick="applyReadingDetailsFilter()" style="padding: 6px 15px; border-radius: 4px; border: none; background: #667eea; color: #fff; cursor: pointer; font-size: 14px;" data-i18n="apply">Применить</button>
+                <button onclick="resetReadingDetailsFilter()" style="padding: 6px 15px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); background: transparent; color: #fff; cursor: pointer; font-size: 14px;" data-i18n="reset">Сбросить</button>
+            </div>
+        </div>
+        <div class="reading-details-body" id="readingDetailsBody">
+            <div class="text-muted" data-i18n="readings_select_record_for_details">Выберите запись, чтобы увидеть детали</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BASE || 'http://localhost:8000');
+    const t = (key, fallback = '') => window.i18n?.translate?.(key) || fallback || key;
+    const tr = (key, params = {}, fallback = '') => {
+        const base = t(key, fallback);
+        return Object.entries(params).reduce((txt, [p, v]) => txt.replace(new RegExp(`\\{${p}\\}`, 'g'), String(v)), base);
+    };
+    function localizeDetailMeterType(rawType) {
+        const value = String(rawType || '').trim();
+        if (!value) return '—';
+        const normalized = value.toUpperCase();
+        const has = (...parts) => parts.some((part) => normalized.includes(part));
+
+        if (has('ELECTRIC', 'ELECTRICITY', 'ЭЛЕКТРИЧ', 'ТОК', 'ELEKTR')) {
+            return t('meter_electricity', 'Электричество');
+        }
+        if (has('GAS', 'ГАЗ', 'QAZ')) {
+            return t('meter_gas', 'Газ');
+        }
+        if (has('WATER', 'ВОД', ' SU', 'SU ')) {
+            return t('meter_cold_water', 'Вода');
+        }
+        if (has('SEWER', 'КАНАЛ', 'KANAL')) {
+            return t('readings_meter_sewerage', 'Канализация');
+        }
+        if (has('SERVICE', 'СЕРВИС', 'XİDMƏT', 'XIDMET')) {
+            return t('tariffs_purpose_service', 'Сервис');
+        }
+        if (has('RENT', 'АРЕНД', 'İCARƏ', 'ICARE')) {
+            return t('tariffs_purpose_rent', 'Аренда');
+        }
+        if (has('CONSTRUCTION', 'СТРОИТ', 'TIKINTI', 'TİKİNTİ')) {
+            return t('tariffs_purpose_construction', 'Строительство');
+        }
+        return value;
+    }
+    function localizeDetailUnit(rawUnit) {
+        const value = String(rawUnit || '').trim();
+        if (!value) return '';
+        const normalized = value.toLowerCase();
+        if (normalized === 'квт·ч' || normalized === 'квт*ч' || normalized === 'kwh' || normalized === 'kw/h') {
+            return t('user_unit_kwh', 'кВт·ч');
+        }
+        if (normalized === 'м³' || normalized === 'm3') {
+            return t('user_unit_m3', 'м³');
+        }
+        if (normalized.includes('мес') || normalized === 'mo' || normalized === 'month') {
+            return t('readings_unit_month_short', 'мес.');
+        }
+        return value;
+    }
+    let readingsData = null;
+    let blocks = [];
+    let residents = [];
+
+    // Pagination state
+    let paginationState = {
+        currentPage: 1,
+        itemsPerPage: 25,
+        totalItems: 0,
+        totalPages: 1
+    };
+
+    function isReadingsPageActive() {
+        const route = window.location.hash.split('?')[0].slice(1);
+        if (route && route !== '/readings' && !route.startsWith('/readings')) {
+            return false;
+        }
+        return !!document.getElementById('readingsTableBody');
+    }
+
+    const meterPhotoFiles = new Map();
+    const meterPhotoObjectUrls = new Map();
+    let activePhotoMeterId = null;
+    let meterPhotoPickerInitialized = false;
+    let isReadingEditMode = false;
+    const initialLastReadingByMeter = new Map();
+    const deletedLastReadingMeters = new Set();
+
+    function resetDeleteLastReadingGuards() {
+        initialLastReadingByMeter.clear();
+        deletedLastReadingMeters.clear();
+    }
+
+    // Set today's date as default
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('DOMContentLoaded - readings page');
+        setTimeout(() => {
+            const today = new Date().toISOString().split('T')[0];
+            const modalDate = document.getElementById('modalDate');
+            if (modalDate) {
+                modalDate.value = today;
+            }
+            initCustomReadingPaginationDropdown();
+            initMeterPhotoPicker();
+            console.log('Calling loadReadings from DOMContentLoaded');
+            if (typeof window.loadReadings === 'function') {
+                window.loadReadings();
+            } else {
+                console.error('loadReadings is not defined in DOMContentLoaded!');
+            }
+        }, 100);
+    });
+
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1;
+    const yearSelect = document.getElementById("filterYear");
+    const monthSelect = document.getElementById("filterMonth");
+
+    if (yearSelect && yearSelect.querySelector(`option[value="${currentYear}"]`)) {
+        yearSelect.value = currentYear;
+    }
+    if (monthSelect) {
+        monthSelect.value = currentMonth.toString();
+    }
+
+    // Load all blocks for filter initially
+    window.loadAllBlocks = async function loadAllBlocks() {
+        try {
+            const response = await fetch(`${API_BASE}/api/blocks`, { credentials: 'include' });
+            if (response.ok) {
+                const data = await response.json();
+                blocks = Array.isArray(data) ? data : (data.blocks || []);
+                console.log('Global blocks loaded:', blocks);
+                window.updateFilterDropdowns();
+            }
+        } catch (error) {
+            console.error('Error loading blocks for filter:', error);
+        }
+    }
+
+    // Load readings from API
+    window.loadReadings = async function loadReadings() {
+        console.log('=== loadReadings() called ===');
+        try {
+            const blockId = document.getElementById('filterBlock')?.value;
+            const residentId = document.getElementById('filterResident')?.value;
+            const meterTypes = getSelectedMeterTypes();
+            // Всегда получаем год и месяц, если не указаны - используем текущие
+            const yearSelect = document.getElementById('filterYear');
+            const monthSelect = document.getElementById('filterMonth');
+            const year = yearSelect?.value || new Date().getFullYear().toString();
+            const month = monthSelect?.value || (new Date().getMonth() + 1).toString();
+            const searchTerm = document.getElementById('filterSearch')?.value.trim();
+
+            console.log('Filters:', { blockId, residentId, meterTypes, year, month, searchTerm });
+
+            const params = new URLSearchParams();
+            // Pagination parameters
+            params.append('page', paginationState.currentPage);
+            params.append('per_page', paginationState.itemsPerPage);
+            // Всегда передаем год и месяц
+            params.append('year', year);
+            params.append('month', month);
+
+            if (blockId && blockId !== 'all') {
+                // Find block ID by name
+                const block = blocks.find(b => b.name === blockId);
+                if (block) {
+                    params.append('block_id', block.id);
+                } else {
+                    console.warn('Block not found in blocks array:', blockId, blocks);
+                }
+            }
+            if (residentId && residentId !== 'all') params.append('resident_id', residentId);
+            const allTypeCount = ALL_METER_TYPES.length;
+            if (Array.isArray(meterTypes) && meterTypes.length > 0 && meterTypes.length < allTypeCount) {
+                meterTypes.forEach((t) => params.append('meter_type', t));
+            }
+            if (searchTerm) params.append('q', searchTerm);
+
+            let url = `${API_BASE}/api/readings?${params.toString()}`;
+
+            console.log('Loading readings from:', url);
+
+            let response = await fetch(url, { credentials: 'include' });
+            console.log('Response status:', response.status, response.statusText);
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Endpoint error:', errorText);
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+
+            readingsData = await response.json();
+            console.log('Readings data received:', readingsData);
+            console.log('Rows count:', readingsData.rows?.length || 0);
+            console.log('First row sample:', readingsData.rows?.[0]);
+            console.log('Blocks:', readingsData.blocks);
+            console.log('Residents:', readingsData.residents);
+            blocks = readingsData.blocks || [];
+            residents = readingsData.residents || [];
+
+            // Update pagination state
+            const pagination = readingsData.pagination || {};
+            paginationState.totalItems = pagination.total || 0;
+            paginationState.totalPages = pagination.last_page || 1;
+            paginationState.currentPage = pagination.page || 1;
+
+            if (!isReadingsPageActive()) {
+                return;
+            }
+
+            console.log('Calling renderReadingsTable...');
+            if (typeof window.renderReadingsTable === 'function') {
+                window.renderReadingsTable();
+            } else {
+                console.error('renderReadingsTable is not a function!', typeof renderReadingsTable);
+            }
+            console.log('Calling updateFilterDropdowns...');
+            if (typeof window.updateFilterDropdowns === 'function') {
+                window.updateFilterDropdowns();
+            } else {
+                console.error('updateFilterDropdowns is not a function!', typeof updateFilterDropdowns);
+            }
+            updatePaginationUI();
+        } catch (error) {
+            console.error('Error loading readings:', error);
+            if (typeof showError === 'function') {
+                showError(`${t('readings_error_load', 'Ошибка загрузки показаний')}: ${error.message}`);
+            }
+        }
+    }
+
+    function bindResidentFilterToBlock() {
+        const blockSelect = document.getElementById('filterBlock');
+        if (!blockSelect) return;
+
+        // Prevent duplicate handlers when SPA reloads the page content
+        if (blockSelect._residentFilterHandler) {
+            blockSelect.removeEventListener('change', blockSelect._residentFilterHandler);
+        }
+
+        blockSelect._residentFilterHandler = function () {
+            // When block changes: update resident list immediately
+            updateResidentFilterOptions();
+        };
+        blockSelect.addEventListener('change', blockSelect._residentFilterHandler);
+    }
+
+    // Render readings table
+    window.renderReadingsTable = function renderReadingsTable() {
+        const tbody = document.getElementById('readingsTableBody');
+        console.log('Rendering readings table:', { tbody: !!tbody, readingsData, hasRows: readingsData?.rows });
+
+        if (!tbody) {
+            // Ignore stale async renders when SPA view is already replaced.
+            return;
+        }
+
+        if (!readingsData) {
+            console.warn('No readings data');
+            tbody.innerHTML = `<div class="text-muted text-center" style="padding: 40px;">${t('tariffs_no_data', 'Нет данных')}</div>`;
+            return;
+        }
+
+        if (!readingsData.rows) {
+            console.warn('No rows in readings data:', readingsData);
+            tbody.innerHTML = `<div class="text-muted text-center" style="padding: 40px;">${t('tariffs_no_data', 'Нет данных')}</div>`;
+            return;
+        }
+
+        if (readingsData.rows.length === 0) {
+            console.log('Empty rows array');
+            tbody.innerHTML = `<div class="text-muted text-center" style="padding: 40px;">${t('readings_no_data_period', 'Нет показаний за выбранный период')}</div>`;
+            return;
+        }
+
+        console.log('Rendering', readingsData.rows.length, 'rows');
+
+        function translateMeterUnit(unitRaw) {
+            const src = String(unitRaw || '').trim();
+            if (!src) return '';
+            const low = src.toLowerCase();
+            if (/квт|kwh|kvt|kvt·s|kvt-saat/.test(low)) return t('user_unit_kwh', src);
+            if (/м³|m3|m³/.test(low)) return t('user_unit_m3', src);
+            if (/мес|month|ay/.test(low)) return t('readings_unit_month_short', src);
+            return src;
+        }
+
+        function translateResidentInfo(rawInfo) {
+            let text = String(rawInfo || '').trim();
+            if (!text) return '—';
+            text = text.replace(/(?:блок|blok|block)/gi, t('residents_filter_block', 'Блок'));
+            text = text.replace(/(?:дом|ev|house)/gi, t('residents_col_house', '№ дома'));
+            text = text.replace(/(?:фио|ad soyad|full name)/gi, t('residents_col_name', 'ФИО жителя'));
+            text = text.replace(/(?:телефон|telefon|phone)/gi, t('phone', 'Телефон'));
+            return text;
+        }
+
+        let totalAmount = 0;
+        const rowsHtmlArray = readingsData.rows.map((row, index) => {
+            console.log(`Processing row ${index}:`, row);
+            totalAmount += row.total_amount || 0;
+
+            if (!row.meters || !Array.isArray(row.meters)) {
+                console.warn(`Row ${index} has no meters array:`, row);
+                return null; // Skip this row if no meters
+            }
+
+            const metersHtml = row.meters.map(m => {
+                const rawType = String(m.type || '');
+                const typeUpper = rawType.toUpperCase();
+                const typeLower = rawType.toLowerCase();
+
+                let meterTypeLabel = rawType;
+                let isFixedType = false;
+
+                if (typeUpper === 'ELECTRIC' || typeLower.includes('электр') || typeLower.includes('elektr') || typeLower.includes('electric')) {
+                    meterTypeLabel = t('meter_electricity', 'Электричество');
+                } else if (typeUpper === 'GAS' || typeLower.includes('газ') || typeLower.includes('qaz') || typeLower.includes('gas')) {
+                    meterTypeLabel = t('meter_gas', 'Газ');
+                } else if (typeUpper === 'WATER' || typeLower.includes('вода') || typeLower.includes('su') || typeLower.includes('water')) {
+                    meterTypeLabel = t('meter_cold_water', 'Вода');
+                } else if (typeUpper === 'SEWERAGE' || typeLower.includes('канал') || typeLower.includes('kanaliz') || typeLower.includes('sewerage')) {
+                    meterTypeLabel = t('readings_meter_sewerage', 'Канализация');
+                } else if (typeUpper === 'SERVICE' || typeLower.includes('сервис') || typeLower.includes('xidmət') || typeLower.includes('service')) {
+                    meterTypeLabel = t('tariffs_purpose_service', 'Сервис');
+                    isFixedType = true;
+                } else if (typeUpper === 'RENT' || typeLower.includes('аренд') || typeLower.includes('icar') || typeLower.includes('rent')) {
+                    meterTypeLabel = t('tariffs_purpose_rent', 'Аренда');
+                    isFixedType = true;
+                } else if (typeUpper === 'CONSTRUCTION' || typeLower.includes('строит') || typeLower.includes('tikinti') || typeLower.includes('construction')) {
+                    meterTypeLabel = t('tariffs_purpose_construction', 'Строительство');
+                    isFixedType = true;
+                }
+
+                const unitTranslated = translateMeterUnit(m.unit);
+                const chipClass = isFixedType ? 'meter-chip chip-warning' : 'meter-chip';
+                return `
+                        <div class="meter-item">
+                            <span class="${chipClass}">${meterTypeLabel}</span>
+                            <span class="meter-value">${m.consumption.toFixed(3)} ${unitTranslated}</span>
+                        </div>
+                    `;
+            }).join('');
+
+            const amountsHtml = row.meters.map(m => {
+                const isPaid = !!m.is_paid;
+                const isPartial = !!m.is_partial;
+                const statusClass = isPaid ? 'status-paid' : (isPartial ? 'status-partial' : 'status-due');
+                const amountClass = isPaid || isPartial ? '' : 'amount-value-alert';
+            const rawStatus = String(m.payment_status || '').trim().toLowerCase();
+            const statusText = rawStatus
+                ? ((rawStatus.includes('не') && rawStatus.includes('оплач')) ? t('readings_status_unpaid', 'Не оплачено')
+                    : rawStatus.includes('частич') ? t('readings_status_partial', 'Частично')
+                    : rawStatus.includes('оплач') ? t('status_paid', 'Оплачено')
+                    : m.payment_status)
+                : (isPaid ? t('status_paid', 'Оплачено') : (isPartial ? t('readings_status_partial', 'Частично') : t('readings_status_unpaid', 'Не оплачено')));
+                return `
+                        <div class="amount-item">
+                            <span class="status-pill ${statusClass}">${statusText}</span>
+                            <span class="amount-value ${amountClass}">${m.total.toFixed(2)} ₼</span>
+                        </div>
+                    `;
+            }).join('');
+
+            const readingKey = `${row.block_name.toLowerCase()}_${row.unit_number}`;
+            const residentTotal = row.total_amount || 0;
+            const residentInfoTranslated = translateResidentInfo(row.resident_info);
+            return `
+                    <div class="reading-row-scroll">
+                    <div class="reading-row" data-reading-key="${readingKey}" data-resident-id="${row.resident_id}">
+                        <div class="reading-col reading-col-resident">
+                            <div class="resident-badge">
+                                <span class="resident-code">${row.resident_code}</span>
+                                <span class="resident-info">${residentInfoTranslated}</span>
+                            </div>
+                        </div>
+                        <div class="reading-col">
+                            <div class="meter-stack">
+                                ${metersHtml || `<div class="text-muted">${t('readings_no_meters', 'Нет счётчиков')}</div>`}
+                            </div>
+                        </div>
+                        <div class="reading-col">
+                            <div class="amount-stack">
+                                ${amountsHtml || '<div class="text-muted">0.00 ₼</div>'}
+                            </div>
+                            <div class="reading-total reading-total-resident">
+                                <span>${t('readings_total', 'Итого')}:</span>
+                                <span class="reading-total-value">${residentTotal.toFixed(2)} ₼</span>
+                            </div>
+                        </div>
+                        <div class="reading-col reading-col-actions">
+                            <div class="reading-actions">
+                                ${row.has_editable_meters ? `
+                                    <button class="table-btn table-btn-primary" type="button" onclick="openReadingEditor(${row.resident_id})">
+                                        <i class="bi bi-pencil"></i>
+                                        ${t('action_edit', 'Редактировать')}
+                                    </button>
+                                ` : ''}
+                                <button class="table-btn table-btn-secondary" type="button" onclick="openReadingDetails(${row.resident_id})">
+                                    <i class="bi bi-info-circle"></i>
+                                    ${t('readings_details_button', 'Подробнее')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    
+                `;
+        });
+
+        // Filter out null values (rows with no meters)
+        const filteredRowsHtml = rowsHtmlArray.filter(html => html !== null);
+        console.log('Generated HTML for', filteredRowsHtml.length, 'rows (filtered from', readingsData.rows.length, ')');
+        console.log('Total amount:', totalAmount);
+
+        if (filteredRowsHtml.length === 0) {
+            tbody.innerHTML = `<div class="text-muted text-center" style="padding: 40px;">${t('readings_no_data_display', 'Нет данных для отображения')}</div>`;
+            return;
+        }
+
+        tbody.innerHTML = filteredRowsHtml.join('') + `
+                <div class="reading-total">
+                    <span>${t('readings_total', 'Итого')}:</span>
+                    <span class="reading-total-value">${totalAmount.toFixed(2)} ₼</span>
+                </div>
+            `;
+        console.log('Table rendered successfully');
+    }
+
+    // Update filter dropdowns
+    window.updateFilterDropdowns = function updateFilterDropdowns() {
+        // Update blocks dropdown (filter)
+        const blockSelect = document.getElementById('filterBlock');
+        if (blockSelect && blocks.length > 0) {
+            const currentValue = blockSelect.value;
+            blockSelect.innerHTML = `<option value="all">${t('all', 'Все')}</option>`;
+            blocks.forEach(block => {
+                const option = document.createElement('option');
+                option.value = block.name;
+                option.textContent = block.name;
+                if (block.name === currentValue) option.selected = true;
+                blockSelect.appendChild(option);
+            });
+        }
+
+        // Update blocks dropdown (modal)
+        const modalBlockSelect = document.getElementById('modalBlock');
+        if (modalBlockSelect && blocks.length > 0) {
+            const currentValue = modalBlockSelect.value;
+            modalBlockSelect.innerHTML = `<option value="">${t('readings_select_placeholder', '— выберите —')}</option>`;
+            blocks.forEach(block => {
+                const option = document.createElement('option');
+                option.value = block.name;
+                option.textContent = block.name;
+                if (block.name === currentValue) option.selected = true;
+                modalBlockSelect.appendChild(option);
+            });
+        }
+
+        updateResidentFilterOptions();
+        updateExportBlockOptions();
+    }
+
+    function updateResidentFilterOptions() {
+        const residentSelect = document.getElementById('filterResident');
+        if (!residentSelect) return;
+
+        const currentValue = residentSelect.value;
+        const selectedBlockName = document.getElementById('filterBlock')?.value || 'all';
+        const norm = (v) => String(v === null || v === undefined ? '' : v).trim();
+        const selectedBlockNorm = norm(selectedBlockName);
+
+        const list = Array.isArray(residents) ? residents : [];
+        const filtered = selectedBlockNorm && selectedBlockNorm !== 'all'
+            ? list.filter((r) => norm(r?.block_name) === selectedBlockNorm)
+            : list;
+
+        residentSelect.innerHTML = `<option value="all">${t('all', 'Все')}</option>`;
+        filtered.forEach((resident) => {
+            const unit = norm(resident?.unit_number) || '—';
+            const option = document.createElement('option');
+            option.value = resident.id;
+            option.textContent = `№${unit}`;
+            if (String(resident.id) === String(currentValue)) option.selected = true;
+            residentSelect.appendChild(option);
+        });
+
+        // If current selection no longer exists in filtered list, fallback to "all"
+        const hasSelected = filtered.some((r) => String(r?.id) === String(currentValue));
+        if (currentValue && currentValue !== 'all' && !hasSelected) {
+            residentSelect.value = 'all';
+        }
+    }
+
+    const ALL_METER_TYPES = ['ELECTRIC', 'GAS', 'WATER', 'SEWERAGE', 'SERVICE', 'RENT', 'CONSTRUCTION'];
+    const UTILITY_METER_TYPES = ['ELECTRIC', 'GAS', 'WATER', 'SEWERAGE'];
+    function meterTypeLabels() {
+        return {
+            utility: 'Utility',
+            ELECTRIC: t('meter_electricity', 'Электричество'),
+            GAS: t('meter_gas', 'Газ'),
+            WATER: t('meter_cold_water', 'Вода'),
+            SEWERAGE: t('readings_meter_sewerage', 'Канализация'),
+            SERVICE: t('tariffs_purpose_service', 'Сервис'),
+            RENT: t('tariffs_purpose_rent', 'Аренда'),
+            CONSTRUCTION: t('tariffs_purpose_construction', 'Строительство'),
+        };
+    }
+
+    function getSelectedMeterTypes() {
+        const boxes = Array.from(document.querySelectorAll('#filterMeterTypeDetails .meter-type-checkbox:checked'));
+        const raw = boxes.map((b) => String(b.value || '').trim()).filter(Boolean);
+        const selected = new Set();
+
+        raw.forEach((value) => {
+            if (value === 'utility') {
+                UTILITY_METER_TYPES.forEach((t) => selected.add(t));
+            } else if (ALL_METER_TYPES.includes(value)) {
+                selected.add(value);
+            }
+        });
+
+        return Array.from(selected);
+    }
+
+    function getSelectedMeterTypesRaw() {
+        return Array.from(document.querySelectorAll('#filterMeterTypeDetails .meter-type-checkbox:checked'))
+            .map((b) => String(b.value || '').trim())
+            .filter(Boolean);
+    }
+
+    function applyUtilityMeterTypeRules() {
+        const optionsRoot = document.getElementById('filterMeterTypeDetails');
+        if (!optionsRoot) return;
+
+        const utilityCb = optionsRoot.querySelector('.meter-type-checkbox[value="utility"]');
+        if (!utilityCb) return;
+
+        const utilityChildren = UTILITY_METER_TYPES
+            .map((key) => optionsRoot.querySelector(`.meter-type-checkbox[value="${key}"]`))
+            .filter(Boolean);
+
+        if (utilityCb.checked) {
+            utilityChildren.forEach((cb) => {
+                cb.checked = true;
+                cb.disabled = true;
+            });
+            utilityCb.disabled = false;
+            return;
+        }
+
+        utilityChildren.forEach((cb) => {
+            cb.disabled = false;
+        });
+
+        const anyChildChecked = utilityChildren.some((cb) => cb.checked);
+        utilityCb.disabled = anyChildChecked;
+        if (anyChildChecked) {
+            utilityCb.checked = false;
+        }
+    }
+
+    function updateMeterTypeSummary() {
+        const summary = document.getElementById('filterMeterTypeSummary');
+        if (!summary) return;
+
+        const selectedResolved = getSelectedMeterTypes();
+        if (selectedResolved.length === 0 || selectedResolved.length === ALL_METER_TYPES.length) {
+            summary.textContent = t('all', 'Все');
+            return;
+        }
+
+        const selectedRaw = getSelectedMeterTypesRaw();
+        const utilitySelected = selectedRaw.includes('utility');
+        const hasCustomUtilityMix = selectedRaw.some(
+            (v) => v !== 'utility' && !UTILITY_METER_TYPES.includes(v)
+        );
+        if (utilitySelected && !hasCustomUtilityMix) {
+            summary.textContent = 'Utility';
+            return;
+        }
+
+        if (selectedResolved.length <= 2) {
+            const labels = selectedResolved.map((v) => meterTypeLabels()[v] || v);
+            summary.textContent = labels.join(', ');
+            return;
+        }
+
+        summary.textContent = tr('tariffs_selected_count', { count: selectedResolved.length }, '{count} выбрано');
+    }
+
+    function bindMeterTypeMultiSelect() {
+        const details = document.getElementById('filterMeterTypeDetails');
+        if (!details) return;
+
+        const allBox = document.getElementById('meterTypeAll');
+        const boxes = Array.from(document.querySelectorAll('#filterMeterTypeDetails .meter-type-checkbox'));
+        if (!allBox || boxes.length === 0) return;
+
+        // dedupe handlers for SPA reloads
+        if (allBox._changeHandler) allBox.removeEventListener('change', allBox._changeHandler);
+        allBox._changeHandler = function () {
+            const shouldCheck = allBox.checked;
+            boxes.forEach((b) => {
+                b.checked = shouldCheck;
+                b.disabled = false;
+            });
+            applyUtilityMeterTypeRules();
+            allBox.checked = boxes.every((x) => x.checked);
+            updateMeterTypeSummary();
+        };
+        allBox.addEventListener('change', allBox._changeHandler);
+
+        boxes.forEach((b) => {
+            if (b._changeHandler) b.removeEventListener('change', b._changeHandler);
+            b._changeHandler = function () {
+                applyUtilityMeterTypeRules();
+                allBox.checked = boxes.every((x) => x.checked);
+                updateMeterTypeSummary();
+            };
+            b.addEventListener('change', b._changeHandler);
+        });
+
+        // Initial sync
+        applyUtilityMeterTypeRules();
+        allBox.checked = boxes.every((b) => b.checked);
+        updateMeterTypeSummary();
+    }
+
+    window.toggleReadingsExportPanel = function toggleReadingsExportPanel(event) {
+        if (event && typeof event.stopPropagation === 'function') {
+            event.stopPropagation();
+        }
+        const panel = document.getElementById('readingsExportPanel');
+        if (!panel) return;
+        const isOpen = panel.style.display !== 'none';
+        panel.style.display = isOpen ? 'none' : 'block';
+    };
+
+    function closeReadingsExportPanel() {
+        const panel = document.getElementById('readingsExportPanel');
+        if (!panel) return;
+        panel.style.display = 'none';
+    }
+
+    function bindReadingsExportOutsideClose() {
+        if (window._readingsExportOutsideClickHandler) {
+            document.removeEventListener('click', window._readingsExportOutsideClickHandler);
+            window._readingsExportOutsideClickHandler = null;
+        }
+    }
+
+    function bindReadingsExportToggleButton() {
+        const toggleBtn = document.getElementById('readingsExportToggleBtn');
+        if (!toggleBtn) return;
+
+        if (toggleBtn._clickHandler) {
+            toggleBtn.removeEventListener('click', toggleBtn._clickHandler);
+        }
+
+        toggleBtn._clickHandler = function (e) {
+            e.preventDefault();
+            window.toggleReadingsExportPanel(e);
+        };
+        toggleBtn.addEventListener('click', toggleBtn._clickHandler);
+    }
+
+    function updateExportBlockOptions() {
+        const blockSelect = document.getElementById('exportFilterBlock');
+        if (!blockSelect) return;
+        const currentValue = blockSelect.value || 'all';
+        blockSelect.innerHTML = `<option value="all">${t('all', 'Все')}</option>`;
+        (Array.isArray(blocks) ? blocks : []).forEach((block) => {
+            const option = document.createElement('option');
+            option.value = block.name;
+            option.textContent = block.name;
+            if (String(block.name) === String(currentValue)) option.selected = true;
+            blockSelect.appendChild(option);
+        });
+    }
+
+    async function loadExportResidentsByBlock() {
+        const residentSelect = document.getElementById('exportFilterResident');
+        if (!residentSelect) return;
+
+        const currentValue = residentSelect.value || 'all';
+        const blockName = document.getElementById('exportFilterBlock')?.value || 'all';
+        const blockObj = (Array.isArray(blocks) ? blocks : []).find((b) => String(b?.name) === String(blockName));
+
+        try {
+            const perPage = 100;
+            let page = 1;
+            let lastPage = 1;
+            const allResidents = [];
+
+            do {
+                const params = new URLSearchParams();
+                params.append('page', String(page));
+                params.append('per_page', String(perPage));
+                if (blockObj && blockObj.id) params.append('block_id', String(blockObj.id));
+
+                const response = await fetch(`${API_BASE}/api/residents?${params.toString()}`, { credentials: 'include' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                const items = Array.isArray(data)
+                    ? data
+                    : (Array.isArray(data?.items) ? data.items : (Array.isArray(data?.residents) ? data.residents : []));
+                allResidents.push(...items);
+                lastPage = Math.max(1, Number(data?.last_page || data?.pagination?.last_page || 1));
+                page += 1;
+            } while (page <= lastPage);
+
+            residentSelect.innerHTML = `<option value="all">${t('all', 'Все')}</option>`;
+            allResidents.forEach((resident) => {
+                const option = document.createElement('option');
+                option.value = resident.id;
+                option.textContent = `№${resident.unit_number || '—'}`;
+                if (String(resident.id) === String(currentValue)) option.selected = true;
+                residentSelect.appendChild(option);
+            });
+
+            if (currentValue !== 'all' && !allResidents.some((r) => String(r?.id) === String(currentValue))) {
+                residentSelect.value = 'all';
+            }
+        } catch (error) {
+            console.error('Export residents load error:', error);
+            residentSelect.innerHTML = `<option value="all">${t('all', 'Все')}</option>`;
+        }
+    }
+
+    window.resetReadingsExportFilters = async function resetReadingsExportFilters() {
+        const blockSelect = document.getElementById('exportFilterBlock');
+        const residentSelect = document.getElementById('exportFilterResident');
+        const dateFrom = document.getElementById('exportFilterDateFrom');
+        const dateTo = document.getElementById('exportFilterDateTo');
+        const format = document.getElementById('readingsExportFormat');
+        const allBox = document.getElementById('exportMeterTypeAll');
+        const boxes = Array.from(document.querySelectorAll('#exportFilterMeterTypeDetails .export-meter-type-checkbox'));
+
+        if (blockSelect) blockSelect.value = 'all';
+        if (residentSelect) residentSelect.value = 'all';
+        if (format) format.value = 'xls';
+
+        const d = new Date();
+        if (dateFrom) {
+            dateFrom.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        }
+        if (dateTo) {
+            dateTo.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        }
+
+        boxes.forEach((b) => {
+            b.checked = true;
+            b.disabled = false;
+        });
+        if (allBox) allBox.checked = true;
+        applyExportUtilityMeterTypeRules();
+        updateExportMeterTypeSummary();
+
+        await loadExportResidentsByBlock();
+
+        if (typeof showSuccess === 'function') {
+            showSuccess(t('readings_export_filters_reset', 'Фильтры экспорта сброшены!'));
+        }
+    };
+
+    function getSelectedExportMeterTypes() {
+        const boxes = Array.from(document.querySelectorAll('#exportFilterMeterTypeDetails .export-meter-type-checkbox:checked'));
+        const raw = boxes.map((b) => String(b.value || '').trim()).filter(Boolean);
+        const selected = new Set();
+
+        raw.forEach((value) => {
+            if (value === 'utility') {
+                UTILITY_METER_TYPES.forEach((t) => selected.add(t));
+            } else if (ALL_METER_TYPES.includes(value)) {
+                selected.add(value);
+            }
+        });
+
+        return Array.from(selected);
+    }
+
+    function getSelectedExportMeterTypesRaw() {
+        return Array.from(document.querySelectorAll('#exportFilterMeterTypeDetails .export-meter-type-checkbox:checked'))
+            .map((b) => String(b.value || '').trim())
+            .filter(Boolean);
+    }
+
+    function applyExportUtilityMeterTypeRules() {
+        const root = document.getElementById('exportFilterMeterTypeDetails');
+        if (!root) return;
+        const utilityCb = root.querySelector('.export-meter-type-checkbox[value="utility"]');
+        if (!utilityCb) return;
+
+        const utilityChildren = UTILITY_METER_TYPES
+            .map((key) => root.querySelector(`.export-meter-type-checkbox[value="${key}"]`))
+            .filter(Boolean);
+
+        if (utilityCb.checked) {
+            utilityChildren.forEach((cb) => {
+                cb.checked = true;
+                cb.disabled = true;
+            });
+            utilityCb.disabled = false;
+            return;
+        }
+
+        utilityChildren.forEach((cb) => { cb.disabled = false; });
+        const anyChildChecked = utilityChildren.some((cb) => cb.checked);
+        utilityCb.disabled = anyChildChecked;
+        if (anyChildChecked) utilityCb.checked = false;
+    }
+
+    function updateExportMeterTypeSummary() {
+        const summary = document.getElementById('exportFilterMeterTypeSummary');
+        if (!summary) return;
+
+        const selectedResolved = getSelectedExportMeterTypes();
+        if (selectedResolved.length === 0 || selectedResolved.length === ALL_METER_TYPES.length) {
+            summary.textContent = t('readings_all_types', 'Все типы');
+            return;
+        }
+
+        const selectedRaw = getSelectedExportMeterTypesRaw();
+        const utilitySelected = selectedRaw.includes('utility');
+        const hasCustomUtilityMix = selectedRaw.some((v) => v !== 'utility' && !UTILITY_METER_TYPES.includes(v));
+        if (utilitySelected && !hasCustomUtilityMix) {
+            summary.textContent = 'Utility';
+            return;
+        }
+
+        const labels = selectedResolved.map((v) => meterTypeLabels()[v] || v);
+        const preview = labels.slice(0, 2).join(', ');
+        summary.textContent = labels.length > 2 ? `${preview} +${labels.length - 2}` : preview;
+    }
+
+    function bindExportMeterTypeMultiSelect() {
+        const details = document.getElementById('exportFilterMeterTypeDetails');
+        if (!details) return;
+
+        const allBox = document.getElementById('exportMeterTypeAll');
+        const selectAllBtn = document.getElementById('exportMeterSelectAllBtn');
+        const okBtn = document.getElementById('exportMeterOkBtn');
+        const clearBtn = document.getElementById('exportMeterClearBtn');
+        const boxes = Array.from(document.querySelectorAll('#exportFilterMeterTypeDetails .export-meter-type-checkbox'));
+        if (!allBox || boxes.length === 0) return;
+
+        if (allBox._changeHandler) allBox.removeEventListener('change', allBox._changeHandler);
+        allBox._changeHandler = function () {
+            const shouldCheck = allBox.checked;
+            boxes.forEach((b) => {
+                b.checked = shouldCheck;
+                b.disabled = false;
+            });
+            applyExportUtilityMeterTypeRules();
+            allBox.checked = boxes.every((x) => x.checked);
+            updateExportMeterTypeSummary();
+        };
+        allBox.addEventListener('change', allBox._changeHandler);
+
+        boxes.forEach((b) => {
+            if (b._changeHandler) b.removeEventListener('change', b._changeHandler);
+            b._changeHandler = function () {
+                applyExportUtilityMeterTypeRules();
+                allBox.checked = boxes.every((x) => x.checked);
+                updateExportMeterTypeSummary();
+            };
+            b.addEventListener('change', b._changeHandler);
+        });
+
+        if (selectAllBtn) {
+            if (selectAllBtn._clickHandler) selectAllBtn.removeEventListener('click', selectAllBtn._clickHandler);
+            selectAllBtn._clickHandler = function () {
+                boxes.forEach((b) => {
+                    b.checked = true;
+                    b.disabled = false;
+                });
+                allBox.checked = true;
+                applyExportUtilityMeterTypeRules();
+                updateExportMeterTypeSummary();
+            };
+            selectAllBtn.addEventListener('click', selectAllBtn._clickHandler);
+        }
+
+        if (clearBtn) {
+            if (clearBtn._clickHandler) clearBtn.removeEventListener('click', clearBtn._clickHandler);
+            clearBtn._clickHandler = function () {
+                boxes.forEach((b) => {
+                    b.checked = false;
+                    b.disabled = false;
+                });
+                allBox.checked = false;
+                applyExportUtilityMeterTypeRules();
+                updateExportMeterTypeSummary();
+            };
+            clearBtn.addEventListener('click', clearBtn._clickHandler);
+        }
+
+        if (okBtn) {
+            if (okBtn._clickHandler) okBtn.removeEventListener('click', okBtn._clickHandler);
+            okBtn._clickHandler = function () {
+                details.open = false;
+            };
+            okBtn.addEventListener('click', okBtn._clickHandler);
+        }
+
+        applyExportUtilityMeterTypeRules();
+        allBox.checked = boxes.every((b) => b.checked);
+        updateExportMeterTypeSummary();
+    }
+
+    function buildExportMonthList(fromDateStr, toDateStr) {
+        const now = new Date();
+        const parseMonthValue = (value, fallbackDate) => {
+            const raw = String(value || '').trim();
+            if (!raw) {
+                return new Date(fallbackDate.getFullYear(), fallbackDate.getMonth(), 1);
+            }
+            const parts = raw.split('-');
+            if (parts.length !== 2) throw new Error('Неверный формат месяца');
+            const year = Number(parts[0]);
+            const month = Number(parts[1]);
+            if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) {
+                throw new Error('Неверный диапазон дат');
+            }
+            return new Date(year, month - 1, 1);
+        };
+
+        let fromDate = parseMonthValue(fromDateStr, now);
+        let toDate = parseMonthValue(toDateStr, now);
+        if (fromDate > toDate) {
+            const t = fromDate;
+            fromDate = toDate;
+            toDate = t;
+        }
+
+        const months = [];
+        const cursor = new Date(fromDate.getFullYear(), fromDate.getMonth(), 1);
+        while (cursor <= toDate) {
+            months.push({ year: cursor.getFullYear(), month: cursor.getMonth() + 1 });
+            cursor.setMonth(cursor.getMonth() + 1);
+        }
+        return months;
+    }
+
+    async function fetchAllReadingsForExportMonth(year, month, filters) {
+        const out = [];
+        let page = 1;
+        let lastPage = 1;
+        do {
+            const params = new URLSearchParams();
+            params.append('page', String(page));
+            params.append('per_page', '100');
+            params.append('year', String(year));
+            params.append('month', String(month));
+            if (filters.blockId) params.append('block_id', String(filters.blockId));
+            if (filters.residentId) params.append('resident_id', String(filters.residentId));
+            if (filters.meterTypes.length > 0 && filters.meterTypes.length < ALL_METER_TYPES.length) {
+                filters.meterTypes.forEach((t) => params.append('meter_type', t));
+            }
+
+            const response = await fetch(`${API_BASE}/api/readings?${params.toString()}`, { credentials: 'include' });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            const rows = Array.isArray(data?.rows) ? data.rows : [];
+            out.push(...rows);
+            lastPage = Math.max(1, Number(data?.pagination?.last_page || 1));
+            page += 1;
+        } while (page <= lastPage);
+
+        return out;
+    }
+
+    async function fetchTenantInfoMapForExport(filters) {
+        const map = new Map();
+        const perPage = 200;
+        let page = 1;
+        let lastPage = 1;
+        do {
+            const params = new URLSearchParams();
+            params.append('page', String(page));
+            params.append('per_page', String(perPage));
+            if (filters.blockId) params.append('block_id', String(filters.blockId));
+
+            const response = await fetch(`${API_BASE}/api/tenants?${params.toString()}`, { credentials: 'include' });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            const items = Array.isArray(data?.tenants) ? data.tenants : [];
+            items.forEach((tenant) => {
+                const fullName = String(tenant?.full_name || '').trim() || String(tenant?.username || '').trim() || '—';
+                const phone = String(tenant?.phone || '').trim() || '—';
+                const residentIds = Array.isArray(tenant?.resident_ids) ? tenant.resident_ids : [];
+                residentIds.forEach((residentId) => {
+                    const key = Number(residentId);
+                    if (!Number.isFinite(key)) return;
+                    const existing = map.get(key);
+                    if (!existing) {
+                        map.set(key, { fullName, phone });
+                        return;
+                    }
+                    const nameParts = String(existing.fullName || '').split(',').map((x) => x.trim()).filter(Boolean);
+                    if (!nameParts.includes(fullName)) {
+                        nameParts.push(fullName);
+                    }
+                    const phoneParts = String(existing.phone || '').split(',').map((x) => x.trim()).filter(Boolean);
+                    if (phone !== '—' && !phoneParts.includes(phone)) {
+                        phoneParts.push(phone);
+                    }
+                    map.set(key, {
+                        fullName: nameParts.join(', ') || '—',
+                        phone: phoneParts.join(', ') || '—'
+                    });
+                });
+            });
+            lastPage = Math.max(1, Number(data?.pagination?.last_page || 1));
+            page += 1;
+        } while (page <= lastPage);
+
+        return map;
+    }
+
+    function buildReadingsExportRows(monthBuckets, tenantInfoMap = new Map()) {
+        const rows = [];
+        monthBuckets.forEach((bucket) => {
+            const periodText = `${bucket.year}-${String(bucket.month).padStart(2, '0')}`;
+            bucket.rows.forEach((row) => {
+                const meterEntries = Array.isArray(row?.meters) ? row.meters : [];
+                const metersList = meterEntries
+                    .map((m) => `${m.type}: ${Number(m.consumption || 0).toFixed(3)} ${m.unit || ''} (${Number(m.total || 0).toFixed(2)} ₼)`)
+                    .filter(Boolean);
+                const calculatedTotal = meterEntries.reduce((acc, m) => acc + Number(m?.total || 0), 0);
+                const fallbackTotal = Number(row?.total_amount || 0);
+                const residentIdNum = Number(row?.resident_id);
+                const tenantInfo = tenantInfoMap.get(residentIdNum);
+                const residentFullName = tenantInfo?.fullName || '—';
+                const residentPhone = tenantInfo?.phone || '—';
+                rows.push({
+                    period: periodText,
+                    residentCode: row?.resident_code || '—',
+                    residentFullName,
+                    residentPhone,
+                    block: row?.block_name || '—',
+                    unit: row?.unit_number || '—',
+                    total: Number.isFinite(calculatedTotal) ? calculatedTotal : fallbackTotal,
+                    metersList: metersList.length ? metersList : ['—'],
+                });
+            });
+        });
+        return rows;
+    }
+
+    function buildReadingsExportFiltersText(filters) {
+        const chunks = [];
+        const block = document.getElementById('exportFilterBlock');
+        const resident = document.getElementById('exportFilterResident');
+        if (filters.blockName && filters.blockName !== 'all') {
+            chunks.push(`${t('residents_filter_block', 'Блок')}: ${block?.options[block.selectedIndex]?.text || filters.blockName}`);
+        }
+        if (filters.residentId && filters.residentId !== 'all') {
+            chunks.push(`${t('resident', 'Резидент')}: ${resident?.options[resident.selectedIndex]?.text || filters.residentId}`);
+        }
+        if (filters.meterTypes.length > 0 && filters.meterTypes.length < ALL_METER_TYPES.length) {
+            chunks.push(`${t('readings_filter_types', 'Типы')}: ${filters.meterTypes.map((x) => meterTypeLabels()[x] || x).join(', ')}`);
+        } else {
+            chunks.push(`${t('readings_filter_types', 'Типы')}: ${t('all', 'Все')}`);
+        }
+        chunks.push(`${t('filter_period', 'Период')}: ${filters.dateFrom || '...'} — ${filters.dateTo || '...'}`);
+        return chunks.join(' | ');
+    }
+
+    function exportReadingsToStyledExcel(rows, filtersText) {
+        const esc = (v) => String(v === null || v === undefined ? '' : v)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const bodyRows = rows.map((r) => `
+            <tr>
+                <td>${esc(r.period)}</td>
+                <td>${esc(r.residentCode)}</td>
+                <td>${esc(r.residentFullName)}</td>
+                <td class="phone-cell">${esc(r.residentPhone)}</td>
+                <td>${esc(r.block)}</td>
+                <td>${esc(r.unit)}</td>
+                <td class="meters-cell">${(Array.isArray(r.metersList) ? r.metersList : ['—']).map((meter, idx) => `<div class="meter-line">${esc(String(idx + 1) + ') ' + meter)}</div>`).join('')}</td>
+                <td class="money-cell">${esc(r.total.toFixed(2))}</td>
+            </tr>
+        `).join('');
+
+        const html = `
+            <html><head><meta charset="utf-8" />
+            <style>
+                body { font-family: Calibri, Arial, sans-serif; color: #111827; }
+                .title-table { border-collapse: collapse; width: 100%; margin-bottom: 10px; }
+                .title-cell { border: 2px solid #1f2937; padding: 12px; background: #f8fafc; }
+                .title-main { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+                .title-sub { font-size: 12px; color: #4b5563; }
+                table { border-collapse: collapse; width: 100%; }
+                .meta td { border: 1px solid #9ca3af; padding: 6px 8px; font-size: 12px; }
+                .meta td:first-child { width: 180px; background: #eef2ff; font-weight: 700; }
+                .data { margin-top: 12px; }
+                .data th, .data td { border: 1px solid #9ca3af; padding: 6px 8px; font-size: 12px; vertical-align: top; }
+                .data th { background: #dbeafe; font-weight: 700; text-align: center; }
+                .money-cell { text-align: right; mso-number-format: "\\@"; }
+                .phone-cell { mso-number-format: "\\@"; }
+                .meters-cell { white-space: normal; line-height: 1.25; }
+                .meter-line { padding: 1px 0; border-bottom: 1px dashed #e5e7eb; }
+                .meter-line:last-child { border-bottom: none; }
+            </style></head><body>
+                <table class="title-table">
+                    <tr><td class="title-cell"><div class="title-main">${t('readings_report_title', 'Отчет по показаниям')}</div><div class="title-sub">${t('readings_report_subtitle', 'Royal Park - Экспорт для учета')}</div></td></tr>
+                </table>
+                <table class="meta">
+                    <tr><td>${t('tariffs_export_generated', 'Сформировано')}</td><td>${esc(new Date().toLocaleString())}</td></tr>
+                    <tr><td>${t('tariffs_export_filters', 'Фильтры')}</td><td>${esc(filtersText)}</td></tr>
+                    <tr><td>${t('readings_rows_count', 'Количество строк')}</td><td>${esc(rows.length)}</td></tr>
+                </table>
+                <table class="data">
+                    <thead><tr><th>${t('filter_period', 'Период')}</th><th>${t('resident', 'Резидент')}</th><th>${t('residents_col_name', 'ФИО жителя')}</th><th>${t('phone', 'Номер телефона')}</th><th>${t('residents_filter_block', 'Блок')}</th><th>${t('residents_col_house', '№ дома')}</th><th>${t('readings_consumption_by_meters', 'Расход по счетчикам')}</th><th>${t('readings_total_amount', 'Итоговая сумма')}</th></tr></thead>
+                    <tbody>${bodyRows || `<tr><td colspan="8">${t('tariffs_no_data', 'Нет данных')}</td></tr>`}</tbody>
+                </table>
+            </body></html>
+        `;
+
+        const blob = new Blob(['\ufeff' + html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `readings_export_${new Date().toISOString().slice(0, 10)}.xls`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    function exportReadingsToPdf(rows, filtersText) {
+        const esc = (v) => String(v === null || v === undefined ? '' : v)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const tableRows = rows.map((r) => `
+            <tr>
+                <td>${esc(r.period)}</td><td>${esc(r.residentCode)}</td><td>${esc(r.residentFullName)}</td><td>${esc(r.residentPhone)}</td><td>${esc(r.block)}</td>
+                <td>${esc(r.unit)}</td><td>${(Array.isArray(r.metersList) ? r.metersList : ['—']).map((meter, idx) => `<div>${esc(String(idx + 1) + ') ' + meter)}</div>`).join('')}</td><td>${esc(r.total.toFixed(2))}</td>
+            </tr>`).join('');
+        const html = `
+            <html><head><title>${t('readings_export_title', 'Экспорт показаний')}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 24px; color: #111; }
+                table { width: 100%; border-collapse: collapse; font-size: 11px; }
+                th, td { border: 1px solid #ccc; padding: 6px; text-align: left; vertical-align: top; }
+                th { background: #f3f4f6; }
+            </style></head><body>
+                <h2>${t('readings_report_title', 'Отчет по показаниям')}</h2>
+                <p><strong>${t('tariffs_export_generated', 'Сформировано')}:</strong> ${esc(new Date().toLocaleString())}</p>
+                <p><strong>${t('tariffs_export_filters', 'Фильтры')}:</strong> ${esc(filtersText)}</p>
+                <p><strong>${t('tariffs_export_count', 'Количество')}:</strong> ${rows.length}</p>
+                <table>
+                    <thead><tr><th>${t('filter_period', 'Период')}</th><th>${t('resident', 'Резидент')}</th><th>${t('residents_col_name', 'ФИО жителя')}</th><th>${t('phone', 'Номер телефона')}</th><th>${t('residents_filter_block', 'Блок')}</th><th>${t('residents_col_house', '№ дома')}</th><th>${t('readings_consumption_by_meters', 'Расход по счетчикам')}</th><th>${t('readings_total_amount', 'Итоговая сумма')}</th></tr></thead>
+                    <tbody>${tableRows || `<tr><td colspan="8">${t('tariffs_no_data', 'Нет данных')}</td></tr>`}</tbody>
+                </table>
+            </body></html>
+        `;
+
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        iframe.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(iframe);
+        const doc = iframe.contentWindow?.document;
+        if (!doc || !iframe.contentWindow) {
+            iframe.remove();
+            throw new Error(t('readings_print_prepare_error', 'Не удалось подготовить печать.'));
+        }
+        doc.open();
+        doc.write(html);
+        doc.close();
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        setTimeout(() => iframe.remove(), 1000);
+    }
+
+    window.exportReadings = async function exportReadings() {
+        const exportBtn = document.querySelector('#readingsExportPanel .btn-success');
+        const format = document.getElementById('readingsExportFormat')?.value || 'xls';
+
+        const blockName = document.getElementById('exportFilterBlock')?.value || 'all';
+        const residentIdRaw = document.getElementById('exportFilterResident')?.value || 'all';
+        const residentId = residentIdRaw !== 'all' ? Number(residentIdRaw) : null;
+        const meterTypes = getSelectedExportMeterTypes();
+        const dateFrom = document.getElementById('exportFilterDateFrom')?.value || '';
+        const dateTo = document.getElementById('exportFilterDateTo')?.value || '';
+        const blockObj = (Array.isArray(blocks) ? blocks : []).find((b) => String(b?.name) === String(blockName));
+
+        if (exportBtn) {
+            exportBtn.disabled = true;
+            exportBtn.textContent = t('tariffs_export_in_progress', 'Экспорт...');
+        }
+
+        try {
+            const months = buildExportMonthList(dateFrom, dateTo);
+            const filters = {
+                blockId: blockObj?.id || null,
+                blockName,
+                residentId: Number.isFinite(residentId) ? residentId : null,
+                meterTypes,
+                dateFrom,
+                dateTo
+            };
+
+            const buckets = [];
+            for (const item of months) {
+                const monthRows = await fetchAllReadingsForExportMonth(item.year, item.month, filters);
+                buckets.push({ year: item.year, month: item.month, rows: monthRows });
+            }
+
+            const tenantInfoMap = await fetchTenantInfoMapForExport(filters);
+            const rows = buildReadingsExportRows(buckets, tenantInfoMap);
+            if (!rows.length) {
+                if (typeof showWarning === 'function') showWarning(t('tariffs_export_no_data', 'Нет данных для экспорта по выбранным фильтрам.'));
+                return;
+            }
+
+            const filtersText = buildReadingsExportFiltersText(filters);
+            if (format === 'pdf') {
+                if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches && typeof showInfo === 'function') {
+                    showInfo(t('readings_mobile_pdf_info', 'На мобильных PDF открывается через системный диалог печати/сохранения.'));
+                }
+                exportReadingsToPdf(rows, filtersText);
+            } else {
+                exportReadingsToStyledExcel(rows, filtersText);
+            }
+            if (typeof showSuccess === 'function') showSuccess(t('export_completed', 'Экспорт выполнен.'));
+        } catch (error) {
+            console.error('Readings export error:', error);
+            if (typeof showError === 'function') showError(`${t('residents_export_error', 'Ошибка экспорта')}: ${error.message}`);
+        } finally {
+            if (exportBtn) {
+                exportBtn.disabled = false;
+                exportBtn.innerHTML = `<i class="bi bi-box-arrow-down"></i> ${t('export', 'Экспорт')}`;
+            }
+        }
+    };
+
+    // Pagination Functions
+    function buildReadingPageList(current, total) {
+        if (total <= 5) {
+            return Array.from({ length: total }, (_, i) => i + 1);
+        }
+        const pages = new Set([1, total]);
+        if (current <= 3) {
+            [2, 3, 4, 5].forEach(p => pages.add(p));
+        } else if (current >= total - 2) {
+            [total - 1, total - 2, total - 3, total - 4].forEach(p => pages.add(p));
+        } else {
+            [current - 2, current - 1, current, current + 1, current + 2].forEach(p => pages.add(p));
+        }
+        const sorted = Array.from(pages).filter(p => p >= 1 && p <= total).sort((a, b) => a - b);
+        const result = [];
+        for (let i = 0; i < sorted.length; i++) {
+            const page = sorted[i];
+            result.push(page);
+            const next = sorted[i + 1];
+            if (next && next - page > 1) {
+                result.push('dots');
+            }
+        }
+        return result;
+    }
+
+    function updatePaginationUI() {
+        const currentPageEl = document.getElementById('readingCurrentPage');
+        const totalPagesEl = document.getElementById('readingTotalPages');
+        const totalItemsEl = document.getElementById('readingTotalItems');
+        const prevBtn = document.getElementById('readingPrevBtn');
+        const nextBtn = document.getElementById('readingNextBtn');
+        const pagesContainer = document.getElementById('readingPageButtons');
+
+        if (currentPageEl) currentPageEl.textContent = paginationState.currentPage;
+        if (totalPagesEl) totalPagesEl.textContent = paginationState.totalPages;
+        if (totalItemsEl) totalItemsEl.textContent = paginationState.totalItems;
+        if (prevBtn) prevBtn.disabled = paginationState.currentPage <= 1;
+        if (nextBtn) nextBtn.disabled = paginationState.currentPage >= paginationState.totalPages;
+
+        if (!pagesContainer) return;
+        pagesContainer.innerHTML = '';
+
+        const pages = buildReadingPageList(paginationState.currentPage, paginationState.totalPages);
+        pages.forEach(p => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-pagination';
+
+            if (p === 'dots') {
+                btn.textContent = '...';
+                btn.disabled = true;
+                btn.classList.add('dots');
+            } else {
+                btn.textContent = p;
+                if (p > paginationState.totalPages) {
+                    btn.disabled = true;
+                } else {
+                    btn.onclick = () => {
+                        if (p !== paginationState.currentPage) {
+                            goToReadingPage(p);
+                        }
+                    };
+                }
+                if (p === paginationState.currentPage) {
+                    btn.classList.add('active');
+                    btn.setAttribute('aria-current', 'page');
+                }
+            }
+
+            pagesContainer.appendChild(btn);
+        });
+    }
+
+    window.goToReadingPage = function (page) {
+        if (page === 'prev') {
+            if (paginationState.currentPage > 1) {
+                paginationState.currentPage--;
+                loadReadings();
+            }
+        } else if (page === 'next') {
+            if (paginationState.currentPage < paginationState.totalPages) {
+                paginationState.currentPage++;
+                loadReadings();
+            }
+        } else if (typeof page === 'number') {
+            paginationState.currentPage = page;
+            loadReadings();
+        }
+    };
+
+    window.changeReadingItemsPerPage = function () {
+        const select = document.getElementById('readingItemsPerPage');
+        if (select) {
+            paginationState.itemsPerPage = parseInt(select.value);
+            paginationState.currentPage = 1;
+            loadReadings();
+            updateCustomReadingPaginationDropdown();
+        }
+    };
+
+    function updateCustomReadingPaginationDropdown() {
+        const select = document.getElementById('readingItemsPerPage');
+        const customSelect = document.getElementById('customReadingItemsPerPage');
+        if (!select || !customSelect) return;
+
+        const value = select.value;
+        const selectText = customSelect.querySelector('.select-text');
+        const options = customSelect.querySelectorAll('.select-option');
+
+        if (selectText) selectText.textContent = value;
+        options.forEach(opt => {
+            opt.classList.remove('selected');
+            if (opt.getAttribute('data-value') === value) {
+                opt.classList.add('selected');
+            }
+        });
+    }
+
+    function initCustomReadingPaginationDropdown() {
+        const customSelect = document.getElementById('customReadingItemsPerPage');
+        if (!customSelect) {
+            console.warn('initCustomReadingPaginationDropdown: customSelect not found');
+            return;
+        }
+
+        const selectBtn = customSelect.querySelector('.select-btn');
+        const selectOptions = customSelect.querySelector('.select-options');
+        if (!selectBtn || !selectOptions) {
+            console.warn('initCustomReadingPaginationDropdown: selectBtn or selectOptions not found');
+            return;
+        }
+
+        const options = selectOptions.querySelectorAll('.select-option');
+
+        // Удаляем старые обработчики, если они есть (предотвращаем дублирование)
+        if (selectBtn._clickHandler) {
+            selectBtn.removeEventListener('click', selectBtn._clickHandler);
+        }
+
+        // Создаем новый обработчик для кнопки
+        selectBtn._clickHandler = function (e) {
+            e.stopPropagation();
+            customSelect.classList.toggle('open');
+        };
+        selectBtn.addEventListener('click', selectBtn._clickHandler);
+
+        // Удаляем старые обработчики с опций
+        options.forEach(opt => {
+            if (opt._clickHandler) {
+                opt.removeEventListener('click', opt._clickHandler);
+            }
+
+            // Создаем новый обработчик для опции
+            opt._clickHandler = function () {
+                const value = this.getAttribute('data-value');
+                const select = document.getElementById('readingItemsPerPage');
+                if (select) {
+                    select.value = value;
+                    changeReadingItemsPerPage();
+                }
+                customSelect.classList.remove('open');
+            };
+            opt.addEventListener('click', opt._clickHandler);
+        });
+
+        // Удаляем старый обработчик клика вне селекта, если есть
+        if (window._readingPaginationOutsideClickHandler) {
+            document.removeEventListener('click', window._readingPaginationOutsideClickHandler);
+        }
+
+        // Создаем новый обработчик клика вне селекта
+        window._readingPaginationOutsideClickHandler = function (e) {
+            if (!customSelect.contains(e.target)) {
+                customSelect.classList.remove('open');
+            }
+        };
+        document.addEventListener('click', window._readingPaginationOutsideClickHandler);
+
+        updateCustomReadingPaginationDropdown();
+    }
+
+    // Filter Functions
+    window.applyFilters = async function applyFilters() {
+        paginationState.currentPage = 1; // Reset to first page on filter apply
+        await loadReadings();
+        if (typeof showSuccess === 'function') {
+            showSuccess(t('filters_applied', 'Фильтры применены!'));
+        }
+    }
+
+    // Modal Functions
+    window.openRecordModal = function openRecordModal() {
+        document.getElementById('recordReadingModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+        initMeterPhotoPicker();
+        resetDeleteLastReadingGuards();
+        isReadingEditMode = false;
+        const title = document.getElementById('recordReadingTitle');
+        if (title) {
+            title.textContent = t('readings_modal_record_title', 'Запись показателя');
+        }
+        
+        // Устанавливаем сегодняшнюю дату по умолчанию
+        const today = new Date().toISOString().split('T')[0];
+        const modalDate = document.getElementById('modalDate');
+        if (modalDate) {
+            modalDate.value = today;
+        }
+    }
+
+    window.closeRecordModal = function closeRecordModal() {
+        document.getElementById('recordReadingModal').classList.remove('active');
+        document.body.style.overflow = 'auto';
+        document.getElementById('recordReadingForm').reset();
+        document.getElementById('modalResident').disabled = true;
+        document.getElementById('modalResident').innerHTML = `<option value="">${t('readings_select_block_first', '— выберите блок —')}</option>`;
+        hideMeterDetails();
+        resetMeterPhotoState();
+        resetDeleteLastReadingGuards();
+        isReadingEditMode = false;
+        const title = document.getElementById('recordReadingTitle');
+        if (title) {
+            title.textContent = t('readings_modal_record_title', 'Запись показателя');
+        }
+    }
+
+    // Do not close modals on overlay click
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeRecordModal();
+            closeReadingDetails();
+        }
+    });
+
+    const sampleMeterTariffs = {
+        1: [
+            { id: 'gas-a-1', type: 'Газ', tariff: 'A-gas', prev: 120, unit: 'м³', price: 45, placeholder: '≥ 120' },
+            { id: 'water-a-1', type: 'Вода', tariff: 'A-su', prev: 80, unit: 'м³', price: 30, value: 95 },
+        ],
+        2: [
+            { id: 'electric-a-2', type: 'Электричество', tariff: 'A tok', prev: 40, unit: 'кВт·ч', price: 70, value: 185 },
+            { id: 'water-a-2', type: 'Вода', tariff: 'A aqua', prev: 60, unit: 'м³', price: 28, placeholder: '≥ 60' },
+            { id: 'gas-a-2', type: 'Газ', tariff: 'A gas+', prev: 25, unit: 'м³', price: 55, value: 40 },
+        ],
+        3: [
+            { id: 'water-b-0', type: 'Вода', tariff: 'B aqua', prev: 10, unit: 'м³', price: 28, value: 16 },
+            { id: 'electric-b-0', type: 'Электричество', tariff: 'B tok', prev: 100, unit: 'кВт·ч', price: 82, placeholder: '≥ 100' },
+        ],
+        4: [
+            { id: 'gas-b-1', type: 'Газ', tariff: 'Qaz', prev: 50, unit: 'м³', price: 55, placeholder: '≥ 50', value: 60 },
+            { id: 'electric-b-1', type: 'Электричество', tariff: 'B tok', prev: 0, unit: 'кВт·ч', price: 80, value: 220 },
+            { id: 'water-b-1', type: 'Вода', tariff: 'B su', prev: 30, unit: 'м³', price: 28, placeholder: '≥ 30' },
+        ],
+        5: [
+            { id: 'electric-k-1', type: 'Электричество', tariff: 'K tok', prev: 300, unit: 'кВт·ч', price: 78, value: 430 },
+            { id: 'water-k-1', type: 'Вода', tariff: 'K aqua', prev: 140, unit: 'м³', price: 32, value: 180 },
+        ],
+        6: [
+            { id: 'gas-k-2', type: 'Газ', tariff: 'K gas', prev: 0, unit: 'м³', price: 60, placeholder: '≥ 0' },
+            { id: 'water-k-2', type: 'Вода', tariff: 'K aqua+', prev: 70, unit: 'м³', price: 29, value: 110 },
+        ],
+        7: [
+            { id: 'gas-main', type: 'Газ', tariff: 'Qaz', prev: 0, unit: 'м³', price: 50, placeholder: '≥ 0' },
+            { id: 'electric', type: 'Электричество', tariff: 'X2 tok', prev: 0, unit: 'кВт·ч', price: 75, value: 200 },
+            { id: 'gas-aux', type: 'Газ', tariff: 'Qaz', prev: 0, unit: 'м³', price: 50, placeholder: '≥ 0' },
+            { id: 'water', type: 'Вода', tariff: 'X2 su', prev: 0, unit: 'м³', price: 50, value: 300 },
+        ],
+        8: [
+            { id: 'electric-x-2', type: 'Электричество', tariff: 'X tok+', prev: 150, unit: 'кВт·ч', price: 77, value: 280 },
+            { id: 'water-x-2', type: 'Вода', tariff: 'X su+', prev: 90, unit: 'м³', price: 35, placeholder: '≥ 90' },
+        ],
+        9: [
+            { id: 'electric-z-1', type: 'Электричество', tariff: 'Z tok', prev: 400, unit: 'кВт·ч', price: 65, value: 540 },
+            { id: 'water-z-1', type: 'Вода', tariff: 'Z aqua', prev: 220, unit: 'м³', price: 25, placeholder: '≥ 220' },
+        ],
+        10: [
+            { id: 'gas-z-2', type: 'Газ', tariff: 'Z gas', prev: 95, unit: 'м³', price: 58, value: 120 },
+            { id: 'electric-z-2', type: 'Электричество', tariff: 'Z tok+', prev: 210, unit: 'кВт·ч', price: 68, placeholder: '≥ 210' },
+        ],
+        11: [
+            { id: 'gas-a-41', type: 'Газ', tariff: 'Qaz', prev: 180, unit: 'м³', price: 55, placeholder: '≥ 180' },
+            { id: 'water-a-41', type: 'Вода', tariff: 'X2 su', prev: 250, unit: 'м³', price: 35, value: 300 },
+        ],
+        12: [
+            { id: 'electric-a-50', type: 'Электричество', tariff: 'X2 tok', prev: 100, unit: 'кВт·ч', price: 75, value: 200 },
+            { id: 'water-a-50', type: 'Вода', tariff: 'X2 su', prev: 0, unit: 'м³', price: 50, value: 300 },
+            { id: 'gas-a-50', type: 'Газ', tariff: 'Qaz', prev: 0, unit: 'м³', price: 55, placeholder: '≥ 0' },
+        ]
+    };
+
+    const readingDetailsData = {
+        a41: {
+            title: 'Резидент: A / 41',
+            meters: [
+                {
+                    type: 'Газ',
+                    meter: '№ 123',
+                    tariff: 'Qaz',
+                    unit: 'м³',
+                    rows: []
+                },
+                {
+                    type: 'Электричество',
+                    meter: '№ 1234',
+                    tariff: 'X2 tok',
+                    unit: 'кВт·ч',
+                    rows: [
+                        { date: '2025-11-26', value: '200.000', consumption: '200.000', amount: '15000.00', vat: '0', comment: '—' }
+                    ]
+                },
+                {
+                    type: 'Газ',
+                    meter: '№ 13445',
+                    tariff: 'Qaz',
+                    unit: 'м³',
+                    rows: []
+                },
+                {
+                    type: 'Вода',
+                    meter: '№ 58585',
+                    tariff: 'X2 su',
+                    unit: 'м³',
+                    rows: [
+                        { date: '2025-11-26', value: '300.000', consumption: '300.000', amount: '15000.00', vat: '0', comment: '—' }
+                    ]
+                }
+            ]
+        },
+        a50: {
+            title: 'Резидент: A / 50',
+            meters: [
+                {
+                    type: 'Электричество',
+                    meter: '№ 9801',
+                    tariff: 'X2 tok',
+                    unit: 'кВт·ч',
+                    rows: [
+                        { date: '2025-11-15', value: '120.000', consumption: '120.000', amount: '8200.00', vat: '0', comment: 'Оплачено' },
+                        { date: '2025-10-15', value: '100.000', consumption: '100.000', amount: '6500.00', vat: '0', comment: '—' }
+                    ]
+                },
+                {
+                    type: 'Вода',
+                    meter: '№ 7742',
+                    tariff: 'A su',
+                    unit: 'м³',
+                    rows: [
+                        { date: '2025-11-10', value: '180.000', consumption: '40.000', amount: '2400.00', vat: '0', comment: 'Контрольное снятие' }
+                    ]
+                }
+            ]
+        }
+    };
+
+    const readingEditorPrefill = {
+        a41: {
+            block: 'A',
+            residentId: '11',
+            date: '2025-11-26',
+            comment: 'Показания подтверждены охраной'
+        },
+        a50: {
+            block: 'A',
+            residentId: '12',
+            date: '2025-11-15',
+            comment: 'Заполнено вручную'
+        }
+    };
+
+    // Load residents based on selected block
+    window.loadResidents = async function loadResidents(skipFilter = false, selectResidentId = null) {
+        const blockName = document.getElementById('modalBlock').value;
+        const residentSelect = document.getElementById('modalResident');
+        hideMeterDetails();
+
+        if (blockName) {
+            residentSelect.disabled = false;
+            residentSelect.innerHTML = `<option value="">${t('readings_loading_placeholder', '— загрузка... —')}</option>`;
+
+            try {
+                console.log('Loading residents for block:', blockName);
+                console.log('Available blocks:', blocks);
+
+                // Find block ID by name
+                let block = blocks.find(b => b.name === blockName);
+
+                // If block not found in local array, try to load from API
+                if (!block) {
+                    console.log('Block not found in local array, loading from API...');
+                    try {
+                        let url = `${API_BASE}/api/blocks`;
+                        let response = await fetch(url, { credentials: 'include' });
+                        if (response.ok) {
+                            const blocksData = await response.json();
+                            blocks = Array.isArray(blocksData) ? blocksData : (blocksData.items || []);
+                            block = blocks.find(b => b.name === blockName);
+                            console.log('Blocks loaded from API:', blocks);
+                            console.log('Found block:', block);
+                        }
+                    } catch (error) {
+                        console.error('Error loading blocks:', error);
+                    }
+                }
+
+                if (!block) {
+                    console.error('Block not found:', blockName);
+                    residentSelect.innerHTML = `<option value="">${t('readings_block_not_found_placeholder', '— блок не найден —')}</option>`;
+                    return;
+                }
+
+                console.log('Using block:', block);
+
+                // Load all residents for the block (with pagination if needed)
+                let residentsList = [];
+                let page = 1;
+                const perPage = 100; // API limit
+                let hasMore = true;
+
+                while (hasMore) {
+                    let url = `${API_BASE}/api/residents?block_id=${block.id}&per_page=${perPage}&page=${page}`;
+                    console.log('Fetching residents from:', url);
+                    let response = await fetch(url, { credentials: 'include' });
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    console.log('Residents data received (page', page, '):', data);
+
+                    // Handle paginated response (with items) or direct array
+                    let pageResidents = [];
+                    if (Array.isArray(data)) {
+                        pageResidents = data;
+                        hasMore = false; // If it's an array, assume no pagination
+                    } else if (data.items) {
+                        pageResidents = data.items;
+                        // Check if there are more pages
+                        const total = data.total || 0;
+                        const lastPage = data.last_page || 1;
+                        hasMore = page < lastPage;
+                    } else if (data.residents) {
+                        pageResidents = data.residents;
+                        hasMore = false;
+                    }
+
+                    residentsList = residentsList.concat(pageResidents);
+                    page++;
+
+                    // Safety limit to prevent infinite loops
+                    if (page > 100) {
+                        console.warn('Reached page limit, stopping pagination');
+                        break;
+                    }
+                }
+
+                console.log('Total residents loaded:', residentsList.length);
+
+                // If skipFilter is true (e.g., when editing), show all residents
+                if (skipFilter) {
+                    console.log('Skipping filter - showing all residents');
+                    populateResidentsSelect(residentsList, selectResidentId);
+                    return;
+                }
+
+                // Get year and month from modal date input (not from filter dropdowns)
+                // This allows filtering based on the date selected in the modal
+                const modalDateInput = document.getElementById('modalDate');
+                let year, month;
+                
+                if (modalDateInput && modalDateInput.value) {
+                    // Parse date from modal (format: YYYY-MM-DD)
+                    const dateStr = modalDateInput.value;
+                    const dateParts = dateStr.split('-');
+                    if (dateParts.length === 3) {
+                        year = dateParts[0];
+                        month = dateParts[1];
+                        console.log('Using date from modal:', year, month);
+                    } else {
+                        // Fallback to current date if parsing fails
+                        const now = new Date();
+                        year = now.getFullYear().toString();
+                        month = (now.getMonth() + 1).toString();
+                        console.log('Failed to parse modal date, using current:', year, month);
+                    }
+                } else {
+                    // Fallback to filter dropdowns if modal date is not set
+                    const yearSelect = document.getElementById('filterYear');
+                    const monthSelect = document.getElementById('filterMonth');
+                    year = yearSelect?.value || new Date().getFullYear().toString();
+                    month = monthSelect?.value || (new Date().getMonth() + 1).toString();
+                    console.log('Modal date not set, using filters:', year, month);
+                }
+
+                // Get residents who already have readings for the selected period
+                let residentsWithReadings = new Set();
+                let readingsPage = 1;
+                let hasMoreReadings = true;
+
+                while (hasMoreReadings) {
+                    const readingsUrl = `${API_BASE}/api/readings?block_id=${block.id}&year=${year}&month=${month}&per_page=100&page=${readingsPage}`;
+                    console.log('Fetching readings from:', readingsUrl);
+                    let readingsResponse = await fetch(readingsUrl, { credentials: 'include' });
+                    
+                    if (readingsResponse.ok) {
+                        const readingsData = await readingsResponse.json();
+                        if (readingsData.rows && Array.isArray(readingsData.rows)) {
+                            readingsData.rows.forEach(row => {
+                                if (row.resident_id) {
+                                    residentsWithReadings.add(row.resident_id);
+                                }
+                            });
+                            
+                            // Check pagination
+                            const pagination = readingsData.pagination || {};
+                            const lastPage = pagination.last_page || 1;
+                            hasMoreReadings = readingsPage < lastPage;
+                            readingsPage++;
+                        } else {
+                            hasMoreReadings = false;
+                        }
+                    } else {
+                        hasMoreReadings = false;
+                    }
+
+                    // Safety limit
+                    if (readingsPage > 100) {
+                        console.warn('Reached readings page limit');
+                        break;
+                    }
+                }
+
+                console.log('Residents with readings:', Array.from(residentsWithReadings));
+
+                // Filter out residents who already have readings for this period
+                const filteredResidents = residentsList.filter(resident => {
+                    return !residentsWithReadings.has(resident.id);
+                });
+
+                console.log('Residents count after filtering:', filteredResidents.length);
+                console.log('Filtered residents list:', filteredResidents);
+                populateResidentsSelect(filteredResidents, selectResidentId);
+            } catch (error) {
+                console.error('Error loading residents:', error);
+                residentSelect.innerHTML = `<option value="">${t('readings_load_error_placeholder', '— ошибка загрузки —')}</option>`;
+            }
+        } else {
+            residentSelect.disabled = true;
+            residentSelect.innerHTML = `<option value="">${t('readings_select_block_first', '— выберите блок —')}</option>`;
+        }
+    }
+
+    function populateResidentsSelect(residentsList, selectResidentId = null) {
+        const residentSelect = document.getElementById('modalResident');
+        console.log('Populating residents select with', residentsList.length, 'residents');
+        residentSelect.innerHTML = `<option value="">${t('readings_select_placeholder', '— выберите —')}</option>`;
+        if (residentsList.length === 0) {
+            residentSelect.innerHTML = `<option value="">${t('readings_no_residents_placeholder', '— нет резидентов —')}</option>`;
+            return;
+        }
+        residentsList.forEach(resident => {
+            const option = document.createElement('option');
+            option.value = resident.id;
+            option.textContent = `${resident.block_name || ''} / ${resident.unit_number}`;
+            residentSelect.appendChild(option);
+            console.log('Added resident option:', option.textContent, 'ID:', resident.id);
+        });
+        
+        // If selectResidentId is provided, select it after populating
+        if (selectResidentId) {
+            residentSelect.value = selectResidentId;
+            console.log('Selected resident ID:', selectResidentId);
+        }
+    }
+
+    window.openReadingEditor = async function openReadingEditor(residentId) {
+        const resident = readingsData?.rows?.find(r => r.resident_id === residentId);
+        if (resident && resident.has_editable_meters === false) {
+            if (typeof showWarning === 'function') {
+                showWarning(t('readings_edit_disabled_paid', 'Редактирование отключено: все строки уже оплачены или частично оплачены'));
+            } else if (typeof showError === 'function') {
+                showError(t('readings_edit_disabled_paid', 'Редактирование отключено: все строки уже оплачены или частично оплачены'));
+            }
+            return;
+        }
+        openRecordModal();
+        isReadingEditMode = true;
+        const title = document.getElementById('recordReadingTitle');
+        if (title) {
+            title.textContent = t('readings_modal_edit_title', 'Редактирование показателя');
+        }
+
+        // Find resident in readingsData
+        if (!resident) {
+            if (typeof showError === 'function') {
+                showError(t('readings_resident_not_found', 'Резидент не найден'));
+            }
+            return;
+        }
+
+        const blockSelect = document.getElementById('modalBlock');
+        const residentSelect = document.getElementById('modalResident');
+        const dateInput = document.getElementById('modalDate');
+        const commentField = document.getElementById('modalComment');
+
+        // В режиме редактирования "Показателей" мы редактируем месяц,
+        // который выбран в фильтрах (год/месяц сверху), а не "сегодня".
+        // Это критично, иначе backend не найдёт existing-reading за нужный месяц
+        // и вы увидите "не тот тариф".
+        const yearSel = document.getElementById('filterYear');
+        const monthSel = document.getElementById('filterMonth');
+        const y = (yearSel?.value || new Date().getFullYear().toString());
+        const m = (monthSel?.value || (new Date().getMonth() + 1).toString());
+        const mm = String(m).padStart(2, '0');
+        const monthDate = `${y}-${mm}-01`;
+
+        // Set date BEFORE calling renderMeterDetails
+        if (dateInput) {
+            dateInput.value = monthDate;
+        }
+
+        if (blockSelect) {
+            blockSelect.value = resident.block_name;
+            // When editing, skip filtering to show all residents including the one being edited
+            // Pass residentId to select it after loading
+            await loadResidents(true, residentId);
+        }
+
+        // Render meter details after resident is selected
+        if (residentSelect && residentId) {
+            // Small delay to ensure select is populated
+            setTimeout(() => {
+                if (residentSelect.value !== residentId.toString()) {
+                    residentSelect.value = residentId;
+                }
+                // Now renderMeterDetails will use the correct date
+                renderMeterDetails(residentId);
+            }, 100);
+        }
+    }
+
+    // Сохраняем текущий residentId для фильтрации
+    let currentReadingDetailsResidentId = null;
+
+    async function loadReadingDetailsData(residentId, fromMonth = null, toMonth = null) {
+        const body = document.getElementById('readingDetailsBody');
+        if (!body) return;
+
+        body.innerHTML = `<div class="text-muted text-center" style="padding: 20px;">${t('loading', 'Загрузка...')}</div>`;
+
+        // Формируем URL с параметрами фильтрации
+        let url = `${API_BASE}/api/readings/resident/${residentId}/history`;
+        const params = new URLSearchParams();
+        if (fromMonth) params.append('from_month', fromMonth);
+        if (toMonth) params.append('to_month', toMonth);
+        if (params.toString()) {
+            url += '?' + params.toString();
+        }
+
+        try {
+            let response = await fetch(url, { credentials: 'include' });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Reading history data:', data);
+
+            const metersWithReadings = (data.meters || []).filter(meter =>
+                meter && Array.isArray(meter.readings) && meter.readings.length > 0
+            );
+
+            if (metersWithReadings.length === 0) {
+                body.innerHTML = `<div class="detail-empty">${t('readings_no_readings_details', 'Нет данных о показаниях')}</div>`;
+                return;
+            }
+
+            // Группируем счётчики по типу, чтобы избежать дубликатов
+            const metersByType = {};
+            metersWithReadings.forEach(meter => {
+                const key = `${meter.type}_${meter.tariff_name || ''}`;
+                if (!metersByType[key]) {
+                    metersByType[key] = {
+                        type: meter.type,
+                        tariff_name: meter.tariff_name,
+                        unit: meter.unit,
+                        serial_number: meter.serial_number,
+                        readings: []
+                    };
+                }
+                // Объединяем показания всех счётчиков этого типа
+                metersByType[key].readings.push(...meter.readings);
+            });
+
+            // Сортируем показания по дате (от новых к старым)
+            Object.values(metersByType).forEach(meter => {
+                meter.readings.sort((a, b) => new Date(b.date) - new Date(a.date));
+            });
+
+            const metersHtml = Object.values(metersByType).map(meter => {
+                const rowsHtml = meter.readings.map(reading => {
+                    const photoUrl = resolvePhotoUrl(reading.photo_url || '');
+                    return `
+                        <div class="detail-grid-row">
+                            <div>${reading.date}</div>
+                            <div>${reading.value.toFixed(3)}</div>
+                            <div>${reading.consumption.toFixed(3)}</div>
+                            <div class="detail-amount ${reading.amount > 0 ? 'detail-amount-alert' : ''}">${reading.amount.toFixed(2)}</div>
+                            <div>${reading.vat_percent}</div>
+                            <div>${reading.comment}</div>
+                            <div>
+                                ${photoUrl ? `
+                                    <a href="${photoUrl}" target="_blank" class="detail-photo-link">
+                                        <img src="${photoUrl}" alt="Фото счётчика" loading="lazy"
+                                             onerror="this.parentElement.outerHTML='<span class=\\'detail-photo-empty\\'>—</span>'">
+                                    </a>
+                                ` : '<span class="detail-photo-empty">—</span>'}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Показываем серийный номер, если он есть и не является фикс-услугой
+                const serialInfo = meter.serial_number && meter.serial_number !== '-'
+                    ? ` (№${meter.serial_number})`
+                    : '';
+
+                const meterTypeText = localizeDetailMeterType(meter.type);
+                const meterUnitText = localizeDetailUnit(meter.unit);
+                return `
+                        <div class="detail-meter-card">
+                            <div class="detail-meter-head">
+                                <span class="detail-meter-badge">${meterTypeText}${serialInfo}</span>
+                                <div class="detail-meter-info">
+                                    <span>${t('tariff', 'тариф')}: ${meter.tariff_name || '—'}</span>
+                                </div>
+                                <span class="detail-unit-chip">${meterUnitText}</span>
+                            </div>
+                            <div class="detail-grid detail-grid-head">
+                                <div>${t('date', 'Дата')}</div>
+                                <div>${t('user_resident_table_reading', 'Показание')}, ${meterUnitText}</div>
+                                <div>${t('user_resident_table_usage', 'Расход')}, ${meterUnitText}</div>
+                                <div>${t('user_resident_table_charge', 'Начислено')}</div>
+                                <div>${t('user_resident_table_vat', 'НДС, %')}</div>
+                                <div>${t('user_resident_table_comment', 'Комментарий')}</div>
+                                <div>${t('readings_photo', 'Фото')}</div>
+                            </div>
+                            <div class="detail-grid-body">
+                                ${rowsHtml || `<div class="detail-empty-row">${t('readings_no_records', 'Нет записей')}</div>`}
+                            </div>
+                        </div>
+                    `;
+            }).join('');
+
+            body.innerHTML = metersHtml || `<div class="detail-empty">${t('tariffs_no_data', 'Нет данных')}</div>`;
+            return data;
+        } catch (error) {
+            console.error('Error loading reading history:', error);
+            body.innerHTML = `<div class="detail-empty">${t('error_loading_data', 'Ошибка загрузки данных')}: ${error.message}</div>`;
+            throw error;
+        }
+    }
+
+    window.openReadingDetails = async function openReadingDetails(residentId) {
+        const modal = document.getElementById('readingDetailsModal');
+        const title = document.getElementById('readingDetailsTitle');
+        const body = document.getElementById('readingDetailsBody');
+        if (!modal || !title || !body) return;
+
+        const resident = readingsData?.rows?.find(r => r.resident_id === residentId);
+        if (!resident) {
+            title.textContent = t('readings_details_title', 'Детали показаний');
+            body.innerHTML = `<div class="detail-empty">${t('readings_resident_not_found', 'Резидент не найден')}</div>`;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            return;
+        }
+
+        // Сохраняем residentId для фильтрации
+        currentReadingDetailsResidentId = residentId;
+
+        title.textContent = `${t('resident', 'Резидент')}: ${resident.resident_code}`;
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        // Устанавливаем фильтр по умолчанию на текущий (выбранный) месяц
+        const fromMonthInput = document.getElementById('readingDetailsFromMonth');
+        const toMonthInput = document.getElementById('readingDetailsToMonth');
+        const yearSel = document.getElementById('filterYear');
+        const monthSel = document.getElementById('filterMonth');
+
+        const now = new Date();
+        const year = parseInt(yearSel?.value || now.getFullYear().toString(), 10);
+        const month = parseInt(monthSel?.value || (now.getMonth() + 1).toString(), 10);
+        const mm = String(month).padStart(2, '0');
+        const defaultMonthValue = `${year}-${mm}`; // формат YYYY-MM для <input type="month">
+
+        if (fromMonthInput) fromMonthInput.value = defaultMonthValue;
+        if (toMonthInput) toMonthInput.value = defaultMonthValue;
+
+        // Загружаем данные за выбранный по умолчанию месяц
+        try {
+            await loadReadingDetailsData(residentId, defaultMonthValue, defaultMonthValue);
+        } catch (error) {
+            console.error('Error loading reading history:', error);
+            body.innerHTML = `<div class="detail-empty">${t('error_loading_data', 'Ошибка загрузки данных')}: ${error.message}</div>`;
+        }
+    }
+
+    window.applyReadingDetailsFilter = async function applyReadingDetailsFilter() {
+        if (!currentReadingDetailsResidentId) return;
+
+        const fromMonthInput = document.getElementById('readingDetailsFromMonth');
+        const toMonthInput = document.getElementById('readingDetailsToMonth');
+        const body = document.getElementById('readingDetailsBody');
+        
+        const fromMonth = fromMonthInput?.value || null;
+        const toMonth = toMonthInput?.value || null;
+
+        // Валидация: начальный месяц не должен быть позже конечного
+        if (fromMonth && toMonth && fromMonth > toMonth) {
+            alert(t('readings_date_range_invalid', 'Начальный месяц не может быть позже конечного месяца'));
+            return;
+        }
+
+        try {
+            await loadReadingDetailsData(currentReadingDetailsResidentId, fromMonth, toMonth);
+        } catch (error) {
+            console.error('Error loading filtered reading history:', error);
+            body.innerHTML = `<div class="detail-empty">${t('error_loading_data', 'Ошибка загрузки данных')}: ${error.message}</div>`;
+        }
+    }
+
+    window.resetReadingDetailsFilter = async function resetReadingDetailsFilter() {
+        const fromMonthInput = document.getElementById('readingDetailsFromMonth');
+        const toMonthInput = document.getElementById('readingDetailsToMonth');
+        
+        if (fromMonthInput) fromMonthInput.value = '';
+        if (toMonthInput) toMonthInput.value = '';
+
+        // Перезагружаем данные без фильтрации
+        if (currentReadingDetailsResidentId) {
+            await applyReadingDetailsFilter();
+        }
+    }
+
+    function renderDetailMeterCard(meter) {
+        const rows = (meter.rows && meter.rows.length)
+            ? meter.rows.map(row => `
+                    <div class="detail-grid-row">
+                        <div>${row.date || '—'}</div>
+                        <div>${row.value || '—'}</div>
+                        <div>${row.consumption || '—'}</div>
+                        <div class="detail-amount ${row.amount && Number(row.amount) > 0 ? 'detail-amount-alert' : ''}">${row.amount || '0.00'}</div>
+                        <div>${row.vat ?? '—'}</div>
+                        <div>${row.comment || '—'}</div>
+                    </div>
+                `).join('')
+            : '<div class="detail-empty-row">Нет записей</div>';
+
+        const meterTypeText = localizeDetailMeterType(meter.type);
+        const meterUnitText = localizeDetailUnit(meter.unit || '');
+        return `
+                <div class="detail-meter-card">
+                    <div class="detail-meter-head">
+                        <span class="detail-meter-badge">${meterTypeText}</span>
+                        <div class="detail-meter-info">
+                            <span>${meter.meter}</span>
+                            <span>${t('tariff', 'тариф')}: ${meter.tariff}</span>
+                        </div>
+                        <span class="detail-unit-chip">${meterUnitText}</span>
+                    </div>
+                    <div class="detail-grid detail-grid-head">
+                        <div>${t('date', 'Дата')}</div>
+                        <div>${t('user_resident_table_reading', 'Показание')}</div>
+                        <div>${t('user_resident_table_usage', 'Расход')}</div>
+                        <div>${t('user_resident_table_charge', 'Начислено')}</div>
+                        <div>${t('user_resident_table_vat', 'НДС, %')}</div>
+                        <div>${t('user_resident_table_comment', 'Комментарий')}</div>
+                    </div>
+                    <div class="detail-grid-body">
+                        ${rows}
+                    </div>
+                </div>
+            `;
+    }
+
+    window.closeReadingDetails = function closeReadingDetails() {
+        const modal = document.getElementById('readingDetailsModal');
+        if (!modal) return;
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+
+    function isMobilePhotoMode() {
+        return window.matchMedia('(pointer: coarse)').matches ||
+            /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    }
+
+    function resolvePhotoUrl(url) {
+        if (!url) return '';
+        if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:') || url.startsWith('data:')) {
+            return url;
+        }
+        return `${API_BASE}${url.startsWith('/') ? '' : '/'}${url}`;
+    }
+
+    function resetMeterPhotoState() {
+        meterPhotoFiles.clear();
+        meterPhotoObjectUrls.forEach((url) => URL.revokeObjectURL(url));
+        meterPhotoObjectUrls.clear();
+
+        document.querySelectorAll('#meterTableBody tr[data-meter-id]').forEach(row => {
+            const preview = row.querySelector('.meter-photo-preview');
+            if (!preview) return;
+            const existingUrl = resolvePhotoUrl(row.dataset.existingPhotoUrl || '');
+            if (existingUrl) {
+                const parts = existingUrl.split('/');
+                const fileName = parts[parts.length - 1] || 'Фото загружено';
+                preview.innerHTML = `
+                    <div class="meter-photo-actions">
+                        <button type="button" class="meter-photo-link" onclick="openMeterPhotoPicker(${row.dataset.meterId}, event)" title="${t('readings_replace_photo', 'Заменить фото')}">
+                            <img src="${existingUrl}" alt="Фото счётчика">
+                            <span class="meter-photo-overlay"><i class="bi bi-camera"></i></span>
+                        </button>
+                        <button type="button" class="meter-photo-view" onclick="viewMeterPhoto(${row.dataset.meterId}, event)" title="${t('readings_view_photo', 'Просмотреть фото')}">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    <span class="meter-photo-name">${fileName}</span>
+                `;
+            } else {
+                preview.innerHTML = `
+                    <button type="button" class="btn btn-sm btn-outline-primary meter-photo-btn"
+                            onclick="openMeterPhotoPicker(${row.dataset.meterId}, event)">
+                        <i class="bi bi-camera"></i>
+                    </button>
+                    <span class="meter-photo-placeholder">${t('readings_no_photo', 'Нет фото')}</span>
+                `;
+            }
+        });
+    }
+
+    function updateMeterPhotoPreview(meterId, file) {
+        const row = document.querySelector(`#meterTableBody tr[data-meter-id="${meterId}"]`);
+        if (!row) return;
+        const preview = row.querySelector('.meter-photo-preview');
+        if (!preview) return;
+
+        const existingUrl = meterPhotoObjectUrls.get(meterId);
+        if (existingUrl) {
+            URL.revokeObjectURL(existingUrl);
+            meterPhotoObjectUrls.delete(meterId);
+        }
+
+        const objectUrl = URL.createObjectURL(file);
+        meterPhotoObjectUrls.set(meterId, objectUrl);
+        preview.innerHTML = `
+            <div class="meter-photo-actions">
+                <button type="button" class="meter-photo-link" onclick="openMeterPhotoPicker(${meterId}, event)" title="${t('readings_replace_photo', 'Заменить фото')}">
+                    <img src="${objectUrl}" alt="Фото счётчика">
+                    <span class="meter-photo-overlay"><i class="bi bi-camera"></i></span>
+                </button>
+                <button type="button" class="meter-photo-view" onclick="viewMeterPhoto(${meterId}, event)" title="${t('readings_view_photo', 'Просмотреть фото')}">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+            <span class="meter-photo-name">${file.name}</span>
+        `;
+    }
+
+    function closePhotoPicker(clearActive = true) {
+        const modal = document.getElementById('photoPickerModal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+        if (clearActive) {
+            activePhotoMeterId = null;
+        }
+    }
+
+    window.openMeterPhotoPicker = function openMeterPhotoPicker(meterId, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        activePhotoMeterId = meterId;
+
+        if (!isMobilePhotoMode()) {
+            const galleryInput = document.getElementById('meterPhotoInputGallery');
+            if (galleryInput) {
+                galleryInput.click();
+            }
+            return;
+        }
+
+        const modal = document.getElementById('photoPickerModal');
+        if (modal) {
+            modal.classList.add('active');
+        }
+    }
+
+    window.viewMeterPhoto = function viewMeterPhoto(meterId, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const newUrl = meterPhotoObjectUrls.get(meterId);
+        if (newUrl) {
+            window.open(newUrl, '_blank', 'noopener');
+            return;
+        }
+        const row = document.querySelector(`#meterTableBody tr[data-meter-id="${meterId}"]`);
+        const existingUrl = row ? resolvePhotoUrl(row.dataset.existingPhotoUrl || '') : '';
+        if (existingUrl) {
+            window.open(existingUrl, '_blank', 'noopener');
+            return;
+        }
+        if (typeof showWarning === 'function') {
+            showWarning(t('readings_no_photo_preview', 'Нет фото для просмотра'));
+        } else {
+            alert(t('readings_no_photo_preview', 'Нет фото для просмотра'));
+        }
+    }
+
+    function handleMeterPhotoSelected(file) {
+        if (!file || !activePhotoMeterId) {
+            closePhotoPicker(true);
+            return;
+        }
+
+        meterPhotoFiles.set(activePhotoMeterId, file);
+        updateMeterPhotoPreview(activePhotoMeterId, file);
+        closePhotoPicker(true);
+    }
+
+    function initMeterPhotoPicker() {
+        if (meterPhotoPickerInitialized) {
+            return;
+        }
+        const cameraInput = document.getElementById('meterPhotoInputCamera');
+        const galleryInput = document.getElementById('meterPhotoInputGallery');
+        const modal = document.getElementById('photoPickerModal');
+
+        if (cameraInput) {
+            cameraInput.addEventListener('change', () => {
+                handleMeterPhotoSelected(cameraInput.files?.[0]);
+                cameraInput.value = '';
+            });
+        }
+
+        if (galleryInput) {
+            galleryInput.addEventListener('change', () => {
+                handleMeterPhotoSelected(galleryInput.files?.[0]);
+                galleryInput.value = '';
+            });
+        }
+
+        if (modal) {
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closePhotoPicker();
+                }
+            });
+
+            modal.querySelectorAll('.photo-picker-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const source = btn.getAttribute('data-source');
+                    closePhotoPicker(false);
+                    if (source === 'camera') {
+                        cameraInput?.click();
+                    } else {
+                        galleryInput?.click();
+                    }
+                });
+            });
+
+            const cancelBtn = modal.querySelector('.photo-picker-cancel');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => closePhotoPicker(true));
+            }
+        }
+        meterPhotoPickerInitialized = true;
+    }
+
+    // Record Reading Function
+    let isSubmitting = false; // Флаг для предотвращения двойной отправки
+    window.recordReading = async function recordReading(event) {
+        event.preventDefault();
+
+        // Предотвращаем двойную отправку
+        if (isSubmitting) {
+            console.log('Already submitting, ignoring duplicate request');
+            return;
+        }
+
+        isSubmitting = true;
+
+        // Отключаем кнопку отправки
+        const submitButton = event.target.querySelector('button[type="submit"]');
+        let originalText = '';
+        if (submitButton) {
+            submitButton.disabled = true;
+            originalText = submitButton.textContent;
+            submitButton.textContent = 'Сохранение...';
+        }
+
+        try {
+            const residentId = parseInt(document.getElementById('modalResident').value);
+            let dateStr = document.getElementById('modalDate').value;
+            const comment = document.getElementById('modalComment').value.trim();
+
+            if (!residentId) {
+                if (typeof showError === 'function') {
+                    showError(t('readings_select_resident_error', 'Выберите резидента'));
+                }
+                isSubmitting = false;
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText || 'Записать';
+                }
+                return;
+            }
+
+            if (!dateStr) {
+                if (typeof showError === 'function') {
+                    showError(t('readings_select_date_error', 'Выберите дату показаний'));
+                }
+                isSubmitting = false;
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText || 'Записать';
+                }
+                return;
+            }
+
+            // Ensure date is in YYYY-MM-DD format
+            // If date is in DD.MM.YYYY format, convert it
+            if (dateStr.includes('.')) {
+                const parts = dateStr.split('.');
+                if (parts.length === 3) {
+                    dateStr = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                }
+            }
+
+            console.log('Date string:', dateStr);
+
+            let items;
+            try {
+                items = collectMeterData();
+            } catch (error) {
+                // Ошибка валидации уже показана в collectMeterData
+                isSubmitting = false;
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText || 'Записать';
+                }
+                return;
+            }
+
+            if (items.length === 0) {
+                if (typeof showWarning === 'function') {
+                    showWarning(t('readings_no_data_save', 'Нет данных для сохранения'));
+                }
+                isSubmitting = false;
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText || 'Записать';
+                }
+                return;
+            }
+
+            const payload = {
+                resident_id: residentId,
+                date_str: dateStr,
+                items: items,
+                note: comment || null
+            };
+
+            console.log('Saving reading with payload:', payload);
+
+            try {
+                let url = `${API_BASE}/api/readings`;
+                console.log('POST to:', url);
+
+                let response;
+                response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+
+                console.log('Response status:', response.status, response.statusText);
+
+                if (!response.ok) {
+                    const errorText = await response.text().catch(() => 'Unknown error');
+                    console.error('Endpoint error:', errorText);
+                    throw new Error(errorText || `HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('Reading saved successfully:', result);
+                if (typeof showSuccess === 'function') {
+                    showSuccess(t('readings_saved_success', 'Показания успешно записаны!'));
+                }
+
+                try {
+                    await uploadMeterPhotos(dateStr);
+                } catch (photoError) {
+                    console.error('Photo upload error:', photoError);
+                    if (typeof showWarning === 'function') {
+                        showWarning(t('readings_saved_photo_failed', 'Показания сохранены, но фото не загрузились.'));
+                    }
+                }
+
+                // Update filters to the month of the saved reading
+                const savedDate = new Date(dateStr);
+                const savedYear = savedDate.getFullYear();
+                const savedMonth = savedDate.getMonth() + 1; // getMonth() returns 0-11
+
+                const yearSelect = document.getElementById('filterYear');
+                const monthSelect = document.getElementById('filterMonth');
+
+                if (yearSelect && savedYear) {
+                    yearSelect.value = savedYear.toString();
+                }
+                if (monthSelect && savedMonth) {
+                    monthSelect.value = savedMonth.toString();
+                }
+
+                closeRecordModal();
+                await loadReadings();
+            } catch (error) {
+                console.error('Error recording reading:', error);
+                if (typeof showError === 'function') {
+                    showError(`${t('readings_save_error', 'Ошибка сохранения')}: ${error.message}`);
+                }
+            }
+        } finally {
+            // Восстанавливаем состояние кнопки и флага
+            isSubmitting = false;
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = originalText || 'Записать';
+            }
+        }
+    }
+
+    async function uploadMeterPhotos(dateStr) {
+        if (!dateStr || meterPhotoFiles.size === 0) {
+            return;
+        }
+
+        for (const [meterId, file] of meterPhotoFiles.entries()) {
+            const row = document.querySelector(`#meterTableBody tr[data-meter-id="${meterId}"]`);
+            if (row?.dataset?.paymentLocked === '1') {
+                continue;
+            }
+            const formData = new FormData();
+            formData.append('date_str', dateStr);
+            formData.append('file', file);
+
+            const response = await fetch(`${API_BASE}/api/readings/meter/${meterId}/photo`, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text().catch(() => '');
+                throw new Error(errorText || `HTTP ${response.status}`);
+            }
+        }
+
+        resetMeterPhotoState();
+    }
+
+    function collectMeterData() {
+        const rows = document.querySelectorAll('#meterTableBody tr[data-meter-id]');
+        const items = [];
+
+        for (const row of rows) {
+            if (row.dataset.paymentLocked === '1') {
+                continue;
+            }
+            const meterId = parseInt(row.dataset.meterId);
+            const isFixed = row.dataset.isFixed === 'true';
+
+            if (isFixed) {
+                const checkbox = row.querySelector('.meter-checkbox');
+                if (checkbox?.checked) {
+                    items.push({
+                        meter_id: meterId,
+                        new_value: 1
+                    });
+                }
+            } else {
+                const input = row.querySelector('.meter-input');
+                const value = input?.value ? parseFloat(input.value) : null;
+
+                if (value !== null) {
+                    // Проверяем значение только при сохранении
+                    const prev = parseFloat(row.dataset.prevValue || '0');
+                    if (value < prev) {
+                        if (typeof showError === 'function') {
+                            const meterType = row.querySelector('.meter-type-pill')?.textContent || 'счётчика';
+                            showError(`Новое значение для ${meterType} (${value.toFixed(3)}) не может быть меньше предыдущего (${prev.toFixed(3)})`);
+                        }
+                        throw new Error(`Value ${value} is less than previous ${prev}`);
+                    }
+
+                    items.push({
+                        meter_id: meterId,
+                        new_value: value
+                    });
+                }
+            }
+        }
+
+        return items;
+    }
+
+    window.hideMeterDetails = function hideMeterDetails() {
+        const section = document.getElementById('meterDetailsSection');
+        if (section) {
+            section.classList.add('hidden');
+            document.getElementById('meterTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-muted text-center">Выберите резидента, чтобы увидеть тарифы</td>
+                    </tr>`;
+        }
+        resetMeterPhotoState();
+        resetDeleteLastReadingGuards();
+    }
+
+    document.getElementById('modalResident').addEventListener('change', function () {
+        const residentId = this.value;
+        resetDeleteLastReadingGuards();
+        if (!residentId) {
+            hideMeterDetails();
+            return;
+        }
+        renderMeterDetails(residentId);
+    });
+
+    // Add event listener for date change to reload meter details and update residents list
+    const modalDateInput = document.getElementById('modalDate');
+    if (modalDateInput) {
+        modalDateInput.addEventListener('change', function () {
+            resetDeleteLastReadingGuards();
+            const residentId = document.getElementById('modalResident')?.value;
+            const blockName = document.getElementById('modalBlock')?.value;
+            
+            // If block is selected, reload residents list with new date filter
+            if (blockName) {
+                console.log('📅 Date changed, reloading residents list for block:', blockName);
+                // Save current resident ID to restore it after reload (if it's still in the list)
+                const savedResidentId = residentId ? parseInt(residentId) : null;
+                loadResidents(false, savedResidentId); // false = apply filter, savedResidentId = try to restore selection
+            }
+            
+            // If resident is already selected, reload meter details
+            if (residentId) {
+                console.log('📅 Date changed, reloading meter details for resident:', residentId);
+                // Small delay to ensure residents list is updated first
+                setTimeout(() => {
+                    const currentResidentId = document.getElementById('modalResident')?.value;
+                    if (currentResidentId) {
+                        renderMeterDetails(parseInt(currentResidentId));
+                    }
+                }, 300);
+            }
+        });
+    }
+
+    window.renderMeterDetails = async function renderMeterDetails(residentId) {
+        const section = document.getElementById('meterDetailsSection');
+        const tbody = document.getElementById('meterTableBody');
+
+        if (!section || !tbody) return;
+
+        if (!residentId) {
+            console.warn('renderMeterDetails called without residentId');
+            return;
+        }
+
+        tbody.innerHTML = '<tr><td colspan="7" class="text-muted text-center">Загрузка...</td></tr>';
+        section.classList.remove('hidden');
+
+        try {
+            const dateInput = document.getElementById('modalDate');
+            let dateStr = dateInput?.value || new Date().toISOString().split('T')[0];
+
+            // Если дата в формате DD.MM.YYYY, конвертируем в YYYY-MM-DD
+            if (dateStr.includes('.')) {
+                const parts = dateStr.split('.');
+                if (parts.length === 3) {
+                    dateStr = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                }
+            }
+
+            console.log('🔍 renderMeterDetails - dateStr:', dateStr, 'residentId:', residentId);
+
+            let url = `${API_BASE}/api/readings/resident/${residentId}/meters?date=${dateStr}`;
+            const response = await fetch(url, { credentials: 'include' });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            const meters = data.meters || [];
+
+            // В режиме редактирования подставляем последний сохраненный комментарий за выбранный месяц.
+            if (isReadingEditMode) {
+                const commentField = document.getElementById('modalComment');
+                if (commentField) {
+                    const existingNotes = meters
+                        .filter(m => m?.existing && typeof m?.existing_note === 'string' && m.existing_note.trim() !== '')
+                        .sort((a, b) => Number(b?.existing_reading_id || 0) - Number(a?.existing_reading_id || 0));
+                    commentField.value = existingNotes.length > 0 ? existingNotes[0].existing_note : '';
+                }
+            }
+
+            renderMeterTable(meters);
+        } catch (error) {
+            console.error('Error loading meters:', error);
+            tbody.innerHTML = `<tr><td colspan="7" class="text-danger text-center">Ошибка загрузки: ${error.message}</td></tr>`;
+        }
+    }
+
+    function calculateAmount(consumption, tariffSteps, vatPercent, useMultiplier = false, multiplier = 1) {
+        if (!tariffSteps || tariffSteps.length === 0) {
+            return 0;
+        }
+
+        const coeff = (useMultiplier && Number(multiplier) > 0) ? Number(multiplier) : 1;
+        let left = Number(consumption || 0) * coeff;
+        let totalNet = 0;
+
+        // Для CONSTRUCTION тарифов используем первую ступень
+        if (tariffSteps[0] && tariffSteps[0].from_date !== null && tariffSteps[0].from_date !== undefined) {
+            // Date-based tariff (CONSTRUCTION)
+            if (tariffSteps.length > 0) {
+                const price = tariffSteps[0].price;
+                totalNet = left * price;
+            }
+        } else {
+            // Value-based tariff
+            for (const step of tariffSteps) {
+                if (left <= 0) break;
+
+                const fromValue = step.from_value !== null ? step.from_value : 0;
+                const toValue = step.to_value !== null ? step.to_value : null;
+                const price = step.price;
+
+                let chunk = 0;
+                if (toValue === null) {
+                    chunk = left;
+                } else {
+                    const width = toValue - fromValue;
+                    chunk = Math.min(left, width);
+                }
+
+                if (chunk > 0) {
+                    totalNet += chunk * price;
+                    left -= chunk;
+                }
+            }
+        }
+
+        const vat = totalNet * (vatPercent / 100);
+        return totalNet + vat;
+    }
+
+    function getWaterBaseValues(row) {
+        const prev = parseFloat(row.dataset.prevValue || '0');
+        const input = row.querySelector('.meter-input');
+        const value = input?.value ? parseFloat(input.value) : null;
+        if (value === null || Number.isNaN(value)) {
+            return { consumption: 0, amount: 0 };
+        }
+
+        const consumption = Math.max(0, value - prev);
+        const tariffSteps = JSON.parse(row.dataset.tariffSteps || '[]');
+        const vatPercent = parseFloat(row.dataset.vatPercent || '0');
+        const useMultiplier = row.dataset.useMultiplier === '1';
+        const multiplier = parseFloat(row.dataset.consumptionMultiplier || '1');
+        const amount = calculateAmount(consumption, tariffSteps, vatPercent, useMultiplier, multiplier);
+        return { consumption, amount };
+    }
+
+    function upsertAutoSewerRowForWater(waterRow) {
+        if (!waterRow) return;
+        const percent = parseFloat(waterRow.dataset.seweragePercent || '0');
+        if (!(percent > 0)) return;
+
+        const meterId = waterRow.dataset.meterId;
+        const customerType = (waterRow.dataset.sewerageCustomerType || '').toUpperCase();
+        const k = percent / 100;
+
+        const { consumption: baseConsumption, amount: baseAmount } = getWaterBaseValues(waterRow);
+        let waterConsumption = baseConsumption;
+        let waterAmount = baseAmount;
+        let sewerConsumption = baseConsumption * k;
+        let sewerAmount = baseAmount * k;
+
+        if (customerType === 'INDIVIDUAL') {
+            waterConsumption = baseConsumption * (1 - k);
+            waterAmount = baseAmount * (1 - k);
+            sewerConsumption = baseConsumption * k;
+            sewerAmount = Math.max(0, baseAmount - waterAmount);
+        }
+
+        const waterConsumptionEl = waterRow.querySelector('.meter-consumption');
+        const waterAmountEl = waterRow.querySelector('.meter-amount');
+        if (waterConsumptionEl) waterConsumptionEl.textContent = waterConsumption.toFixed(3);
+        if (waterAmountEl) waterAmountEl.textContent = waterAmount.toFixed(2);
+
+        let sewerRow = document.querySelector(`#meterTableBody tr.auto-sewer-row[data-linked-water-meter-id="${meterId}"]`);
+        if (!sewerRow) {
+            sewerRow = document.createElement('tr');
+            sewerRow.className = 'auto-sewer-row';
+            sewerRow.setAttribute('data-linked-water-meter-id', meterId);
+            sewerRow.innerHTML = `
+                <td><span class="meter-type-pill">${t('readings_sewerage_auto', 'Канализация (авто)')}</span></td>
+                <td class="auto-sewer-tariff">—</td>
+                <td>—</td>
+                <td>от воды</td>
+                <td><span class="meter-consumption">0.000</span></td>
+                <td><span class="meter-amount">0.00</span></td>
+                <td><div class="meter-photo-cell"><span class="meter-photo-placeholder">—</span></div></td>
+                <td></td>
+            `;
+            waterRow.insertAdjacentElement('afterend', sewerRow);
+        }
+
+        const tariffCell = sewerRow.querySelector('.auto-sewer-tariff');
+        if (tariffCell) {
+            const waterTariffName = waterRow.dataset.tariffName || t('meter_cold_water', 'Вода');
+            tariffCell.textContent = `${waterTariffName} (${percent.toFixed(2)}%)`;
+        }
+
+        const sewerConsumptionEl = sewerRow.querySelector('.meter-consumption');
+        const sewerAmountEl = sewerRow.querySelector('.meter-amount');
+        if (sewerConsumptionEl) sewerConsumptionEl.textContent = sewerConsumption.toFixed(3);
+        if (sewerAmountEl) sewerAmountEl.textContent = sewerAmount.toFixed(2);
+    }
+
+    function refreshAllAutoSewerRows() {
+        const waterRows = Array.from(document.querySelectorAll('#meterTableBody tr[data-meter-id][data-meter-type="WATER"]'));
+        waterRows.forEach(upsertAutoSewerRowForWater);
+    }
+
+    function upsertAutoStableRowForMeter(baseRow) {
+        if (!baseRow) return;
+        const meterType = String(baseRow.dataset.meterType || '').toUpperCase();
+        if (!(meterType === 'ELECTRIC' || meterType === 'GAS')) return;
+
+        const stableTariff = parseFloat(baseRow.dataset.stableTariff || '0');
+        const meterId = baseRow.dataset.meterId;
+        const existingRow = document.querySelector(`#meterTableBody tr.auto-stable-row[data-linked-meter-id="${meterId}"]`);
+        if (!(stableTariff > 0)) {
+            if (existingRow) existingRow.remove();
+            return;
+        }
+
+        let stableRow = existingRow;
+        if (!stableRow) {
+            stableRow = document.createElement('tr');
+            stableRow.className = 'auto-stable-row';
+            stableRow.setAttribute('data-linked-meter-id', meterId);
+            stableRow.innerHTML = `
+                <td><span class="meter-type-pill">${t('stable_tariff', 'Стабильный тариф')}</span></td>
+                <td class="auto-stable-tariff">—</td>
+                <td>—</td>
+                <td>${t('readings_auto', 'авто')}</td>
+                <td><span class="meter-consumption">—</span></td>
+                <td><span class="meter-amount">0.00</span></td>
+                <td><div class="meter-photo-cell"><span class="meter-photo-placeholder">—</span></div></td>
+                <td></td>
+            `;
+            baseRow.insertAdjacentElement('afterend', stableRow);
+        }
+
+        const typeTitle = meterType === 'GAS'
+            ? t('meter_gas', 'Газ')
+            : t('meter_electricity', 'Электричество');
+        const tariffName = baseRow.dataset.tariffName || typeTitle;
+        const tariffCell = stableRow.querySelector('.auto-stable-tariff');
+        if (tariffCell) {
+            tariffCell.textContent = `${tariffName} (${typeTitle})`;
+        }
+        const amountEl = stableRow.querySelector('.meter-amount');
+        if (amountEl) {
+            amountEl.textContent = stableTariff.toFixed(2);
+        }
+    }
+
+    function refreshAllAutoStableRows() {
+        const rows = Array.from(document.querySelectorAll('#meterTableBody tr[data-meter-id][data-meter-type="ELECTRIC"], #meterTableBody tr[data-meter-id][data-meter-type="GAS"]'));
+        rows.forEach(upsertAutoStableRowForMeter);
+    }
+
+    function renderMeterTable(meters) {
+        const tbody = document.getElementById('meterTableBody');
+        if (!tbody) return;
+        const showDelete = isReadingEditMode;
+        // Важно: в режиме редактирования показываем ВСЕ назначенные тарифы/счетчики.
+        // Даже если показатель за месяц удален (existing=false), строка должна оставаться,
+        // чтобы было видно, что тариф назначен и его можно снова отметить/ввести.
+        const metersToRender = meters;
+        const deleteHeader = document.querySelector('.meter-table thead th:last-child');
+        if (deleteHeader) {
+            deleteHeader.textContent = showDelete ? t('readings_delete_last', 'Удалить последнее') : '';
+        }
+
+        if (metersToRender.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-muted text-center">Для выбранного резидента нет счётчиков</td></tr>';
+            return;
+        }
+
+        const hasRealSewerMeter = metersToRender.some(m => m.type === 'SEWERAGE');
+        tbody.innerHTML = metersToRender.map(meter => {
+            // В режиме редактирования месяца удаление должно относиться ТОЛЬКО к записи
+            // выбранного месяца (existing_reading_id), а не к "последней вообще".
+            // Иначе при отсутствии записи в текущем месяце может удалиться следующий месяц.
+            const serverLastReadingId = isReadingEditMode
+                ? (meter.existing_reading_id ?? null)
+                : (meter.last_reading_id ?? meter.existing_reading_id ?? null);
+            if (!initialLastReadingByMeter.has(meter.meter_id)) {
+                initialLastReadingByMeter.set(meter.meter_id, serverLastReadingId);
+            }
+            const expectedLastReadingId = initialLastReadingByMeter.get(meter.meter_id);
+            const paymentLocked = meter.payment_locked === true;
+            const deleteLocked = paymentLocked || deletedLastReadingMeters.has(meter.meter_id) || !expectedLastReadingId;
+            const deleteDisabledAttr = deleteLocked ? 'disabled' : '';
+            const deleteTitle = paymentLocked
+                ? t('readings_row_paid_locked', 'Строка уже оплачена и недоступна для изменений')
+                : (deleteLocked
+                    ? t('readings_delete_only_last_tip', 'Можно удалить только одно последнее показание')
+                    : t('readings_delete_last_reading_title', 'Удалить последнее показание'));
+            const inputDisabledAttr = paymentLocked ? 'disabled' : '';
+            const meterDisplayType = localizeDetailMeterType(meter.display_type || meter.type);
+
+            // prev_value - это последнее показание ДО начала месяца (или initial_reading)
+            // existing_value - это существующее показание ЗА этот месяц (если есть)
+            // НО: для отображения "Предыдущее" мы должны показывать prev_value
+            // А для поля "Новое / Отметить" НЕ должны заполнять existing_value - поле должно быть пустым
+            // prev_value из backend - это последнее показание ДО начала месяца (или initial_reading)
+            // Если prev_value = 0, это может означать, что нет предыдущих показаний И initial_reading = 0
+            const prev = (meter.prev_value !== null && meter.prev_value !== undefined && !isNaN(meter.prev_value))
+                ? parseFloat(meter.prev_value)
+                : 0;
+            const existing = (meter.existing_value !== null && meter.existing_value !== undefined) ? parseFloat(meter.existing_value) : null;
+            const isFixed = meter.is_fixed;
+
+            // Debug logging
+            console.log('🔍 Meter data:', {
+                meter_id: meter.meter_id,
+                type: meter.display_type,
+                prev_value_backend: meter.prev_value,
+                prev_parsed: prev,
+                existing_value_backend: meter.existing_value,
+                existing_parsed: existing,
+                unit: meter.unit
+            });
+            // Убираем min атрибут, чтобы можно было вводить любое значение
+            // Проверка будет при сохранении
+            const placeholder = isFixed ? '' : `placeholder="≥ ${prev.toFixed(3)}"`;
+
+            // For fixed services, use checkbox
+            if (isFixed) {
+                const tariffStepsJson = JSON.stringify(meter.tariff_steps || []);
+                const vatPercent = meter.vat_percent || 0;
+                const useMultiplier = !!meter.use_multiplier;
+                const consumptionMultiplier = parseFloat(meter.consumption_multiplier || 1) || 1;
+                // Для фикс-услуг consumption всегда = 1, если отмечено
+                const consumption = meter.existing ? 1 : 0;
+                // Рассчитываем сумму на основе consumption
+                // Если есть existing показание, используем его сумму, иначе рассчитываем
+                let initialAmount = 0;
+                if (meter.existing && meter.existing_value !== null && meter.existing_value !== undefined) {
+                    // Если есть существующее показание, используем его сумму (будет загружена из backend)
+                    // Но для фикс-услуг нужно рассчитать на основе consumption = 1
+                    initialAmount = calculateAmount(1, meter.tariff_steps || [], vatPercent, useMultiplier, consumptionMultiplier);
+                } else if (consumption > 0) {
+                    // Если отмечено, но нет existing показания, рассчитываем
+                    initialAmount = calculateAmount(consumption, meter.tariff_steps || [], vatPercent, useMultiplier, consumptionMultiplier);
+                } else {
+                    // Если не отмечено, сумма = 0.00
+                    initialAmount = 0;
+                }
+
+                // Для "Предыдущее" показываем единицу измерения (для фикс-услуг всегда "0 мес.")
+                const prevDisplay = meter.unit ? `0 ${meter.unit}` : '—';
+
+                // Для Construction показываем диапазон дат рядом с чекбоксом
+                let dateRangeText = '';
+                if (meter.date_range && meter.date_range.from_date && meter.date_range.to_date) {
+                    const fromDate = new Date(meter.date_range.from_date);
+                    const toDate = new Date(meter.date_range.to_date);
+                    const formatDate = (date) => {
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const year = date.getFullYear();
+                        return `${day}.${month}.${year}`;
+                    };
+                    dateRangeText = ` от ${formatDate(fromDate)} до ${formatDate(toDate)}`;
+                }
+
+                return `
+                        <tr data-meter-id="${meter.meter_id}" 
+                            data-is-fixed="true"
+                            data-tariff-steps='${tariffStepsJson}'
+                            data-vat-percent="${vatPercent}"
+                            data-use-multiplier="${useMultiplier ? '1' : '0'}"
+                            data-consumption-multiplier="${consumptionMultiplier}"
+                            data-expected-last-reading-id="${expectedLastReadingId || ''}"
+                            data-payment-locked="${paymentLocked ? '1' : '0'}">
+                            <td><span class="meter-type-pill">${meterDisplayType}</span></td>
+                            <td>${meter.tariff_name}</td>
+                            <td>${prevDisplay}</td>
+                            <td>
+                                <input type="checkbox" 
+                                       class="meter-checkbox" 
+                                       ${meter.existing ? 'checked' : ''}
+                                       ${inputDisabledAttr}
+                                       onchange="handleFixedMeterChange(this, ${meter.meter_id})">
+                                <label>${t('readings_mark', 'Отметить')}${dateRangeText}</label>
+                            </td>
+                            <td><span class="meter-consumption">${consumption.toFixed(3)}</span></td>
+                            <td><span class="meter-amount">${initialAmount.toFixed(2)}</span></td>
+                            <td>
+                                <div class="meter-photo-cell">
+                                    <span class="meter-photo-placeholder">—</span>
+                                </div>
+                            </td>
+                            <td>
+                                ${showDelete ? `
+                                    <div class="meter-delete-cell">
+                                        <button type="button" class="btn btn-sm btn-danger" 
+                                                onclick="deleteLastReading(${meter.meter_id}, this, event)"
+                                                title="${deleteTitle}"
+                                                ${deleteDisabledAttr}>
+                                            ${t('action_delete', 'Удалить')}
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </td>
+                        </tr>
+                    `;
+            }
+
+            const tariffStepsJson = JSON.stringify(meter.tariff_steps || []);
+            const vatPercent = meter.vat_percent || 0;
+            const useMultiplier = !!meter.use_multiplier;
+            const consumptionMultiplier = parseFloat(meter.consumption_multiplier || 1) || 1;
+            const seweragePercent = (!hasRealSewerMeter && meter.type === 'WATER')
+                ? (parseFloat(meter.sewerage_percent || 0) || 0)
+                : 0;
+            const sewerageCustomerType = meter.tariff_customer_type || '';
+
+            // Если есть существующее значение, используем его для поля ввода
+            const inputValue = (existing !== null && existing !== undefined) ? existing.toFixed(3) : '';
+            const supportsPhoto = ['GAS', 'WATER', 'ELECTRIC'].includes(meter.type);
+            const existingPhotoUrl = meter.existing_photo_url || '';
+
+            // Рассчитываем consumption и amount для существующего значения
+            let initialConsumption = 0;
+            let initialAmount = 0;
+            if (existing !== null && existing !== undefined) {
+                initialConsumption = existing - prev;
+                if (initialConsumption > 0) {
+                    initialAmount = calculateAmount(initialConsumption, meter.tariff_steps || [], vatPercent, useMultiplier, consumptionMultiplier);
+                }
+            }
+
+            return `
+                    <tr data-meter-id="${meter.meter_id}" 
+                        data-prev-value="${prev}" 
+                        data-tariff-id="${meter.tariff_id}"
+                        data-tariff-steps='${tariffStepsJson}'
+                        data-vat-percent="${vatPercent}"
+                        data-use-multiplier="${useMultiplier ? '1' : '0'}"
+                        data-consumption-multiplier="${consumptionMultiplier}"
+                        data-meter-type="${meter.type}"
+                        data-existing-photo-url="${existingPhotoUrl}"
+                        data-sewerage-percent="${seweragePercent}"
+                        data-stable-tariff="${parseFloat(meter.stable_tariff || 0) || 0}"
+                        data-sewerage-customer-type="${sewerageCustomerType}"
+                        data-tariff-name="${meter.tariff_name || ''}"
+                        data-expected-last-reading-id="${expectedLastReadingId || ''}"
+                        data-payment-locked="${paymentLocked ? '1' : '0'}">
+                        <td><span class="meter-type-pill">${meterDisplayType}</span></td>
+                        <td>${meter.tariff_name}</td>
+                        <td>${(prev !== null && prev !== undefined) ? prev.toFixed(3) : '0.000'} ${meter.unit}</td>
+                        <td>
+                            <input type="number"
+                                   step="0.001"
+                                   class="meter-input"
+                                   ${placeholder}
+                                   value="${inputValue}"
+                                   ${inputDisabledAttr}
+                                   autocomplete="off"
+                                   oninput="handleMeterInput(this, ${meter.meter_id})">
+                        </td>
+                        <td><span class="meter-consumption">${initialConsumption.toFixed(3)}</span></td>
+                        <td><span class="meter-amount">${initialAmount.toFixed(2)}</span></td>
+                        <td>
+                            <div class="meter-photo-cell">
+                                ${supportsPhoto ? `
+                                    <div class="meter-photo-preview">
+                                        ${existingPhotoUrl ? `
+                                            <button type="button" class="meter-photo-link" onclick="openMeterPhotoPicker(${meter.meter_id}, event)">
+                                                <img src="${resolvePhotoUrl(existingPhotoUrl)}" alt="Фото счётчика">
+                                                <span class="meter-photo-overlay"><i class="bi bi-camera"></i></span>
+                                            </button>
+                                        ` : `
+                                            <button type="button" class="btn btn-sm btn-outline-primary meter-photo-btn"
+                                                    onclick="openMeterPhotoPicker(${meter.meter_id}, event)">
+                                                <i class="bi bi-camera"></i>
+                                            </button>
+                                            <span class="meter-photo-placeholder">${t('readings_no_photo', 'Нет фото')}</span>
+                                        `}
+                                    </div>
+                                ` : '<span class="meter-photo-placeholder">—</span>'}
+                            </div>
+                        </td>
+                        <td>
+                            ${showDelete ? `
+                                <div class="meter-delete-cell">
+                                    <button type="button" class="btn btn-sm btn-danger" 
+                                            onclick="deleteLastReading(${meter.meter_id}, this, event)"
+                                            title="${deleteTitle}"
+                                            ${deleteDisabledAttr}>
+                                        ${t('action_delete', 'Удалить')}
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </td>
+                    </tr>
+                `;
+        }).join('');
+        refreshAllAutoSewerRows();
+        refreshAllAutoStableRows();
+        resetMeterPhotoState();
+    }
+
+    window.handleMeterInput = async function handleMeterInput(input, meterId) {
+        const row = input.closest('tr');
+        if (!row) return;
+        if (input.disabled || row.dataset.paymentLocked === '1') return;
+
+        const prev = parseFloat(row.dataset.prevValue || '0');
+        const value = parseFloat(input.value || '0');
+
+        // Убрали проверку при вводе - позволяем вводить любое значение
+        // Проверка будет при сохранении
+
+        const consumption = Math.max(0, value - prev);
+        const tariffSteps = JSON.parse(row.dataset.tariffSteps || '[]');
+        const vatPercent = parseFloat(row.dataset.vatPercent || '0');
+        const useMultiplier = row.dataset.useMultiplier === '1';
+        const multiplier = parseFloat(row.dataset.consumptionMultiplier || '1');
+        const amount = calculateAmount(consumption, tariffSteps, vatPercent, useMultiplier, multiplier);
+
+        const meterType = (row.dataset.meterType || '').toUpperCase();
+        const seweragePercent = parseFloat(row.dataset.seweragePercent || '0');
+        if (meterType === 'WATER' && seweragePercent > 0) {
+            upsertAutoSewerRowForWater(row);
+        } else {
+            row.dataset.consumption = consumption.toFixed(3);
+            row.querySelector('.meter-consumption').textContent = consumption.toFixed(3);
+            row.querySelector('.meter-amount').textContent = amount.toFixed(2);
+        }
+    }
+
+    window.handleFixedMeterChange = function handleFixedMeterChange(checkbox, meterId) {
+        const row = checkbox.closest('tr');
+        if (!row) return;
+        if (checkbox.disabled || row.dataset.paymentLocked === '1') return;
+
+        const consumption = checkbox.checked ? 1 : 0;
+        row.querySelector('.meter-consumption').textContent = consumption.toFixed(3);
+
+        // Calculate amount for fixed services
+        const tariffSteps = JSON.parse(row.dataset.tariffSteps || '[]');
+        const vatPercent = parseFloat(row.dataset.vatPercent || '0');
+        const useMultiplier = row.dataset.useMultiplier === '1';
+        const multiplier = parseFloat(row.dataset.consumptionMultiplier || '1');
+        const amount = calculateAmount(consumption, tariffSteps, vatPercent, useMultiplier, multiplier);
+        // Всегда показываем сумму, даже если 0.00
+        row.querySelector('.meter-amount').textContent = amount.toFixed(2);
+    }
+
+    window.deleteLastReading = async function deleteLastReading(meterId, button, event) {
+        // КРИТИЧЕСКИ ВАЖНО: Предотвращаем любые действия по умолчанию (submit формы и т.д.)
+        // Это предотвращает случайную отправку формы при клике на кнопку удаления
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+        }
+
+        const row = button.closest('tr');
+        if (row?.dataset?.paymentLocked === '1') {
+            if (typeof showWarning === 'function') {
+                showWarning(t('readings_row_paid_locked', 'Строка уже оплачена и недоступна для изменений'));
+            }
+            return;
+        }
+
+        // Также предотвращаем submit формы программно
+        const form = button.closest('form');
+        if (form) {
+            // Временно отключаем submit формы
+            const originalSubmit = form.onsubmit;
+            form.onsubmit = function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            };
+
+            // Восстанавливаем через небольшую задержку
+            setTimeout(() => {
+                form.onsubmit = originalSubmit;
+            }, 100);
+        }
+
+        // Используем модальное окно приложения вместо браузерного confirm
+        // Удаление НЕ происходит до подтверждения в модальном окне
+        try {
+            const confirmMessage = t(
+                'readings_delete_confirm_message',
+                'Вы уверены, что хотите удалить последнее показание для этого счётчика?'
+            );
+            const confirmTitle = t('readings_delete_confirm_title', 'Подтверждение удаления');
+            const confirmed = await showConfirm(
+                confirmMessage,
+                confirmTitle
+            );
+            
+            // Удаление происходит ТОЛЬКО если confirmed === true (нажата кнопка OK)
+            if (confirmed === true) {
+                await performDeleteLastReading(meterId, button);
+            }
+            // Если confirmed === false, ничего не делаем (отмена)
+        } catch (error) {
+            // Если showConfirm не доступен, используем fallback
+            console.warn('showConfirm not available, using browser confirm as fallback');
+            const fallbackConfirmMessage = t(
+                'readings_delete_confirm_message',
+                'Вы уверены, что хотите удалить последнее показание для этого счётчика?'
+            );
+            if (confirm(fallbackConfirmMessage)) {
+                await performDeleteLastReading(meterId, button);
+            }
+        }
+    }
+
+    async function performDeleteLastReading(meterId, button) {
+        const row = button.closest('tr');
+        if (row?.dataset?.paymentLocked === '1') {
+            button.disabled = true;
+            if (typeof showWarning === 'function') {
+                showWarning(t('readings_row_paid_locked', 'Строка уже оплачена и недоступна для изменений'));
+            }
+            return;
+        }
+        const expectedReadingIdRaw = row?.dataset?.expectedLastReadingId || '';
+        const expectedReadingId = parseInt(expectedReadingIdRaw, 10);
+        if (!expectedReadingId) {
+            button.disabled = true;
+            if (typeof showWarning === 'function') {
+                showWarning(t('readings_delete_last_not_found', 'Удаление недоступно: последнее показание не найдено'));
+            }
+            return;
+        }
+
+        button.disabled = true;
+        const originalText = button.textContent;
+        button.textContent = 'Удаление...';
+
+        try {
+            let url = `${API_BASE}/api/readings/meter/${meterId}/last?expected_reading_id=${expectedReadingId}`;
+            let response = await fetch(url, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                if (response.status === 409) {
+                    const msg = t(
+                        'readings_delete_only_last_tip',
+                        'Можно удалить только одно последнее показание'
+                    );
+                    throw new Error(msg);
+                }
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (typeof showSuccess === 'function') {
+                showSuccess(t('readings_delete_last_success', 'Последнее показание успешно удалено'));
+            }
+            deletedLastReadingMeters.add(meterId);
+            if (row) {
+                row.dataset.expectedLastReadingId = '';
+            }
+
+            // Перезагружаем данные счётчика
+            const residentId = document.getElementById('modalResident')?.value;
+            if (residentId) {
+                await renderMeterDetails(residentId);
+            }
+
+            // Перезагружаем список показаний
+            await loadReadings();
+        } catch (error) {
+            console.error('Error deleting last reading:', error);
+            if (typeof showError === 'function') {
+                showError(`${t('readings_delete_error', 'Ошибка удаления')}: ${error.message}`);
+            }
+        } finally {
+            const isConsumed = deletedLastReadingMeters.has(meterId);
+            button.disabled = isConsumed;
+            button.textContent = isConsumed ? 'Удалено' : originalText;
+        }
+    }
+
+    // Listen for SPA content loaded
+    function initReadingsPage() {
+        console.log('=== Initializing readings page ===');
+        setTimeout(async () => {
+            if (!isReadingsPageActive()) return;
+            initCustomReadingPaginationDropdown();
+            // Сначала загружаем все блоки, чтобы фильтр был полным
+            await window.loadAllBlocks();
+            bindResidentFilterToBlock();
+            bindMeterTypeMultiSelect();
+            bindExportMeterTypeMultiSelect();
+            bindReadingsExportOutsideClose();
+            bindReadingsExportToggleButton();
+            const exportBlockSelect = document.getElementById('exportFilterBlock');
+            if (exportBlockSelect) {
+                if (exportBlockSelect._changeHandler) {
+                    exportBlockSelect.removeEventListener('change', exportBlockSelect._changeHandler);
+                }
+                exportBlockSelect._changeHandler = function () {
+                    loadExportResidentsByBlock();
+                };
+                exportBlockSelect.addEventListener('change', exportBlockSelect._changeHandler);
+            }
+            await loadExportResidentsByBlock();
+
+            const exportDateFrom = document.getElementById('exportFilterDateFrom');
+            const exportDateTo = document.getElementById('exportFilterDateTo');
+            if (exportDateFrom && !exportDateFrom.value) {
+                const d = new Date();
+                exportDateFrom.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            }
+            if (exportDateTo && !exportDateTo.value) {
+                const d = new Date();
+                exportDateTo.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            }
+            
+            if (typeof window.loadReadings === 'function') {
+                console.log('Calling loadReadings');
+                window.loadReadings();
+            } else {
+                console.error('loadReadings is not defined!');
+            }
+        }, 150);
+    }
+
+    // Удаляем старый обработчик, если он существует
+    if (window._readingsContentLoadedHandler) {
+        window.removeEventListener('spa:contentLoaded', window._readingsContentLoadedHandler);
+    }
+
+    window._readingsContentLoadedHandler = function (e) {
+        console.log('=== spa:contentLoaded - readings page ===');
+        console.log('Event detail:', e.detail);
+        const route = e.detail?.route || window.location.hash.split('?')[0].slice(1);
+        console.log('Current route:', route);
+        if (!route || route === '/readings' || route.startsWith('/readings')) {
+            console.log('Loading readings from spa:contentLoaded');
+            initReadingsPage();
+        }
+    };
+
+    window.addEventListener('spa:contentLoaded', window._readingsContentLoadedHandler);
+
+    window.refreshPageTranslations = function () {
+        const route = window.location.hash.split('?')[0].slice(1);
+        if (!route || route === '/readings' || route.startsWith('/readings')) {
+            updateMeterTypeSummary();
+            updateExportMeterTypeSummary();
+            if (typeof window.renderReadingsTable === 'function') {
+                window.renderReadingsTable();
+            }
+        }
+    };
+
+    // Also try to load immediately if page is already loaded
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOMContentLoaded - calling initReadingsPage');
+            initReadingsPage();
+        });
+    } else {
+        // Page already loaded, call immediately
+        console.log('Page already loaded, calling initReadingsPage');
+        initReadingsPage();
+    }
+</script>

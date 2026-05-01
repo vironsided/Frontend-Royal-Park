@@ -1,0 +1,70 @@
+    .debt-card {
+        border-left: 4px solid;
+        transition: all 0.3s ease;
+    }
+
+    .debt-card.overdue {
+        border-left-color: #dc3545;
+    }
+
+    .debt-card.critical {
+        border-left-color: #8b0000;
+        background: rgba(139, 0, 0, 0.05);
+    }
+
+    .debt-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .task-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .overdue-days {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 2rem;
+        font-weight: bold;
+        font-size: 0.75rem;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-left: 2rem;
+        padding-bottom: 1.5rem;
+    }
+
+    .timeline-item:before {
+        content: '';
+        position: absolute;
+        left: 0.4rem;
+        top: 0;
+        height: 100%;
+        width: 2px;
+        background: linear-gradient(180deg, #667eea, #764ba2);
+    }
+
+    .timeline-dot {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        background: #667eea;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #667eea;
+    }
+
+    .timeline-item:last-child:before {
+        display: none;
+    }

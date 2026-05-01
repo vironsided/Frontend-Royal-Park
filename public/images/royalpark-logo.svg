@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="100" height="100" viewBox="0 0 100 100" role="img" aria-label="Royal Park BAKU logo">
+  <!-- Background (sage) -->
+  <rect width="100%" height="100%" fill="#7f9a74"/>
+
+  <!-- Group for logo centered -->
+  <g transform="translate(50,36)" text-anchor="middle" fill="#ffffff" >
+    <!-- Detailed fleur-de-lis tree design -->
+    
+    <!-- Central trunk (wider at base) -->
+    <path d="M-1.5 11 L-1.5 3 C-1.5 2 -1.2 1.5 -0.8 1.5 L0.8 1.5 C1.2 1.5 1.5 2 1.5 3 L1.5 11 Z" fill="#ffffff"/>
+    
+    <!-- Central fleur-de-lis (three petals) -->
+    <!-- Left petal -->
+    <path d="M-4 -8 C-6 -6 -7 -4 -6.5 -2 C-6 -1 -5.5 -0.5 -5 -0.5 C-4.5 -0.5 -4 -1 -3.5 -1.5 C-3 -2 -3 -3 -3.5 -4 C-4 -5 -4.5 -6 -4 -8 Z" fill="#ffffff"/>
+    
+    <!-- Right petal -->
+    <path d="M4 -8 C6 -6 7 -4 6.5 -2 C6 -1 5.5 -0.5 5 -0.5 C4.5 -0.5 4 -1 3.5 -1.5 C3 -2 3 -3 3.5 -4 C4 -5 4.5 -6 4 -8 Z" fill="#ffffff"/>
+    
+    <!-- Center petal (tallest) -->
+    <path d="M0 -10 C-1 -9 -1.5 -7 -1.5 -5 C-1.5 -3 -1 -1.5 0 -1.5 C1 -1.5 1.5 -3 1.5 -5 C1.5 -7 1 -9 0 -10 Z" fill="#ffffff"/>
+    
+    <!-- Left main branch -->
+    <path d="M-6 0 C-8 -1 -9 -3 -8.5 -5 C-8 -6 -7 -6.5 -6 -6 C-5 -6 -4 -5.5 -3.5 -4.5 C-3 -3.5 -3 -2.5 -3.5 -1.5 C-4 -1 -5 -0.5 -6 0 Z" fill="#ffffff"/>
+    
+    <!-- Right main branch -->
+    <path d="M6 0 C8 -1 9 -3 8.5 -5 C8 -6 7 -6.5 6 -6 C5 -6 4 -5.5 3.5 -4.5 C3 -3.5 3 -2.5 3.5 -1.5 C4 -1 5 -0.5 6 0 Z" fill="#ffffff"/>
+    
+    <!-- Small leaves near trunk base -->
+    <path d="M-2.5 6 C-3.5 5.5 -4 4.5 -3.5 3.5 C-3 3 -2.5 3 -2 3.5 C-1.5 4 -1.5 4.5 -2 5 C-2.2 5.5 -2.3 6 -2.5 6 Z" fill="#ffffff"/>
+    
+    <path d="M2.5 6 C3.5 5.5 4 4.5 3.5 3.5 C3 3 2.5 3 2 3.5 C1.5 4 1.5 4.5 2 5 C2.2 5.5 2.3 6 2.5 6 Z" fill="#ffffff"/>
+
+    <!-- main text: 'Royal Park' -->
+    <text x="0" y="26"
+          font-family="Georgia, 'Times New Roman', serif"
+          font-size="11"
+          font-weight="600"
+          letter-spacing="0.1"
+          fill="#ffffff">Royal Park</text>
+
+    <!-- small text: 'BAKU' -->
+    <text x="0" y="32.5"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="5.5"
+          font-weight="700"
+          letter-spacing="0.4"
+          fill="#ffffff">BAKU</text>
+  </g>
+</svg>

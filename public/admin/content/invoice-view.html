@@ -1,0 +1,1155 @@
+<link rel="stylesheet" href="/admin/content_css/invoice-view.css">
+<div class="content-wrapper invoice-view-page">
+    <div class="invoice-header">
+        <h1 id="invoiceTitle"><span data-i18n="user_invoice_title_prefix">Счёт:</span> <span id="invoiceNumber">2025-11/000001</span></h1>
+        <a href="#"
+            onclick="if (window.goBack) { window.goBack('/invoices'); } else if (window.spaRouter && typeof window.spaRouter.goBack === 'function') { window.spaRouter.goBack('/invoices'); } else if (window.spaRouter && typeof window.spaRouter.navigate === 'function') { window.spaRouter.navigate('/invoices'); } else { window.location.hash = '#/invoices'; } return false;"
+            class="btn-back">
+            <i class="bi bi-arrow-left"></i> <span data-i18n="user_invoice_back_to_list">Назад</span>
+        </a>
+    </div>
+
+    <!-- Invoice Summary -->
+    <div class="invoice-summary">
+        <div class="invoice-summary-item">
+            <label data-i18n="resident">Резидент</label>
+            <div class="value" id="invoiceResident">X/2</div>
+        </div>
+        <div class="invoice-summary-item">
+            <label data-i18n="nav_tenants">Житель</label>
+            <div class="value" id="invoiceResidentUser">—</div>
+        </div>
+        <div class="invoice-summary-item">
+            <label data-i18n="user_invoice_period_label">Период</label>
+            <div class="value" id="invoicePeriod">2025-11</div>
+        </div>
+        <div class="invoice-summary-item">
+            <label data-i18n="status">Статус</label>
+            <div class="value" id="invoiceStatus" data-i18n="invoices_status_draft">DRAFT</div>
+        </div>
+        <div class="invoice-summary-item">
+            <label data-i18n="user_invoice_due_date_label">Срок оплаты</label>
+            <div class="value" id="invoiceDueDate">—</div>
+        </div>
+        <div class="invoice-summary-item">
+            <label data-i18n="user_invoice_total_label">Итого</label>
+            <div class="value total" id="invoiceTotal">10.00 ₼</div>
+        </div>
+        <div class="invoice-summary-item">
+            <label data-i18n="invoice_note_label">Примечание</label>
+            <div class="value" id="invoiceNote">—</div>
+        </div>
+    </div>
+
+    <!-- Invoice Actions -->
+    <div class="invoice-actions-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0;" data-i18n="invoice_actions_title">Управление счётом</h3>
+            <button class="btn-outline-secondary" onclick="printInvoice()">
+                <i class="bi bi-printer"></i> <span data-i18n="print">Печать</span>
+            </button>
+        </div>
+
+        <div class="invoice-form-group" id="invoiceNumberGroup">
+            <label data-i18n="invoice_number_label">№ счета</label>
+            <input type="text" id="editInvoiceNumber" value="2025-11/000001" readonly>
+        </div>
+
+        <div class="invoice-form-group" id="dueDateGroup">
+            <label data-i18n="user_invoice_due_date_label">Срок оплаты</label>
+            <div class="date-input-wrapper">
+                <input type="date" id="editDueDate">
+                <button type="button" class="btn-calendar" onclick="openDatePicker('editDueDate')"
+                    title="Открыть календарь">
+                    <i class="bi bi-calendar"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="invoice-form-group" id="noteGroup">
+            <label data-i18n="invoice_note_label">Примечание</label>
+            <textarea id="editNote" rows="3" placeholder="Введите примечание..." data-i18n-placeholder="invoice_note_placeholder"></textarea>
+        </div>
+
+        <div class="invoice-form-buttons">
+            <button class="btn-primary" id="saveInvoiceBtn" onclick="saveInvoice()" data-i18n="invoice_issue_or_update">Выставить / Обновить</button>
+            <button class="btn-primary" id="reissueInvoiceBtn" onclick="reissueInvoice()"
+                style="display: none;" data-i18n="invoice_reissue">Выставить заново</button>
+            <button class="btn-danger" id="cancelInvoiceBtn" onclick="cancelInvoice()" data-i18n="cancel">Отменить</button>
+        </div>
+    </div>
+
+    <!-- Payments Section -->
+    <div class="payments-section">
+        <h3 data-i18n="user_invoice_payments_title">Оплаты по счёту</h3>
+        <div id="paymentsList">
+            <table class="payments-table">
+                <thead>
+                    <tr>
+                        <th data-i18n="date">Дата</th>
+                        <th data-i18n="filter_method">Метод</th>
+                        <th data-i18n="amount">Сумма</th>
+                        <th data-i18n="payments_title">Платёж</th>
+                        <th data-i18n="comment">Комментарий</th>
+                    </tr>
+                </thead>
+                <tbody id="paymentsTableBody">
+                    <tr class="payments-empty-row">
+                        <td colspan="5" data-i18n="invoice_payments_empty">Оплаты по этому счёту отсутствуют.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="payments-summary" id="paymentsSummary">
+            Оплачено: <strong>0.00</strong> · Остаток: <strong>10.00</strong> из <strong>10.00</strong>
+        </div>
+    </div>
+
+    <!-- Line Items Table -->
+    <div
+        style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px; padding: 20px; overflow-x: auto;">
+        <table class="line-items-table">
+            <thead>
+                <tr>
+                    <th data-i18n="invoices_description">Описание</th>
+                    <th data-i18n="user_invoice_items_th_consumed">Израсходовано</th>
+                    <th data-i18n="invoices_charged">Начислено</th>
+                    <th data-i18n="invoices_vat">НДС</th>
+                    <th data-i18n="user_invoice_total_label">Итого</th>
+                    <th data-i18n="status">Статус</th>
+                </tr>
+            </thead>
+            <tbody id="lineItemsTable">
+                <tr>
+                    <td>Газ 20.0 м³</td>
+                    <td>10.00</td>
+                    <td>0.00</td>
+                    <td class="total-value">10.00</td>
+                </tr>
+                <tr class="total-row">
+                    <td colspan="3">Итого к оплате</td>
+                    <td class="total-value">10.00</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Cancel Invoice Modal -->
+<div class="modal-overlay" id="cancelInvoiceModal">
+    <div class="cancel-modal">
+        <div class="cancel-modal-header">
+            <h3 data-i18n="invoices_cancel_title">Отменить счёт</h3>
+            <button class="cancel-modal-close" onclick="closeCancelModal()" type="button">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <div class="cancel-modal-body">
+            <div class="cancel-modal-description" data-i18n="invoices_cancel_hint">
+                Укажите причину отмены. Счёт перейдёт в статус <span class="status-badge">CANCELED</span>
+            </div>
+            <div class="cancel-modal-form-group">
+                <label for="cancelReason" data-i18n="invoices_cancel_reason">Причина</label>
+                <textarea id="cancelReason" placeholder="Например: неверное показание по воде за октябрь" data-i18n-placeholder="invoices_cancel_reason_placeholder"
+                    rows="4"></textarea>
+            </div>
+        </div>
+        <div class="cancel-modal-footer">
+            <button class="btn-modal-cancel" onclick="closeCancelModal()" type="button" data-i18n="cancel">Отмена</button>
+            <button class="btn-modal-confirm" onclick="confirmCancelInvoice()" type="button"
+                id="confirmCancelBtn" data-i18n="invoices_cancel_btn">Отменить счёт</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const API_BASE = window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BASE || 'http://localhost:8000');
+        const t = (key, fallback = '') => window.i18n?.translate?.(key) || fallback || key;
+
+        // URL params - need to be accessible globally
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Get invoice ID from multiple sources (priority order)
+        let invoiceId = null;
+        let currentInvoiceData = null;
+        function isInvoiceViewRoute() {
+            const route = String(window.spaRouter?.currentRoute || window.location.hash.replace('#', '') || '');
+            return route.includes('invoice-view');
+        }
+
+        // 1. Try global variable (set by SPA loader)
+        if (window.__currentInvoiceId) {
+            invoiceId = window.__currentInvoiceId;
+            console.log('📋 Got invoice ID from window.__currentInvoiceId:', invoiceId);
+        }
+
+        // 2. Try URL query params
+        if (!invoiceId) {
+            const urlParams = new URLSearchParams(window.location.search);
+            invoiceId = urlParams.get('id');
+            if (invoiceId) {
+                console.log('📋 Got invoice ID from window.location.search:', invoiceId);
+            }
+        }
+
+        // 3. Try hash query params
+        if (!invoiceId) {
+            const hashParts = window.location.hash.split('?');
+            if (hashParts.length > 1) {
+                const hashParams = new URLSearchParams(hashParts[1]);
+                invoiceId = hashParams.get('id');
+                if (invoiceId) {
+                    console.log('📋 Got invoice ID from window.location.hash query:', invoiceId);
+                }
+            }
+        }
+
+        // 4. Try hash path
+        if (!invoiceId) {
+            const hashParts = window.location.hash.split('?');
+            const hashPath = hashParts[0];
+            const lastPart = hashPath.split('/').pop();
+            // Only use if it's a number
+            if (lastPart && !isNaN(lastPart) && lastPart !== 'invoice-view') {
+                invoiceId = lastPart;
+                console.log('📋 Got invoice ID from hash path:', invoiceId);
+            }
+        }
+
+        // Clean up invoiceId - remove any non-numeric characters
+        if (invoiceId) {
+            invoiceId = invoiceId.toString().trim();
+            // If it contains "invoices", extract the number part
+            if (invoiceId.includes('invoices')) {
+                const match = invoiceId.match(/\d+/);
+                invoiceId = match ? match[0] : null;
+            }
+            // Ensure it's a valid number
+            if (invoiceId && (isNaN(invoiceId) || invoiceId === '')) {
+                invoiceId = null;
+            }
+        }
+
+        console.log('📋 Final extracted invoice ID:', invoiceId);
+
+        // Load invoice data
+        async function loadInvoice(id) {
+            console.log('🔍 loadInvoice called with id:', id, 'type:', typeof id);
+
+            if (!id) {
+                console.error('No invoice ID provided');
+                if (typeof showError === 'function') {
+                    showError(t('invoices_no_id', 'Не указан ID счета'));
+                }
+                return;
+            }
+
+            // Ensure id is a number string
+            const cleanId = String(id).trim();
+            if (isNaN(cleanId)) {
+                console.error('Invalid invoice ID (not a number):', cleanId);
+                if (typeof showError === 'function') {
+                    showError(`${t('invoices_invalid_id', 'Неверный ID счета')}: ${cleanId}`);
+                }
+                return;
+            }
+
+            try {
+                let url = `${API_BASE}/api/invoices/${cleanId}`;
+                console.log('📤 Fetching invoice from:', url);
+                let response = await fetch(url, { credentials: 'include' });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('📋 Invoice data received:', data);
+                console.log('💰 Payments in data:', data.payments);
+
+                // Transform API data to frontend format
+                const invoice = {
+                    id: data.id,
+                    invoiceNumber: data.number || `INV-${data.resident_id}/0/${data.period_year}-${String(data.period_month).padStart(2, '0')}`,
+                    resident: data.resident_code,
+                    residentUser: data.resident_user_full_name || null,
+                    period: `${data.period_year}-${String(data.period_month).padStart(2, '0')}`,
+                    status: data.status,
+                    dueDate: data.due_date || null,
+                    total: data.amount_total,
+                    paid: data.paid_amount,
+                    remaining: data.remaining_amount,
+                    note: data.notes || null,
+                    payments: data.payments || [],
+                    lineItems: data.lines || []
+                };
+                currentInvoiceData = invoice;
+
+                console.log('📋 Transformed invoice:', invoice);
+                console.log('💰 Payments in invoice:', invoice.payments);
+
+                renderInvoice(invoice);
+            } catch (error) {
+                console.error('Error loading invoice:', error);
+                if (typeof showError === 'function') {
+                    showError(`${t('invoices_load_error', 'Ошибка загрузки счета')}: ${error.message}`);
+                } else {
+                    alert(`${t('invoices_load_error', 'Ошибка загрузки счета')}: ${error.message}`);
+                }
+            }
+        }
+
+        function renderInvoice(invoice) {
+            document.getElementById('invoiceNumber').textContent = invoice.invoiceNumber;
+            document.getElementById('invoiceResident').textContent = invoice.resident;
+            const userEl = document.getElementById('invoiceResidentUser');
+            if (userEl) userEl.textContent = invoice.residentUser || '—';
+            document.getElementById('invoicePeriod').textContent = invoice.period;
+
+            // Status badge (i18n)
+            const statusEl = document.getElementById('invoiceStatus');
+            const statusKey = 'invoices_status_' + (invoice.status || '').toLowerCase();
+            statusEl.textContent = t(statusKey, invoice.status);
+            statusEl.setAttribute('data-i18n', statusKey);
+            statusEl.className = 'value';
+
+            // Show/hide buttons based on status
+            const saveBtn = document.getElementById('saveInvoiceBtn');
+            const reissueBtn = document.getElementById('reissueInvoiceBtn');
+            const cancelBtn = document.getElementById('cancelInvoiceBtn');
+
+            if (invoice.status === 'CANCELED') {
+                // For CANCELED: show only "Выставить заново" button, hide others and form fields
+                if (saveBtn) saveBtn.style.display = 'none';
+                if (reissueBtn) reissueBtn.style.display = 'inline-block';
+                if (cancelBtn) cancelBtn.style.display = 'none';
+
+                // Hide form fields for CANCELED status
+                const invoiceNumberGroup = document.getElementById('invoiceNumberGroup');
+                const dueDateGroup = document.getElementById('dueDateGroup');
+                const noteGroup = document.getElementById('noteGroup');
+
+                if (invoiceNumberGroup) invoiceNumberGroup.style.display = 'none';
+                if (dueDateGroup) dueDateGroup.style.display = 'none';
+                if (noteGroup) noteGroup.style.display = 'none';
+            } else if (invoice.status === 'PAID') {
+                // For PAID: hide all action buttons (read-only)
+                if (saveBtn) saveBtn.style.display = 'none';
+                if (reissueBtn) reissueBtn.style.display = 'none';
+                if (cancelBtn) cancelBtn.style.display = 'none';
+            } else {
+                // For DRAFT, ISSUED, PARTIAL: show "Выставить / Обновить" and "Отменить"
+                if (saveBtn) saveBtn.style.display = 'inline-block';
+                if (reissueBtn) reissueBtn.style.display = 'none';
+                if (cancelBtn) cancelBtn.style.display = 'inline-block';
+
+                // Show form fields for other statuses
+                const invoiceNumberGroup = document.getElementById('invoiceNumberGroup');
+                const dueDateGroup = document.getElementById('dueDateGroup');
+                const noteGroup = document.getElementById('noteGroup');
+
+                if (invoiceNumberGroup) invoiceNumberGroup.style.display = '';
+                if (dueDateGroup) dueDateGroup.style.display = '';
+                if (noteGroup) noteGroup.style.display = '';
+            }
+
+            // Format due date for display
+            let dueDateDisplay = '—';
+            if (invoice.dueDate) {
+                const date = new Date(invoice.dueDate);
+                dueDateDisplay = date.toLocaleDateString('ru-RU');
+            }
+            document.getElementById('invoiceDueDate').textContent = dueDateDisplay;
+            document.getElementById('invoiceTotal').textContent = invoice.total.toFixed(2) + ' ₼';
+            document.getElementById('invoiceNote').textContent = invoice.note || '—';
+
+            document.getElementById('editInvoiceNumber').value = invoice.invoiceNumber;
+            if (invoice.dueDate) {
+                // Convert YYYY-MM-DD to date input format
+                document.getElementById('editDueDate').value = invoice.dueDate;
+            } else {
+                document.getElementById('editDueDate').value = '';
+            }
+            if (invoice.note) {
+                document.getElementById('editNote').value = invoice.note;
+            } else {
+                document.getElementById('editNote').value = '';
+            }
+
+            function _extractConsumption(desc) {
+                if (!desc) return { label: '—', consumed: '—', serviceKey: '', qty: '', unitKey: '' };
+                const lang = localStorage.getItem('language') || 'az';
+                const descStr = String(desc).trim();
+                const low = descStr.toLowerCase();
+                const isSewerageLine = /^(?:meter_sewerage\b|Канализация(?:\s*\(авто\))?\b|sewerage(?:\s*\(auto\))?\b|kanalizasiya(?:\s*\(avto\))?\b)/i.test(descStr);
+
+                function getUnitKey(unitRaw) {
+                    const unit = String(unitRaw || '').toLowerCase().trim();
+                    if (!unit) return '';
+                    if (unit.includes('квт') || unit.includes('kwh') || unit.includes('kvt')) return 'user_unit_kwh';
+                    if (unit.includes('м³') || unit.includes('m3')) return 'user_unit_m3';
+                    if (unit.includes('мес') || unit.includes('month') || unit === 'mo.' || unit === 'ay') return 'readings_unit_month_short';
+                    return '';
+                }
+
+                function mapServiceKeyFromText(text) {
+                    const s = String(text || '').toLowerCase();
+                    if (s.includes('meter_electric')) return 'meter_electricity';
+                    if (s.includes('meter_gas')) return 'meter_gas';
+                    if (s.includes('meter_hot_water')) return 'meter_cold_water';
+                    if (s.includes('meter_cold_water') || s.includes('meter_water')) return 'meter_cold_water';
+                    if (s.includes('meter_sewerage')) return 'meter_sewerage';
+                    if (s.includes('электр') || s.includes('electric') || s.includes('elektrik')) return 'meter_electricity';
+                    if (s.includes('газ') || s.includes('gas') || s.includes('qaz')) return 'meter_gas';
+                    if (s.includes('горяч') || s.includes('hot water') || s.includes('isti su')) return 'meter_cold_water';
+                    if (s.includes('вода') || s.includes('water') || s === 'su' || s.includes(' su')) return 'meter_cold_water';
+                    if (s.includes('канал') || s.includes('sewerage') || s.includes('kanal')) return 'meter_sewerage';
+                    if (s.includes('аренд') || s.includes('rent') || s.includes('icar')) return 'tariffs_purpose_rent';
+                    if (s.includes('строит') || s.includes('construction') || s.includes('tikint')) return 'tariffs_purpose_construction';
+                    if (s.includes('utility')) return 'payments_service_utility';
+                    if (s.includes('сервис') || s.includes('service') || s.includes('xidmət') || s.includes('xidmet')) return 'tariffs_purpose_service';
+                    return '';
+                }
+
+                const keyMatch = descStr.match(/^(meter_[a-z_]+)\s+([\d.]+)\s*(.*)$/i);
+                if (keyMatch) {
+                    const key = keyMatch[1];
+                    const qty = keyMatch[2];
+                    const unitRaw = (keyMatch[3] || '').trim();
+                    const unitKey = getUnitKey(unitRaw);
+                    const label = (window.i18n?.translate?.(key, lang) || key);
+                    if (key === 'meter_sewerage') {
+                        return { label, consumed: '—', serviceKey: key, qty: '', unitKey: '' };
+                    }
+                    const unit = unitKey ? (window.i18n?.translate?.(unitKey, lang) || unitRaw) : unitRaw;
+                    return { label, consumed: `${qty} ${unit}`.trim(), serviceKey: key, qty, unitKey };
+                }
+
+                // meter_* without qty is treated as fixed/stable tariff line
+                const keyOnlyMatch = descStr.match(/^(meter_[a-z_]+)$/i);
+                if (keyOnlyMatch) {
+                    const key = keyOnlyMatch[1];
+                    if (key === 'meter_sewerage') {
+                        const label = window.i18n?.translate?.(key, lang) || key;
+                        return { label, consumed: '—', serviceKey: key, qty: '', unitKey: '' };
+                    }
+                    const stableLabel = window.i18n?.translate?.('stable_tariff', lang) || 'Стабильный тариф';
+                    const svc = window.i18n?.translate?.(key, lang) || key;
+                    return { label: `${stableLabel} (${svc})`, consumed: '—', serviceKey: '', qty: '', unitKey: '' };
+                }
+
+                // Stable tariff lines in RU/AZ/EN
+                const stableMatch = descStr.match(/^(?:Стабильн\w*\s+тариф|Sabit\s+tarif|Stable\s+tariff)\s*(?:\(([^)]+)\))?/i);
+                if (stableMatch) {
+                    const stableLabel = window.i18n?.translate?.('stable_tariff', lang) || 'Стабильный тариф';
+                    const servicePart = (stableMatch[1] || '').trim();
+                    const serviceKey = mapServiceKeyFromText(servicePart);
+                    if (serviceKey) {
+                        const svc = window.i18n?.translate?.(serviceKey, lang) || servicePart;
+                        return { label: `${stableLabel} (${svc})`, consumed: '—', serviceKey: '', qty: '', unitKey: '' };
+                    }
+                    return { label: stableLabel, consumed: '—', serviceKey: '', qty: '', unitKey: '' };
+                }
+
+                const patterns = [
+                    { regex: /^Электричество\s+([\d.]+)\s*кВт·ч$/i, serviceKey: 'meter_electricity', unitKey: 'user_unit_kwh' },
+                    { regex: /^Вода\s+([\d.]+)\s*м³$/i, serviceKey: 'meter_cold_water', unitKey: 'user_unit_m3' },
+                    { regex: /^Канализация(?:\s*\(авто\))?\s+([\d.]+)\s*м³$/i, serviceKey: 'meter_sewerage', unitKey: 'user_unit_m3' },
+                    { regex: /^Газ\s+([\d.]+)\s*м³$/i, serviceKey: 'meter_gas', unitKey: 'user_unit_m3' },
+                    { regex: /^Горячая\s+вода\s+([\d.]+)\s*м³$/i, serviceKey: 'meter_cold_water', unitKey: 'user_unit_m3' },
+                ];
+                for (const p of patterns) {
+                    const m = String(desc).match(p.regex);
+                    if (m) {
+                        const qty = m[1];
+                        const label = window.i18n?.translate?.(p.serviceKey, lang) || String(desc).split(' ')[0];
+                        if (p.serviceKey === 'meter_sewerage' || isSewerageLine) {
+                            return { label, consumed: '—', serviceKey: p.serviceKey, qty: '', unitKey: '' };
+                        }
+                        const unit = window.i18n?.translate?.(p.unitKey, lang) || String(desc).split(qty)[1].trim();
+                        return { label, consumed: `${qty} ${unit}`.trim(), serviceKey: p.serviceKey, qty, unitKey: p.unitKey };
+                    }
+                }
+
+                if (isSewerageLine) {
+                    const label = window.i18n?.translate?.('meter_sewerage', lang) || 'Канализация';
+                    return { label, consumed: '—', serviceKey: 'meter_sewerage', qty: '', unitKey: '' };
+                }
+
+                // Generic "<service> <qty> <unit>" parser for mixed-language data
+                const genericMatch = descStr.match(/^(.+?)\s+([\d.]+)\s*([^\d]*)$/);
+                if (genericMatch) {
+                    const serviceRaw = genericMatch[1].trim();
+                    const qty = genericMatch[2];
+                    const unitRaw = genericMatch[3].trim();
+                    const serviceKey = mapServiceKeyFromText(serviceRaw);
+                    const unitKey = getUnitKey(unitRaw);
+                    const label = serviceKey ? (window.i18n?.translate?.(serviceKey, lang) || serviceRaw) : serviceRaw;
+                    if (serviceKey === 'meter_sewerage') {
+                        return { label, consumed: '—', serviceKey, qty: '', unitKey: '' };
+                    }
+                    const unit = unitKey ? (window.i18n?.translate?.(unitKey, lang) || unitRaw) : unitRaw;
+                    return { label, consumed: `${qty} ${unit}`.trim(), serviceKey, qty, unitKey };
+                }
+
+                // Fallback: try to translate by detected service keyword
+                const detectedServiceKey = mapServiceKeyFromText(low);
+                if (detectedServiceKey) {
+                    const label = window.i18n?.translate?.(detectedServiceKey, lang) || descStr;
+                    return { label, consumed: '—', serviceKey: detectedServiceKey, qty: '', unitKey: '' };
+                }
+
+                return { label: descStr, consumed: '—', serviceKey: '', qty: '', unitKey: '' };
+            }
+
+            function _normalizeLinePaymentStatus(rawStatus) {
+                const s = String(rawStatus || '').toLowerCase();
+                if (
+                    s.includes('не оплач') ||
+                    s.includes('неоплач') ||
+                    s.includes('ödənilm') ||
+                    s.includes('odenilm') ||
+                    s.includes('unpaid') ||
+                    s.includes('not paid')
+                ) return 'unpaid';
+                if (s.includes('част') || s.includes('qism') || s.includes('partial')) return 'partial';
+                if (s.includes('оплач') || s.includes('ödənilib') || s.includes('odenilib') || s.includes('paid')) return 'paid';
+                return 'unpaid';
+            }
+
+            // Render line items
+            const tbody = document.getElementById('lineItemsTable');
+            if (invoice.lineItems && invoice.lineItems.length > 0) {
+                const parsedRows = invoice.lineItems.map((item) => ({
+                    item,
+                    parsed: _extractConsumption(item.description || '')
+                }));
+                const stableEligibleServiceKeys = new Set([
+                    'meter_electricity',
+                    'meter_gas',
+                    'meter_cold_water',
+                    'meter_hot_water',
+                    'tariffs_purpose_service',
+                    'tariffs_purpose_rent',
+                    'tariffs_purpose_construction'
+                ]);
+                const servicesWithVariablePart = new Set(
+                    parsedRows
+                        .filter(r => stableEligibleServiceKeys.has(r.parsed.serviceKey) && r.parsed.consumed !== '—')
+                        .map(r => r.parsed.serviceKey)
+                );
+
+                let html = parsedRows.map(({ item, parsed }) => {
+                    const totalAmount = Number(item.amount_total || 0);
+                    const paidAmount = Math.max(0, Number(item.paid_amount || 0));
+                    const paymentStatus = item.payment_status || '';
+                    let statusCode = _normalizeLinePaymentStatus(paymentStatus);
+                    if (totalAmount > 0) {
+                        if (paidAmount <= 0.000001) statusCode = 'unpaid';
+                        else if (paidAmount >= totalAmount - 0.000001) statusCode = 'paid';
+                        else statusCode = 'partial';
+                    }
+                    const ratio = totalAmount > 0 ? Math.min(100, Math.max(0, (paidAmount / totalAmount) * 100)) : 0;
+                    let statusClass = '';
+                    let statusText = '';
+                    if (statusCode === 'paid') {
+                        statusClass = 'payment-status-paid';
+                        statusText = t('invoice_line_status_paid', 'Оплачена');
+                    } else if (statusCode === 'partial') {
+                        statusClass = 'payment-status-partial';
+                        statusText = t('invoice_line_status_partial', 'Частично');
+                    } else {
+                        statusClass = 'payment-status-unpaid';
+                        statusText = t('invoice_line_status_unpaid', 'Не оплачена');
+                    }
+                    const paidMetaTemplate = t('invoice_line_paid_of', 'Оплачено {paid} из {total}');
+                    const paidMeta = paidMetaTemplate
+                        .replace('{paid}', paidAmount.toFixed(2))
+                        .replace('{total}', totalAmount.toFixed(2));
+
+                    let displayLabel = parsed.label;
+                    let displayServiceKey = parsed.serviceKey || '';
+                    const isStandaloneStableLike =
+                        stableEligibleServiceKeys.has(parsed.serviceKey)
+                        && parsed.consumed === '—'
+                        && servicesWithVariablePart.has(parsed.serviceKey);
+                    if (isStandaloneStableLike) {
+                        const stableLabel = t('stable_tariff', 'Стабильный тариф');
+                        const serviceLabel = t(parsed.serviceKey, parsed.label || parsed.serviceKey);
+                        displayLabel = `${stableLabel} (${serviceLabel})`;
+                        // Prevent global post-translation from collapsing label back to service only.
+                        displayServiceKey = '';
+                    }
+
+                    return `
+                <tr>
+                    <td data-original-description="${item.description || ''}" data-service-key="${displayServiceKey}">${displayLabel}</td>
+                    <td data-consumed-qty="${parsed.qty || ''}" data-consumed-unit-key="${parsed.unitKey || ''}">${parsed.consumed}</td>
+                    <td>${(item.amount_net || 0).toFixed(2)}</td>
+                    <td>${(item.amount_vat || 0).toFixed(2)}</td>
+                    <td class="total-value">${totalAmount.toFixed(2)}</td>
+                    <td>
+                        <div class="payment-status-card ${statusClass}">
+                            <div class="payment-status-head">${statusText}</div>
+                            <div class="payment-status-meta">${paidMeta}</div>
+                            <div class="payment-status-track">
+                                <span style="width:${ratio.toFixed(2)}%"></span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+                }).join('');
+
+                const total = invoice.lineItems.reduce((sum, item) => sum + (item.amount_total || 0), 0);
+                html += `
+                <tr class="total-row">
+                    <td colspan="4">${t('invoices_total_to_pay', 'Итого к оплате')}</td>
+                    <td class="total-value">${total.toFixed(2)}</td>
+                    <td></td>
+                </tr>
+            `;
+
+                tbody.innerHTML = html;
+            } else {
+                tbody.innerHTML = `<tr><td colspan="6">${t('readings_no_records', 'Нет данных')}</td></tr>`;
+            }
+
+            // Render payments table
+            const paymentsTbody = document.getElementById('paymentsTableBody');
+            if (paymentsTbody) {
+                console.log('💰 Rendering payments:', invoice.payments);
+                if (invoice.payments && invoice.payments.length > 0) {
+                    paymentsTbody.innerHTML = invoice.payments.map(p => {
+                        // Handle date - can be string or Date object
+                        let dateStr = '—';
+                        if (p.date) {
+                            try {
+                                if (typeof p.date === 'string') {
+                                    dateStr = new Date(p.date).toLocaleDateString('ru-RU');
+                                } else {
+                                    dateStr = new Date(p.date).toLocaleDateString('ru-RU');
+                                }
+                            } catch (e) {
+                                console.error('Error parsing date:', p.date, e);
+                                dateStr = p.date;
+                            }
+                        }
+                        return `
+                    <tr>
+                        <td>${dateStr}</td>
+                        <td>${p.method || '—'}</td>
+                        <td class="payments-amount-cell">${(p.amount || 0).toFixed(2)}</td>
+                        <td>
+                            <a 
+                                href="#/payment-view?id=${p.payment_id}" 
+                                class="payment-link"
+                                onclick="if (window.viewPayment) { viewPayment(${p.payment_id}); } else { window.location.href = '/admin/#/payment-view?id=${p.payment_id}'; } return false;"
+                            >
+                                #${p.payment_id}${p.reference ? ' / ' + p.reference : ''}
+                            </a>
+                        </td>
+                        <td>${p.comment || '—'}</td>
+                    </tr>
+                `;
+                    }).join('');
+                } else {
+                    console.log('💰 No payments found');
+                    paymentsTbody.innerHTML = `<tr class="payments-empty-row"><td colspan="5">${t('invoice_payments_empty', 'Оплаты по этому счёту отсутствуют.')}</td></tr>`;
+                }
+            }
+
+            // Update payments summary
+            const paidLabel = t('user_invoice_payments_summary_paid', 'Оплачено');
+            const remainingLabel = t('payments_leftover', 'Остаток');
+            const ofLabel = t('user_invoice_payments_summary_of', 'из');
+            document.getElementById('paymentsSummary').innerHTML = `
+            ${paidLabel}: <strong>${invoice.paid.toFixed(2)}</strong> · ${remainingLabel}: <strong>${invoice.remaining.toFixed(2)}</strong> ${ofLabel} <strong>${invoice.total.toFixed(2)}</strong>
+        `;
+        }
+
+        window.saveInvoice = async function () {
+            // Use the global invoiceId variable, or try to get from URL
+            let currentInvoiceId = invoiceId || window.__currentInvoiceId;
+
+            if (!currentInvoiceId) {
+                // Try to get from URL params
+                const urlParams = new URLSearchParams(window.location.search);
+                currentInvoiceId = urlParams.get('id');
+
+                if (!currentInvoiceId) {
+                    const hashParts = window.location.hash.split('?');
+                    if (hashParts.length > 1) {
+                        const hashParams = new URLSearchParams(hashParts[1]);
+                        currentInvoiceId = hashParams.get('id');
+                    }
+                }
+            }
+
+            if (!currentInvoiceId) {
+                if (typeof showError === 'function') {
+                    showError(t('invoices_no_id', 'Не указан ID счета'));
+                }
+                return;
+            }
+
+            // Clean up invoiceId
+            const cleanId = String(currentInvoiceId).trim();
+            if (isNaN(cleanId)) {
+                if (typeof showError === 'function') {
+                    showError(`${t('invoices_invalid_id', 'Неверный ID счета')}: ${cleanId}`);
+                }
+                return;
+            }
+
+            const dueDateInput = document.getElementById('editDueDate');
+            const dueDate = dueDateInput ? dueDateInput.value.trim() : '';
+            const noteInput = document.getElementById('editNote');
+            const note = noteInput ? noteInput.value.trim() : '';
+
+            try {
+                const payload = {
+                    due_date: dueDate || null,
+                    notes: note || null
+                };
+
+                console.log('💾 Saving invoice:', { cleanId, payload });
+
+                let url = `${API_BASE}/api/invoices/${cleanId}`;
+                console.log('📤 PUT to:', url);
+                let response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+
+                console.log('📥 Response status:', response.status, response.statusText);
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: response.statusText }));
+                    console.error('❌ Error response:', errorData);
+                    throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                await response.json();
+
+                if (typeof showSuccess === 'function') {
+                    const lang = localStorage.getItem('language') || 'az';
+                    const successText = window.i18n?.translate?.('invoices_save_success', lang) || t('invoices_save_success', 'Счёт успешно обновлён!');
+                    showSuccess(successText);
+                }
+
+                // Reload invoice data
+                await loadInvoice(cleanId);
+            } catch (error) {
+                console.error('Error saving invoice:', error);
+                if (typeof showError === 'function') {
+                    showError(`${t('invoices_save_error', 'Ошибка сохранения')}: ${error.message}`);
+                } else {
+                    alert(`${t('invoices_save_error', 'Ошибка сохранения')}: ${error.message}`);
+                }
+            }
+        };
+
+        window.cancelInvoice = function () {
+            // Открыть модальное окно отмены счета
+            const modal = document.getElementById('cancelInvoiceModal');
+            if (modal) {
+                modal.classList.add('show');
+                // Очистить поле причины при открытии
+                const reasonTextarea = document.getElementById('cancelReason');
+                if (reasonTextarea) {
+                    reasonTextarea.value = '';
+                    reasonTextarea.focus();
+                }
+            }
+        };
+
+        window.closeCancelModal = function () {
+            const modal = document.getElementById('cancelInvoiceModal');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+        };
+
+        window.confirmCancelInvoice = async function () {
+            const reasonTextarea = document.getElementById('cancelReason');
+            const reason = reasonTextarea ? reasonTextarea.value.trim() : '';
+
+            if (!reason) {
+                if (reasonTextarea) {
+                    reasonTextarea.focus();
+                    reasonTextarea.style.borderColor = '#ff6b6b';
+                    setTimeout(() => {
+                        reasonTextarea.style.borderColor = '';
+                    }, 2000);
+                }
+                if (typeof showWarning === 'function') {
+                    showWarning(t('invoices_cancel_reason_required', 'Укажите причину отмены'));
+                }
+                return;
+            }
+
+            const confirmBtn = document.getElementById('confirmCancelBtn');
+            if (confirmBtn) {
+                confirmBtn.disabled = true;
+                confirmBtn.textContent = t('cancel', 'Отмена') + '...';
+            }
+
+            // Use the global invoiceId variable, or try to get from URL
+            let currentInvoiceId = invoiceId || window.__currentInvoiceId;
+
+            if (!currentInvoiceId) {
+                // Try to get from URL params
+                const urlParams = new URLSearchParams(window.location.search);
+                currentInvoiceId = urlParams.get('id');
+
+                if (!currentInvoiceId) {
+                    const hashParts = window.location.hash.split('?');
+                    if (hashParts.length > 1) {
+                        const hashParams = new URLSearchParams(hashParts[1]);
+                        currentInvoiceId = hashParams.get('id');
+                    }
+                }
+            }
+
+            if (!currentInvoiceId) {
+                if (typeof showError === 'function') {
+                    showError(t('invoices_no_id', 'Не указан ID счета'));
+                }
+                if (confirmBtn) {
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = t('invoices_cancel_btn', 'Отменить счёт');
+                }
+                return;
+            }
+
+            // Clean up invoiceId
+            const cleanId = String(currentInvoiceId).trim();
+            if (isNaN(cleanId)) {
+                if (typeof showError === 'function') {
+                    showError(`${t('invoices_invalid_id', 'Неверный ID счета')}: ${cleanId}`);
+                }
+                if (confirmBtn) {
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = t('invoices_cancel_btn', 'Отменить счёт');
+                }
+                return;
+            }
+
+            try {
+                const payload = { reason: reason };
+
+                let url = `${API_BASE}/api/invoices/${cleanId}/cancel`;
+                let response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: response.statusText }));
+                    throw new Error(errorData.detail || `HTTP ${response.status}`);
+                }
+
+                await response.json();
+
+                if (typeof showSuccess === 'function') {
+                    const lang = localStorage.getItem('language') || 'az';
+                    const successText = window.i18n?.translate?.('invoices_cancelled_success', lang) || t('invoices_cancelled_success', 'Счёт отменён!');
+                    showSuccess(successText);
+                }
+
+                closeCancelModal();
+
+                setTimeout(() => {
+                    if (window.goBack) {
+                        window.goBack('/invoices');
+                    } else if (window.spaRouter && typeof window.spaRouter.goBack === 'function') {
+                        window.spaRouter.goBack('/invoices');
+                    } else {
+                        window.location.hash = '#/invoices';
+                    }
+                }, 1000);
+            } catch (error) {
+                console.error('Error canceling invoice:', error);
+                if (typeof showError === 'function') {
+                    showError(`${t('invoices_cancel_error', 'Ошибка отмены')}: ${error.message}`);
+                } else {
+                    alert(`${t('invoices_cancel_error', 'Ошибка отмены')}: ${error.message}`);
+                }
+
+                if (confirmBtn) {
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = t('invoices_cancel_btn', 'Отменить счёт');
+                }
+            }
+        };
+
+        // Закрытие модального окна при клике на overlay
+        document.addEventListener('DOMContentLoaded', function () {
+            const modal = document.getElementById('cancelInvoiceModal');
+            if (modal) {
+                modal.addEventListener('click', function (e) {
+                    if (e.target === modal) {
+                        closeCancelModal();
+                    }
+                });
+
+                // Закрытие по клавише ESC
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape' && modal.classList.contains('show')) {
+                        closeCancelModal();
+                    }
+                });
+            }
+        });
+
+        window.printInvoice = function () {
+            // Use the global invoiceId that was extracted at page load
+            let printId = invoiceId || window.__currentInvoiceId;
+
+            if (!printId) {
+                // Try to get from URL params
+                const urlParams = new URLSearchParams(window.location.search);
+                printId = urlParams.get('id');
+
+                if (!printId) {
+                    const hashParts = window.location.hash.split('?');
+                    if (hashParts.length > 1) {
+                        const hashParams = new URLSearchParams(hashParts[1]);
+                        printId = hashParams.get('id');
+                    }
+                }
+            }
+
+            if (!printId) {
+                if (typeof showError === 'function') {
+                    showError(t('invoices_no_id_print', 'Не указан ID счета для печати'));
+                }
+                return;
+            }
+
+            // Clean up invoiceId
+            const cleanId = String(printId).trim();
+            if (isNaN(cleanId)) {
+                if (typeof showError === 'function') {
+                    showError(`${t('invoices_invalid_id', 'Неверный ID счета')}: ${cleanId}`);
+                }
+                return;
+            }
+
+            // Open frontend print page which loads data from backend API
+            const printUrl = `/admin/content/invoice-print.html?id=${cleanId}`;
+            window.open(printUrl, '_blank');
+        };
+
+        window.reissueInvoice = async function () {
+            // Use the global invoiceId variable, or try to get from URL
+            let currentInvoiceId = invoiceId || window.__currentInvoiceId;
+
+            if (!currentInvoiceId) {
+                // Try to get from URL params
+                const urlParams = new URLSearchParams(window.location.search);
+                currentInvoiceId = urlParams.get('id');
+
+                if (!currentInvoiceId) {
+                    const hashParts = window.location.hash.split('?');
+                    if (hashParts.length > 1) {
+                        const hashParams = new URLSearchParams(hashParts[1]);
+                        currentInvoiceId = hashParams.get('id');
+                    }
+                }
+            }
+
+            if (!currentInvoiceId) {
+                if (typeof showError === 'function') {
+                    showError(t('invoices_no_id', 'Не указан ID счета'));
+                }
+                return;
+            }
+
+            // Clean up invoiceId
+            const cleanId = String(currentInvoiceId).trim();
+            if (isNaN(cleanId)) {
+                if (typeof showError === 'function') {
+                    showError(`${t('invoices_invalid_id', 'Неверный ID счета')}: ${cleanId}`);
+                }
+                return;
+            }
+
+            const dueDateInput = document.getElementById('editDueDate');
+            const dueDate = dueDateInput ? dueDateInput.value.trim() : '';
+            const noteInput = document.getElementById('editNote');
+            const comment = noteInput ? noteInput.value.trim() : '';
+
+            try {
+                const payload = {
+                    due_date: dueDate || null,
+                    comment: comment || null
+                };
+
+                console.log('🔄 Reissuing invoice:', { cleanId, payload });
+
+                let url = `${API_BASE}/api/invoices/${cleanId}/reissue`;
+                console.log('📤 POST to:', url);
+                let response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+
+                console.log('📥 Response status:', response.status, response.statusText);
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: response.statusText }));
+                    console.error('❌ Error response:', errorData);
+                    throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                await response.json();
+
+                if (typeof showSuccess === 'function') {
+                    const lang = localStorage.getItem('language') || 'az';
+                    const successText = window.i18n?.translate?.('invoices_reissue_success', lang) || t('invoices_reissue_success', 'Счёт выставлен заново!');
+                    showSuccess(successText);
+                }
+
+                // Reload invoice data
+                await loadInvoice(cleanId);
+            } catch (error) {
+                console.error('Error reissuing invoice:', error);
+                if (typeof showError === 'function') {
+                    showError(`${t('error_prefix', 'Ошибка')}: ${error.message}`);
+                } else {
+                    alert(`${t('error_prefix', 'Ошибка')}: ${error.message}`);
+                }
+            }
+        };
+
+        window.openDatePicker = function (inputId) {
+            const input = document.getElementById(inputId);
+            if (input) {
+                if (input.showPicker && typeof input.showPicker === 'function') {
+                    try {
+                        const pickerPromise = input.showPicker();
+                        if (pickerPromise && typeof pickerPromise.catch === 'function') {
+                            pickerPromise.catch(err => {
+                                console.warn('showPicker failed, using fallback:', err);
+                                input.focus();
+                                input.click();
+                            });
+                        } else {
+                            input.focus();
+                            input.click();
+                        }
+                    } catch (err) {
+                        console.warn('showPicker not available, using fallback:', err);
+                        input.focus();
+                        input.click();
+                    }
+                } else {
+                    input.focus();
+                    input.click();
+                }
+            }
+        };
+
+        // Функция для обновления заголовка страницы
+        function updatePageHeaderForInvoiceView() {
+            const titleContainer = document.getElementById('page-title-container');
+            if (titleContainer) {
+                const h1 = titleContainer.querySelector('h1');
+                if (h1) {
+                    h1.textContent = 'Счета';
+                    // Удаляем любые inline стили, чтобы применились CSS стили
+                    h1.removeAttribute('style');
+                }
+
+                const breadcrumb = titleContainer.querySelector('.page-breadcrumb');
+                if (breadcrumb) {
+                    breadcrumb.innerHTML = `
+                        <span class="breadcrumb-item">
+                            <svg width="14" height="14" fill="currentColor" style="margin-right: 0.25rem; vertical-align: middle;">
+                                <use href="/images/icons.svg#icon-apartments"></use>
+                            </svg>
+                            Главная
+                        </span>
+                        <span>›</span>
+                        <span class="breadcrumb-item">Финансы</span>
+                        <span>›</span>
+                        <span class="breadcrumb-item">Счета</span>
+                    `;
+                }
+            }
+        }
+
+        // Load invoice on page load
+        function initInvoiceView() {
+            // Обновляем заголовок при инициализации
+            updatePageHeaderForInvoiceView();
+            
+            if (invoiceId) {
+                loadInvoice(invoiceId);
+            } else {
+                console.warn('⚠️ No invoice ID found, waiting for spa:contentLoaded event...');
+            }
+        }
+
+        // Listen for SPA content loaded event
+        // Удаляем старый обработчик, если он существует
+        if (window._invoiceViewContentLoadedHandler) {
+            window.removeEventListener('spa:contentLoaded', window._invoiceViewContentLoadedHandler);
+        }
+
+        window._invoiceViewContentLoadedHandler = function (event) {
+            // Check if we're actually on the invoice-view page
+            const route = window.spaRouter?.currentRoute || window.location.hash.replace('#', '');
+            if (!route.includes('invoice-view')) {
+                return; // Not on invoice-view page, skip
+            }
+            
+            if (event.detail && event.detail.invoiceId) {
+                const eventId = event.detail.invoiceId;
+                console.log('📋 Got invoice ID from spa:contentLoaded event:', eventId);
+                if (!invoiceId) {
+                    invoiceId = eventId;
+                    loadInvoice(invoiceId);
+                }
+            }
+            // Обновляем заголовок при загрузке через SPA
+            updatePageHeaderForInvoiceView();
+        };
+
+        window.addEventListener('spa:contentLoaded', window._invoiceViewContentLoadedHandler);
+        
+        if (window._invoiceViewLanguageChangedHandler) {
+            window.removeEventListener('languageChanged', window._invoiceViewLanguageChangedHandler);
+        }
+        window._invoiceViewLanguageChangedHandler = function () {
+            if (!isInvoiceViewRoute()) return;
+            if (currentInvoiceData) {
+                renderInvoice(currentInvoiceData);
+            } else if (invoiceId) {
+                loadInvoice(invoiceId);
+            }
+        };
+        window.addEventListener('languageChanged', window._invoiceViewLanguageChangedHandler);
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initInvoiceView);
+        } else {
+            initInvoiceView();
+        }
+    })();
+</script>

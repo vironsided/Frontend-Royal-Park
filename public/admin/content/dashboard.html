@@ -1,0 +1,782 @@
+<!-- Dashboard Content -->
+<div class="dashboard-content">
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card solid-blue">
+            <div class="stat-icon blue">
+                <svg width="40" height="40" fill="white">
+                    <use href="/images/icons.svg#icon-users"></use>
+                </svg>
+            </div>
+            <div class="stat-details">
+                <div class="stat-value">1,245</div>
+                <div class="stat-label" data-i18n="total_users">Всего пользователей</div>
+                <div class="stat-change positive" data-i18n="blocks_stat_growth_hint">↑ 12% за месяц</div>
+            </div>
+        </div>
+
+        <div class="stat-card solid-green">
+            <div class="stat-icon green">
+                <svg width="40" height="40" fill="white">
+                    <use href="/images/icons.svg#icon-buildings"></use>
+                </svg>
+            </div>
+            <div class="stat-details">
+                <div class="stat-value">48</div>
+                <div class="stat-label" data-i18n="nav_blocks">Блоков</div>
+                <div class="stat-change positive" data-i18n="blocks_stat_new_hint">↑ 2 новых</div>
+            </div>
+        </div>
+
+        <div class="stat-card solid-orange">
+            <div class="stat-icon orange">
+                <svg width="40" height="40" fill="white">
+                    <use href="/images/icons.svg#icon-payments"></use>
+                </svg>
+            </div>
+            <div class="stat-details">
+                <div class="stat-value">₼2.4M</div>
+                <div class="stat-label" data-i18n="payments_month">Платежи за месяц</div>
+                <div class="stat-change positive" data-i18n="per_month">↑ 8% за месяц</div>
+            </div>
+        </div>
+
+        <div class="stat-card solid-red">
+            <div class="stat-icon purple">
+                <svg width="40" height="40" fill="white">
+                    <use href="/images/icons.svg#icon-maintenance"></use>
+                </svg>
+            </div>
+            <div class="stat-details">
+                <div class="stat-value">23</div>
+                <div class="stat-label" data-i18n="active_requests">Активные заявки</div>
+                <div class="stat-change negative" data-i18n="per_week">↓ 15% за неделю</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content-grid">
+        <!-- Chart -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title" data-i18n="payment_statistics">Статистика платежей</h3>
+                <div class="chart-controls">
+                    <button class="chart-btn" data-period="day" data-i18n="day">День</button>
+                    <button class="chart-btn active" data-period="week" data-i18n="week">Неделя</button>
+                    <button class="chart-btn" data-period="month" data-i18n="month">Месяц</button>
+                    <button class="chart-btn" data-period="year" data-i18n="year">Год</button>
+                </div>
+            </div>
+            <div class="chart-container" style="position: relative; height: 350px; padding: 20px;">
+                <canvas id="paymentChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="activity-card" style="height: 580px; overflow: hidden;">
+            <h3 class="chart-title" data-i18n="latest_activity">Последняя активность</h3>
+            <div id="recentActivityList">
+                <!-- Will be filled dynamically via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Tables Section -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h3 data-i18n="latest_payments">Последние платежи</h3>
+        </div>
+        <div class="table-responsive mobile-table-wrapper">
+            <table class="table mobile-table">
+                <thead>
+                    <tr>
+                        <th data-i18n="id">ID</th>
+                        <th data-i18n="user">Пользователь</th>
+                        <th data-i18n="apartment">Квартира</th>
+                        <th data-i18n="amount">Сумма</th>
+                        <th data-i18n="date">Дата</th>
+                        <th data-i18n="status">Статус</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        'use strict';
+
+        const API_BASE = window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BASE || 'http://localhost:8000');
+        const getActiveLang = () => localStorage.getItem('language') || window.i18n?.currentLanguage || 'az';
+        const t = (key, fallback = '') => window.i18n?.translate?.(key, getActiveLang()) || fallback || key;
+        let recentPaymentsCache = [];
+        let recentActivityCache = [];
+        let activeChartPeriod = 'week';
+        let chartRawDataCache = {
+            day: { labels: [], data: [] },
+            week: { labels: [], data: [] },
+            month: { labels: [], data: [] },
+            year: { labels: [], data: [] }
+        };
+
+        // Загрузка статистики
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/dashboard/stats`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const stats = await response.json();
+                console.log('Dashboard stats loaded:', stats);
+
+                // Обновляем карточки статистики
+                updateStatsCards(stats);
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+                // Используем значения по умолчанию
+                // updateStatsCards({
+                //     totalUsers: 1245,
+                //     totalBuildings: 48,
+                //     monthlyPayments: 2400000,
+                //     activeRequests: 23
+                // });
+            }
+        }
+
+        function updateStatsCards(stats) {
+            // Обновляем карточки
+            const userCard = document.querySelector('.stat-card.solid-blue .stat-value');
+            if (userCard) {
+                animateValue(userCard, parseInt(userCard.textContent.replace(/,/g, '')) || 0, stats.totalUsers || 0, 1000);
+            }
+
+            const buildingCard = document.querySelector('.stat-card.solid-green .stat-value');
+            if (buildingCard) {
+                animateValue(buildingCard, parseInt(buildingCard.textContent) || 0, stats.totalBuildings || 0, 1000);
+            }
+
+            const paymentCard = document.querySelector('.stat-card.solid-orange .stat-value');
+            if (paymentCard) {
+                const currentValue = parseFloat(paymentCard.textContent.replace(/[₼,M]/g, '')) * 1000000 || 0;
+                const newValue = stats.monthlyPayments || 0;
+                animateValue(paymentCard, currentValue, newValue, 1000, true);
+            }
+
+            const requestCard = document.querySelector('.stat-card.solid-red .stat-value');
+            if (requestCard) {
+                animateValue(requestCard, parseInt(requestCard.textContent) || 0, stats.activeRequests || 0, 1000);
+            }
+        }
+
+        function animateValue(element, start, end, duration, isCurrency = false) {
+            if (!element) return;
+
+            const startTime = performance.now();
+            const range = end - start;
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // Easing function
+                const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+                const current = Math.floor(start + range * easeOutQuart);
+
+                if (isCurrency) {
+                    if (current >= 1000000) {
+                        element.textContent = `₼${(current / 1000000).toFixed(1)}M`;
+                    } else if (current >= 1000) {
+                        element.textContent = `₼${(current / 1000).toFixed(0)}K`;
+                    } else {
+                        element.textContent = `₼${current.toLocaleString()}`;
+                    }
+                } else {
+                    element.textContent = current.toLocaleString();
+                }
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    if (isCurrency) {
+                        if (end >= 1000000) {
+                            element.textContent = `₼${(end / 1000000).toFixed(1)}M`;
+                        } else if (end >= 1000) {
+                            element.textContent = `₼${(end / 1000).toFixed(0)}K`;
+                        } else {
+                            element.textContent = `₼${end.toLocaleString()}`;
+                        }
+                    } else {
+                        element.textContent = end.toLocaleString();
+                    }
+                }
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        // Загрузка последних платежей
+        async function loadRecentPayments() {
+            try {
+                const response = await fetch(`${API_BASE}/api/dashboard/recent-payments?limit=4`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Recent payments loaded:', data);
+
+                recentPaymentsCache = data.payments || [];
+                renderRecentPayments(recentPaymentsCache);
+            } catch (error) {
+                console.error('Error loading recent payments:', error);
+                recentPaymentsCache = [];
+                renderRecentPayments([]);
+            }
+        }
+
+        function renderRecentPayments(payments) {
+            const tbody = document.querySelector('.table.mobile-table tbody');
+            if (!tbody) return;
+
+            if (!payments.length) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">${t('payments_no_data', 'Нет платежей')}</td></tr>`;
+                return;
+            }
+
+            const getPaymentStatusMeta = (statusRaw) => {
+                const status = String(statusRaw || '').trim().toLowerCase();
+                if (status.includes('аванс')) {
+                    return {
+                        className: 'badge-info',
+                        text: t('status_paid_advance_credited', 'Оплачено (аванс зачислен)')
+                    };
+                }
+                if (status.includes('частично')) {
+                    return {
+                        className: 'badge-warning',
+                        text: t('status_paid_partially_settled', 'Оплачено (частично погашено)')
+                    };
+                }
+                return {
+                    className: 'badge-success',
+                    text: t('status_paid_fully_settled', 'Оплачено (полностью погашено)')
+                };
+            };
+
+            tbody.innerHTML = payments.map(payment => {
+                const statusMeta = getPaymentStatusMeta(payment.status);
+                const date = new Date(payment.received_at).toLocaleDateString('ru-RU');
+
+                return `
+                <tr>
+                    <td>#${payment.id}</td>
+                    <td>${payment.resident_info.split(',')[0] || '—'}</td>
+                    <td>${payment.resident_code || '—'}</td>
+                    <td>₼${payment.amount_total.toFixed(2)}</td>
+                    <td>${date}</td>
+                    <td><span class="badge ${statusMeta.className}">${statusMeta.text}</span></td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        function refreshRecentPaymentsLanguage() {
+            renderRecentPayments(recentPaymentsCache);
+        }
+
+        // Загрузка последней активности
+        async function loadRecentActivity() {
+            try {
+                const response = await fetch(`${API_BASE}/api/dashboard/recent-activity?limit=5`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Recent activity loaded:', data);
+
+                recentActivityCache = data.activities || [];
+                renderRecentActivity(recentActivityCache);
+            } catch (error) {
+                console.error('Error loading recent activity:', error);
+                // Очищаем список при ошибке
+                recentActivityCache = [];
+                renderRecentActivity([]);
+            }
+        }
+
+        function renderRecentActivity(activities) {
+            const activityList = document.getElementById('recentActivityList');
+            if (!activityList) return;
+
+            // Очищаем существующие элементы
+            activityList.innerHTML = '';
+
+            if (!activities || activities.length === 0) {
+                activityList.innerHTML = `<div class="activity-item"><div class="activity-details"><div class="activity-title">${t('readings_no_data_display', 'Нет активности')}</div></div></div>`;
+                return;
+            }
+
+            const iconMap = {
+                payment: `/images/icons.svg#icon-payments`,
+                repair: `/images/icons.svg#icon-maintenance`,
+                meter: `M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8.009 8.009 0 0 1-8 8Zm0-14a1 1 0 0 0-1 1v5.382l-2.724 2.725a1 1 0 1 0 1.414 1.414l3-3A1 1 0 0 0 13 13V7a1 1 0 0 0-1-1Z`,
+                inspection: `M10 2a8 8 0 0 1 8 8 7.93 7.93 0 0 1-1.28 4.32l3.48 3.48-1.42 1.42-3.48-3.48A7.93 7.93 0 0 1 10 18a8 8 0 0 1 0-16Zm0 2a6 6 0 1 0 6 6 6.007 6.007 0 0 0-6-6Zm0 3a1 1 0 0 1 1 1v3l2 2-1.42 1.42L9 11.58V8a1 1 0 0 1 1-1Z`,
+                user: `/images/icons.svg#icon-users`,
+                debt: `/images/icons.svg#icon-debts`,
+                success: `<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>`,
+                warning: `<path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>`,
+                info: `<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>`
+            };
+
+            const localizeRelativeTime = (timeRaw) => {
+                const text = String(timeRaw || '').trim();
+                if (!text) return '';
+
+                // «Только что» / «Elə indi» / «Just now»
+                if (/^(только\s+что|elə\s+indi|just\s+now)$/i.test(text)) {
+                    return t('time_just_now', 'Только что');
+                }
+
+                let m = text.match(/^(\d+)\s*(минут[аы]?|мин|dəqiqə|dəq|minutes?|min)\s*(назад|əvvəl|ago)?$/i);
+                if (m) return `${m[1]} ${t('time_minutes_ago', 'мин назад')}`;
+
+                m = text.match(/^(\d+)\s*(час|часа|часов|h|saat|hours?|hour)\s*(назад|əvvəl|ago)?$/i);
+                if (m) return `${m[1]} ${t('time_hours_ago', 'ч назад')}`;
+
+                m = text.match(/^(\d+)\s*(день|дня|дней|дн|gün|days?|day|d)\s*(назад|əvvəl|ago)?$/i);
+                if (m) return `${m[1]} ${t('time_days_ago', 'дн назад')}`;
+
+                if (/^час\s+назад$/i.test(text)) return t('hour_ago', 'час назад');
+                return text;
+            };
+
+            const localizeActivityTitle = (activity) => {
+                const raw = String(activity.title || '').trim().toLowerCase();
+                if (raw.includes('новое обращение') || raw.includes('yeni müraciət') || raw.includes('new appeal')) {
+                    return t('activity_new_appeal', 'Новое обращение');
+                }
+
+                const keyByType = {
+                    payment: 'new_payment_received',
+                    repair: 'new_repair_request',
+                    meter: 'meter_reading',
+                    inspection: 'check_completed',
+                    user: 'new_user',
+                    debt: 'debt_reminder',
+                    notification: 'activity_new_appeal'
+                };
+                const key = keyByType[activity.type];
+                if (key) return t(key, activity.title || '');
+                return activity.title || '';
+            };
+
+            const localizeActivityDescription = (descriptionRaw) => {
+                const text = String(descriptionRaw || '').trim();
+                if (!text) return '';
+
+                // Fallback-значения с бэкенда («Новое обращение» / «Yeni müraciət» / «New appeal»):
+                // backend ставит их в description, когда не удалось определить блок/квартиру.
+                if (/^(новое\s+обращение|yeni\s+müraciət|new\s+appeal)$/i.test(text)) {
+                    return t('activity_new_appeal', 'Новое обращение');
+                }
+
+                const blockLabel = t('residents_filter_block', 'Блок');
+                const apartmentLabel = t('apartment', 'Квартира');
+
+                return text
+                    // NOTE: avoid \b here - JS word boundary works poorly with Cyrillic.
+                    .replace(/Блок/gi, blockLabel)
+                    .replace(/Квартира/gi, apartmentLabel)
+                    .replace(/Block/gi, blockLabel)
+                    .replace(/Apartment/gi, apartmentLabel)
+                    .replace(/Mənzil/gi, apartmentLabel)
+                    .replace(/Blok/gi, blockLabel);
+            };
+
+            // Ограничиваем до 5 элементов на случай если сервер вернул больше
+            activities.slice(0, 5).forEach(activity => {
+                const item = document.createElement('div');
+                item.className = 'activity-item';
+                
+                let iconHtml = '';
+                const iconSource = iconMap[activity.icon] || iconMap.info;
+                
+                if (iconSource.includes('svg#')) {
+                    iconHtml = `<svg viewBox="0 0 24 24" aria-hidden="true"><use href="${iconSource}"></use></svg>`;
+                } else if (iconSource.startsWith('<path')) {
+                    iconHtml = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">${iconSource}</svg>`;
+                } else {
+                    iconHtml = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="${iconSource}"/></svg>`;
+                }
+
+                const localizedTitle = localizeActivityTitle(activity);
+                const localizedDescription = localizeActivityDescription(activity.description || '');
+                const localizedTime = localizeRelativeTime(activity.time || '');
+                const metaText = [localizedDescription, localizedTime].filter(Boolean).join(' ');
+
+                item.innerHTML = `
+                    <div class="activity-icon ${activity.icon}">
+                        ${iconHtml}
+                    </div>
+                    <div class="activity-details">
+                        <div class="activity-title">${localizedTitle}</div>
+                        <div class="activity-time">${metaText}</div>
+                    </div>
+                `;
+                activityList.appendChild(item);
+            });
+        }
+
+        function refreshRecentActivityLanguage() {
+            renderRecentActivity(recentActivityCache);
+        }
+
+        function getLocalizedWeekFallbackLabels() {
+            return [
+                t('monday', 'Mon'),
+                t('tuesday', 'Tue'),
+                t('wednesday', 'Wed'),
+                t('thursday', 'Thu'),
+                t('friday', 'Fri'),
+                t('saturday', 'Sat'),
+                t('sunday', 'Sun')
+            ];
+        }
+
+        function getLocalizedMonthFallbackLabels() {
+            return [
+                t('chart_week_1', 'Week 1'),
+                t('chart_week_2', 'Week 2'),
+                t('chart_week_3', 'Week 3'),
+                t('chart_week_4', 'Week 4')
+            ];
+        }
+
+        function getLocalizedYearFallbackLabels() {
+            return [
+                t('chart_month_jan', 'Jan'),
+                t('chart_month_feb', 'Feb'),
+                t('chart_month_mar', 'Mar'),
+                t('chart_month_apr', 'Apr'),
+                t('chart_month_may', 'May'),
+                t('chart_month_jun', 'Jun'),
+                t('chart_month_jul', 'Jul'),
+                t('chart_month_aug', 'Aug'),
+                t('chart_month_sep', 'Sep'),
+                t('chart_month_oct', 'Oct'),
+                t('chart_month_nov', 'Nov'),
+                t('chart_month_dec', 'Dec')
+            ];
+        }
+
+        function localizeChartLabels(period, labels) {
+            const list = Array.isArray(labels) ? labels : [];
+            if (!list.length) {
+                if (period === 'day') return Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
+                if (period === 'week') return getLocalizedWeekFallbackLabels();
+                if (period === 'month') return getLocalizedMonthFallbackLabels();
+                if (period === 'year') return getLocalizedYearFallbackLabels();
+                return [];
+            }
+
+            if (period === 'month') {
+                return list.map((raw) => {
+                    const text = String(raw || '').trim();
+                    const m = text.match(/(\d+)/);
+                    const weekNum = m ? Number(m[1]) : NaN;
+                    if (weekNum >= 1 && weekNum <= 4) return t(`chart_week_${weekNum}`, `Week ${weekNum}`);
+                    return text;
+                });
+            }
+
+            if (period === 'year') {
+                const monthMap = {
+                    янв: 1, yan: 1,
+                    фев: 2, fev: 2, feb: 2,
+                    мар: 3, mar: 3,
+                    апр: 4, apr: 4,
+                    май: 5, may: 5,
+                    июн: 6, iyn: 6, jun: 6,
+                    июл: 7, iyl: 7, jul: 7,
+                    авг: 8, avq: 8, aug: 8,
+                    сен: 9, sen: 9, sent: 9, sep: 9,
+                    окт: 10, okt: 10, oct: 10,
+                    ноя: 11, noy: 11, nov: 11,
+                    дек: 12, dek: 12, dec: 12
+                };
+                const monthKeys = [
+                    'chart_month_jan', 'chart_month_feb', 'chart_month_mar', 'chart_month_apr',
+                    'chart_month_may', 'chart_month_jun', 'chart_month_jul', 'chart_month_aug',
+                    'chart_month_sep', 'chart_month_oct', 'chart_month_nov', 'chart_month_dec'
+                ];
+
+                return list.map((raw) => {
+                    const text = String(raw || '').trim();
+                    const token = text.toLowerCase().replace(/\./g, '').slice(0, 4);
+                    const monthNum = monthMap[token];
+                    if (monthNum) return t(monthKeys[monthNum - 1], text);
+                    return text;
+                });
+            }
+
+            return list;
+        }
+
+        function buildChartDataset(period, gradientFill) {
+            const raw = chartRawDataCache[period] || { labels: [], data: [] };
+            const labels = localizeChartLabels(period, raw.labels);
+            const fallbackData =
+                period === 'day' ? Array.from({ length: 24 }, () => 0) :
+                period === 'week' ? [0, 0, 0, 0, 0, 0, 0] :
+                period === 'month' ? [0, 0, 0, 0] :
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+            const seriesData = Array.isArray(raw.data) && raw.data.length > 0 ? raw.data : fallbackData;
+            const pointRadius = period === 'day' ? 4 : (period === 'year' ? 5 : 6);
+            const pointHoverRadius = period === 'day' ? 7 : (period === 'year' ? 8 : 9);
+            const pointBorderWidth = period === 'day' ? 2 : 3;
+
+            return {
+                labels,
+                datasets: [{
+                    label: `${t('chart_payments_series', 'Payments')} (₼)`,
+                    data: seriesData,
+                    borderColor: '#f97316',
+                    backgroundColor: gradientFill,
+                    tension: 0.45,
+                    fill: true,
+                    pointRadius,
+                    pointHoverRadius,
+                    pointBackgroundColor: '#f97316',
+                    pointBorderColor: '#0f172a',
+                    pointBorderWidth,
+                    pointHoverBorderWidth: pointBorderWidth
+                }]
+            };
+        }
+
+        function refreshChartLanguage() {
+            if (!window.paymentChartInstance) return;
+            const gradientFill = window.paymentChartInstance.data?.datasets?.[0]?.backgroundColor;
+            if (!gradientFill) return;
+
+            const localizedData = buildChartDataset(activeChartPeriod, gradientFill);
+            window.paymentChartInstance.data = localizedData;
+            window.paymentChartInstance.options.plugins.tooltip.callbacks.label = function (context) {
+                return `${t('amount', 'Amount')}: ₼${context.parsed.y.toLocaleString()}`;
+            };
+            window.paymentChartInstance.update('active');
+        }
+
+        // Загрузка данных для графика
+        async function loadChartData(period = 'week') {
+            try {
+                const response = await fetch(`${API_BASE}/api/dashboard/payment-chart?period=${period}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const chartData = await response.json();
+                console.log('Chart data loaded:', chartData);
+
+                return {
+                    labels: chartData.labels || [],
+                    data: chartData.data || []
+                };
+            } catch (error) {
+                console.error('Error loading chart data:', error);
+                // Возвращаем пустые данные
+                return { labels: [], data: [] };
+            }
+        }
+
+        // Initialize Payment Statistics Chart
+        document.addEventListener('DOMContentLoaded', function () {
+            initDashboard();
+        });
+
+        // Also initialize when SPA loads content
+        // Удаляем старый обработчик, если он существует
+        if (window._dashboardContentLoadedHandler) {
+            window.removeEventListener('spa:contentLoaded', window._dashboardContentLoadedHandler);
+        }
+
+        window._dashboardContentLoadedHandler = function (e) {
+            if (e.detail && e.detail.route === '/dashboard') {
+                initDashboard();
+            }
+        };
+
+        window.addEventListener('spa:contentLoaded', window._dashboardContentLoadedHandler);
+        window.addEventListener('languageChanged', refreshRecentPaymentsLanguage);
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'language') refreshRecentPaymentsLanguage();
+        });
+        window.addEventListener('languageChanged', refreshRecentActivityLanguage);
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'language') refreshRecentActivityLanguage();
+        });
+        window.addEventListener('languageChanged', refreshChartLanguage);
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'language') refreshChartLanguage();
+        });
+
+        async function initDashboard() {
+            console.log('Initializing dashboard...');
+
+            // Загружаем все данные параллельно
+            await Promise.all([
+                loadDashboardStats(),
+                loadRecentPayments(),
+                loadRecentActivity()
+            ]);
+
+            // Инициализируем график
+            initializeChart();
+        }
+
+        async function initializeChart() {
+            const canvas = document.getElementById('paymentChart');
+            if (!canvas) return;
+
+            // Destroy existing chart if any
+            if (window.paymentChartInstance) {
+                window.paymentChartInstance.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+
+            // Gradient background for line area (top -> bottom)
+            const gradientFill = ctx.createLinearGradient(0, 0, 0, canvas.clientHeight || 350);
+            gradientFill.addColorStop(0, 'rgba(59, 130, 246, 0.45)');   // blue top
+            gradientFill.addColorStop(0.5, 'rgba(79, 70, 229, 0.25)');  // indigo mid
+            gradientFill.addColorStop(1, 'rgba(15, 23, 42, 0)');        // transparent bottom
+
+            // Загружаем данные для всех периодов
+            const [dayChartData, weekChartData, monthChartData, yearChartData] = await Promise.all([
+                loadChartData('day'),
+                loadChartData('week'),
+                loadChartData('month'),
+                loadChartData('year')
+            ]);
+            chartRawDataCache = {
+                day: dayChartData || { labels: [], data: [] },
+                week: weekChartData || { labels: [], data: [] },
+                month: monthChartData || { labels: [], data: [] },
+                year: yearChartData || { labels: [], data: [] }
+            };
+
+            activeChartPeriod = 'week';
+            let currentData = buildChartDataset(activeChartPeriod, gradientFill);
+
+            // Create chart
+            window.paymentChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: currentData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.96)',
+                            padding: 12,
+                            cornerRadius: 10,
+                            titleColor: '#e5e7eb',
+                            bodyColor: '#f9fafb',
+                            borderColor: 'rgba(148, 163, 184, 0.5)',
+                            borderWidth: 1,
+                            titleFont: {
+                                size: 13,
+                                weight: '600'
+                            },
+                            bodyFont: {
+                                size: 13
+                            },
+                            callbacks: {
+                                label: function (context) {
+                                    return `${t('amount', 'Amount')}: ₼${context.parsed.y.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    if (value >= 1000000) {
+                                        return '₼' + (value / 1000000).toFixed(1) + 'M';
+                                    } else if (value >= 1000) {
+                                        return '₼' + (value / 1000).toFixed(0) + 'K';
+                                    }
+                                    return '₼' + value;
+                                },
+                                font: {
+                                    size: 12
+                                },
+                                color: 'rgba(148, 163, 184, 0.9)'
+                            },
+                            grid: {
+                                color: 'rgba(148, 163, 184, 0.18)',
+                                borderDash: [4, 4],
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 12
+                                },
+                                color: 'rgba(148, 163, 184, 0.9)'
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+
+            // Chart period buttons
+            const chartButtons = document.querySelectorAll('.chart-btn');
+            chartButtons.forEach((btn) => {
+                btn.addEventListener('click', async function () {
+                    // Remove active class from all buttons
+                    chartButtons.forEach(b => b.classList.remove('active'));
+
+                    // Add active class to clicked button
+                    this.classList.add('active');
+
+                    // Load and update chart data based on period
+                    const period = this.dataset.period || 'week';
+                    activeChartPeriod = period;
+
+                    // Загружаем свежие данные для выбранного периода
+                    const freshData = await loadChartData(period);
+                    if (freshData && Array.isArray(freshData.labels) && Array.isArray(freshData.data)) {
+                        chartRawDataCache[period] = freshData;
+                    }
+
+                    currentData = buildChartDataset(period, gradientFill);
+
+                    // Update chart
+                    window.paymentChartInstance.data = currentData;
+                    window.paymentChartInstance.update('active');
+                });
+            });
+        }
+
+    })();
+</script>

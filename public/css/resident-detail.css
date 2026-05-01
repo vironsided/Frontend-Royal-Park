@@ -1,0 +1,431 @@
+:root {
+    --detail-card-bg: rgba(36, 40, 49, 0.9);
+    --detail-border: rgba(255, 255, 255, 0.08);
+}
+
+body.resident-detail-page,
+body.resident-detail-page .admin-container {
+    min-height: 100vh;
+    background: #10131c;
+}
+
+body.resident-detail-page .main-content {
+    margin-left: 280px !important;
+    width: calc(100% - 280px);
+    overflow: visible;
+    /* padding-top: 1.5rem; */
+    padding-bottom: 2rem;
+}
+
+body.resident-detail-page .sidebar.collapsed ~ .main-content {
+    margin-left: 80px !important;
+    width: calc(100% - 80px);
+}
+
+body.resident-detail-page .admin-container {
+    overflow: visible;
+}
+
+.language-selector {
+    display: inline-flex !important;
+    border-radius: 1.25rem;
+    padding: 0.4rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(41, 44, 55, 0.9);
+    box-shadow: inset 0 0 0 1px rgba(17, 20, 30, 0.55);
+    gap: 0.35rem;
+}
+
+.language-btn {
+    width: 72px;
+    height: 54px;
+    border-radius: 0.9rem;
+    background: rgba(0, 0, 0, 0.4);
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: rgba(255, 255, 255, 0.45);
+    transition: var(--transition-smooth);
+    box-shadow: inset 0 -2px 6px rgba(13, 13, 15, 0.7);
+}
+
+.language-btn .flag {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.language-btn .lang-code {
+    font-size: 0.8rem;
+    margin-top: 0.1rem;
+}
+
+.language-btn.active {
+    background: linear-gradient(135deg, #7a72ff 0%, #a95eff 100%);
+    color: #fff;
+    box-shadow: 0 20px 35px rgba(123, 114, 255, 0.45);
+}
+
+.language-btn:not(.active):hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.resident-detail-top {
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.quick-links {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-right: 1.5rem;
+}
+
+.quick-link {
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition-smooth);
+}
+
+.quick-link.active,
+.quick-link:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: transparent;
+    color: #fff;
+}
+
+.resident-detail-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.resident-detail-card,
+.resident-filter-card,
+.meter-card {
+    background: var(--detail-card-bg);
+    border: 1px solid var(--detail-border);
+    border-radius: 20px;
+    overflow: hidden;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-lg);
+}
+
+.resident-detail-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    align-items: center;
+}
+
+.resident-detail-card {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.resident-detail-info {
+    flex: 1;
+}
+
+.resident-detail-info .label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.3rem;
+}
+
+.resident-detail-info .value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.back-button {
+    margin-top: 0;
+    border: none;
+    border-radius: 999px;
+    padding: 0.65rem 1.5rem;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.back-button:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Сетка фильтров - лейблы сверху, контролы снизу */
+.resident-filter-card.filter-grid {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.filter-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.filter-col label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.filter-col input[type="date"] {
+    border-radius: 12px;
+    border: 1px solid var(--detail-border);
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    padding: 0.65rem 1rem;
+    min-width: 160px;
+}
+
+.filter-col-buttons {
+    /* Центрируем по вертикали */
+}
+
+.filter-buttons-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.filter-buttons-row .btn {
+    border-radius: 999px;
+    padding: 0.65rem 1.5rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.filter-col-quick {
+    margin-left: auto;
+}
+
+.quick-filter-buttons {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+}
+
+.quick-filter-btn {
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: transparent;
+    color: var(--text-primary);
+    padding: 0.45rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    white-space: nowrap;
+}
+
+.quick-filter-btn.active,
+.quick-filter-btn:hover {
+    background: linear-gradient(135deg, #2562ff 0%, #24c6dc 100%);
+    border-color: transparent;
+    color: #fff;
+}
+
+/* Адаптив для планшетов */
+@media (max-width: 1100px) {
+    .filter-col-quick {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+
+/* Адаптив для мобильных */
+@media (max-width: 768px) {
+    .resident-filter-card.filter-grid {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .filter-col {
+        width: 100%;
+    }
+    
+    .filter-col input[type="date"] {
+        width: 100%;
+        min-width: 0;
+    }
+    
+    .filter-buttons-row {
+        width: 100%;
+    }
+    
+    .quick-filter-buttons {
+        flex-wrap: wrap;
+    }
+}
+
+.meters-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.meter-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.meter-tag {
+    padding: 0.35rem 1rem;
+    border-radius: 999px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.meter-gas { background: linear-gradient(135deg, #f5af19 0%, #f12711 100%); }
+.meter-electric { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.meter-water { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.meter-service { background: linear-gradient(135deg, #8e9eab 0%, #596164 100%); }
+
+.meter-meta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.meter-unit {
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 0.85rem;
+}
+
+.meter-table {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-x: auto;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+}
+
+.meter-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: fit-content;
+}
+
+.meter-row {
+    display: grid;
+    /* Растягиваем таблицу на всю ширину карточки */
+    grid-template-columns: 1.2fr 1fr 1fr 1fr 0.9fr 1.3fr;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    min-width: 100%;
+}
+
+.meter-head span {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.meter-head-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.meter-head-label > span:first-child {
+    text-transform: inherit;
+}
+
+.meter-head-unit {
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 0.7rem;
+    letter-spacing: 0;
+    color: #fff;
+}
+
+.meter-empty {
+    justify-content: center;
+    text-align: center;
+    font-style: italic;
+    color: var(--text-secondary);
+    min-width: auto !important;
+}
+
+/* Стилизация скроллбара для таблицы */
+.meter-table::-webkit-scrollbar {
+    height: 6px;
+}
+
+.meter-table::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.meter-table::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.meter-table::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+@media (max-width: 992px) {
+    .meter-table {
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .meter-table {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 0.75rem;
+        margin: 0 -0.5rem;
+        padding: 0 0.5rem 0.75rem;
+    }
+    
+    .meter-row {
+        font-size: 0.85rem;
+    }
+    
+    .meter-card-header {
+        flex-wrap: wrap;
+    }
+}
+
