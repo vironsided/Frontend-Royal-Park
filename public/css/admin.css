@@ -487,29 +487,35 @@ html, body {
         left: 0 !important;
         top: 0 !important;
         height: 100vh !important;
-        width: 80px !important;
-        min-width: 80px !important;
-        max-width: 80px !important;
-        transform: none !important;
-        z-index: 1000 !important;
-    }
-
-    .sidebar.open {
         width: 260px !important;
         min-width: 260px !important;
         max-width: 260px !important;
+        transform: translateX(-100%) !important;
+        z-index: 1000 !important;
+    }
+
+    .sidebar.open,
+    .sidebar.show {
+        transform: translateX(0) !important;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
     }
 
+    .sidebar.collapsed {
+        width: 260px !important;
+        min-width: 260px !important;
+        max-width: 260px !important;
+    }
+
     .main-content {
-        margin-left: 80px !important;
-        width: calc(100vw - 80px) !important;
+        margin-left: 0 !important;
+        width: 100vw !important;
         max-height: 100vh;
     }
 
-    .sidebar.open ~ .main-content {
-        margin-left: 260px !important;
-        width: calc(100vw - 260px) !important;
+    .sidebar.open ~ .main-content,
+    .sidebar.show ~ .main-content {
+        margin-left: 0 !important;
+        width: 100vw !important;
     }
 
     .sidebar-overlay {
