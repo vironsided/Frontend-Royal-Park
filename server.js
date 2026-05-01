@@ -6,11 +6,36 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const API_BASE = (process.env.API_BASE || 'http://localhost:8000').replace(/\/+$/, '');
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Runtime config for browser clients (useful for Railway deployments).
+app.get('/js/config.js', (req, res) => {
+    res.type('application/javascript');
+    res.send(`
+(function initAppConfig() {
+    const userConfig = window.APP_CONFIG || {};
+    const configuredBase = userConfig.API_BASE || ${JSON.stringify(API_BASE)};
+    const normalizedBase = String(configuredBase).replace(/\\/+$/, "");
+
+    window.APP_CONFIG = {
+        ...userConfig,
+        API_BASE: normalizedBase
+    };
+
+    window.BACKEND_API_BASE = normalizedBase;
+    window.API_BASE = normalizedBase;
+    window.API_BASE_URL = normalizedBase;
+    window.getApiBase = function getApiBase() {
+        return window.APP_CONFIG.API_BASE;
+    };
+})();
+`);
+});
 
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -74,5 +99,6 @@ app.post('/api/login', (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 RoyalPark Frontend Server running on port ${PORT}`);
     console.log(`📱 Access the application at: http://localhost:${PORT}`);
+    console.log(`🔗 API_BASE configured as: ${API_BASE}`);
 });
 
