@@ -69,6 +69,7 @@
             padding: 0 !important;
             overflow-x: hidden !important;
             background-color: #1a1d2e !important;
+            visibility: hidden !important;
         }
 
         body {
@@ -773,7 +774,8 @@
             
             try {
                 const response = await fetch(`${APP_API_BASE}/api/auth/check`, {
-                    credentials: 'include'
+                    credentials: 'include',
+                    signal: AbortSignal.timeout(5000)
                 });
                 if (!response.ok) {
                     // Not authenticated, redirect to login
@@ -782,6 +784,7 @@
                 }
                 // Session valid, show the page
                 document.body.style.visibility = 'visible';
+                document.documentElement.style.visibility = 'visible';
             } catch (error) {
                 console.error('Session check failed:', error);
                 // On error, redirect to login for safety

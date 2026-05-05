@@ -38,6 +38,11 @@
     <link rel="stylesheet" href="/css/dark-theme.css?v=milky-olivia-2">
     <link rel="stylesheet" href="/css/user-theme.css?v=brand-spectral-1">
     <style>
+        html,
+        body {
+            visibility: hidden;
+        }
+
         .app-bootstrap-loader {
             position: fixed;
             inset: 0;
@@ -590,13 +595,15 @@
             document.body.style.visibility = 'hidden';
             try {
                 const response = await fetch(`${API_BASE_URL}/api/auth/check`, {
-                    credentials: 'include'
+                    credentials: 'include',
+                    signal: AbortSignal.timeout(5000)
                 });
                 if (!response.ok) {
                     window.location.replace('/');
                     return;
                 }
                 document.body.style.visibility = 'visible';
+                document.documentElement.style.visibility = 'visible';
             } catch (error) {
                 console.error('Session check failed:', error);
                 window.location.replace('/');
