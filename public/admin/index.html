@@ -48,7 +48,10 @@
             try {
                 var role = (localStorage.getItem('userRole') || '').trim().toUpperCase();
                 var staffRoles = ['ROOT', 'ADMIN', 'OPERATOR', 'SALES'];
-                if (staffRoles.indexOf(role) === -1) {
+                // Redirect early only when role is explicitly non-staff.
+                // If role is empty (e.g. storage cleared but cookie still valid),
+                // let checkSession() decide based on backend auth.
+                if (role && staffRoles.indexOf(role) === -1) {
                     window.location.replace('/');
                 }
             } catch (_e) {
