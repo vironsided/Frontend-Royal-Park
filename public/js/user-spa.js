@@ -234,25 +234,33 @@
                 const params = new URLSearchParams(window.location.search || '');
                 const ok = (params.get('ok') || '').trim();
                 if (!ok) return;
+                const lang = (typeof window.getUiLanguage === 'function'
+                    ? window.getUiLanguage()
+                    : (localStorage.getItem('language') || 'az'));
+                const t = (key, fallback) => window.i18n?.translate?.(key, lang) || fallback;
 
                 const orderId = (params.get('order_id') || '').trim();
                 const reason = (params.get('reason') || '').trim();
                 if (ok === 'online_payment_success') {
+                    const template = t('payment_gateway_return_success', 'Payment successful (ORDER: {order}).');
                     const msg = orderId
-                        ? `Payment successful (ORDER: ${orderId}).`
-                        : 'Payment successful.';
+                        ? template.replace('{order}', orderId)
+                        : t('payment_success_default', 'Payment completed successfully!');
                     if (!this.showGatewayResultToast('success', msg)) {
                         sessionStorage.setItem('pendingGatewayPaymentResult', JSON.stringify({ kind: 'success', message: msg }));
                     }
                 } else if (ok === 'online_payment_failed') {
-                    let msg = 'Payment failed or canceled.';
+                    let msg = t('payment_gateway_return_failed', 'Payment failed or canceled.');
                     if (reason === 'declined') {
-                        msg = 'Payment was declined by gateway.';
+                        msg = t('payment_gateway_return_declined', 'Payment was declined by gateway.');
                     } else if (reason === 'signature') {
-                        msg = 'Payment callback signature validation failed.';
+                        msg = t('payment_gateway_return_signature', 'Payment callback signature validation failed.');
                     }
                     if (orderId) {
-                        msg += ` ORDER: ${orderId}.`;
+                        const withOrder = t('payment_gateway_return_with_order', '{message} ORDER: {order}.');
+                        msg = withOrder
+                            .replace('{message}', msg)
+                            .replace('{order}', orderId);
                     }
                     if (!this.showGatewayResultToast('error', msg)) {
                         sessionStorage.setItem('pendingGatewayPaymentResult', JSON.stringify({ kind: 'error', message: msg }));

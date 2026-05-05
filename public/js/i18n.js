@@ -1167,6 +1167,11 @@ const translations = {
         payment_success_advance_selected_invoice: "Аванс успешно применён к выбранному счёту.",
         payment_success_advance_not_applied: "Аванс не применён (нет подходящих открытых счетов).",
         payment_success_advance_applied_count: "Аванс успешно применён к {count} счёт(ам).",
+        payment_gateway_return_success: "Оплата прошла успешно (ORDER: {order}).",
+        payment_gateway_return_failed: "Оплата не выполнена или отменена.",
+        payment_gateway_return_declined: "Оплата отклонена платёжным шлюзом.",
+        payment_gateway_return_signature: "Ошибка валидации подписи callback.",
+        payment_gateway_return_with_order: "{message} ORDER: {order}.",
         payment_resident_name: "Имя резидента",
         payment_valid_thru: "Действительно до",
         payment_resident_pass: "КАРТА РЕЗИДЕНТА",
@@ -1179,6 +1184,7 @@ const translations = {
         payment_error_amount_exceeds_invoice: "Сумма не может превышать сумму счёта",
         payment_error_amount_exceeds_invoice_detail: "Сумма не может превышать сумму счёта ({amount} ₼)",
         payment_error_advance_exceeds_invoice: "Сумма оплаты из аванса не может превышать сумму счёта ({amount} ₼)",
+        payment_error_amount_must_be_positive: "Сумма оплаты должна быть больше 0",
         
         user_nav_user_requests: "Заявки",
         user_nav_user_documents: "Документы",
@@ -2606,6 +2612,11 @@ const translations = {
         payment_success_advance_selected_invoice: "Avans seçilmiş hesaba uğurla tətbiq edildi.",
         payment_success_advance_not_applied: "Avans tətbiq edilmədi (uyğun açıq hesab yoxdur).",
         payment_success_advance_applied_count: "Avans {count} hesab(lar)a uğurla tətbiq edildi.",
+        payment_gateway_return_success: "Ödəniş uğurla tamamlandı (ORDER: {order}).",
+        payment_gateway_return_failed: "Ödəniş tamamlanmadı və ya ləğv edildi.",
+        payment_gateway_return_declined: "Ödəniş şlüz tərəfindən rədd edildi.",
+        payment_gateway_return_signature: "Callback imza yoxlaması uğursuz oldu.",
+        payment_gateway_return_with_order: "{message} ORDER: {order}.",
         payment_resident_pass: "REZİDENT KARTI",
         
         // Payment comments
@@ -2616,6 +2627,7 @@ const translations = {
         payment_error_amount_exceeds_invoice: "Məbləğ hesab məbləğindən çox ola bilməz",
         payment_error_amount_exceeds_invoice_detail: "Məbləğ hesab məbləğindən çox ola bilməz ({amount} ₼)",
         payment_error_advance_exceeds_invoice: "Avansdan ödəniş məbləği hesab məbləğindən çox ola bilməz ({amount} ₼)",
+        payment_error_amount_must_be_positive: "Ödəniş məbləği 0-dan böyük olmalıdır",
         payment_resident_name: "Rezident adı",
         payment_valid_thru: "Etibarlılıq müddəti",
         
@@ -4020,6 +4032,11 @@ const translations = {
         payment_success_advance_selected_invoice: "Advance was successfully applied to the selected invoice.",
         payment_success_advance_not_applied: "Advance was not applied (no suitable open invoices).",
         payment_success_advance_applied_count: "Advance was successfully applied to {count} invoice(s).",
+        payment_gateway_return_success: "Payment successful (ORDER: {order}).",
+        payment_gateway_return_failed: "Payment failed or was canceled.",
+        payment_gateway_return_declined: "Payment was declined by gateway.",
+        payment_gateway_return_signature: "Payment callback signature validation failed.",
+        payment_gateway_return_with_order: "{message} ORDER: {order}.",
         payment_resident_name: "Resident Name",
         payment_valid_thru: "Valid Thru",
         payment_resident_pass: "RESIDENT PASS",
@@ -4032,6 +4049,7 @@ const translations = {
         payment_error_amount_exceeds_invoice: "The amount cannot exceed the invoice total",
         payment_error_amount_exceeds_invoice_detail: "The amount cannot exceed the invoice total ({amount} ₼)",
         payment_error_advance_exceeds_invoice: "Advance payment cannot exceed the invoice total ({amount} ₼)",
+        payment_error_amount_must_be_positive: "Payment amount must be greater than 0",
 
         // Resident detail (meters)
         user_resident_block_label: "Block",

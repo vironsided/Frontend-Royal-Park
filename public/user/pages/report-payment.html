@@ -1915,7 +1915,9 @@ async function submitPayment(event) {
     if (!isWalletFlow) {
         clearWalletSessionData();
     }
-    const lang = localStorage.getItem('language') || 'ru';
+    const lang = (typeof window.getUiLanguage === 'function'
+        ? window.getUiLanguage()
+        : (localStorage.getItem('language') || 'az'));
     
     // Determine which pay button was actually clicked (default in sidebar or form button)
     let payButton = null;
@@ -2073,7 +2075,8 @@ async function submitPayment(event) {
     const isTopupOnlyPayment = paymentScope === null;
     
     if (amount <= 0) {
-        showPaymentError('Сумма оплаты должна быть больше 0');
+        const msg = window.i18n?.translate?.('payment_error_amount_must_be_positive', lang) || 'Payment amount must be greater than 0';
+        showPaymentError(msg);
         return false;
     }
 
@@ -2496,6 +2499,16 @@ function localizeResidentPaymentMessage(rawMessage, paymentScope) {
 
 // Show error message
 function showPaymentError(message) {
+    const now = Date.now();
+    if (
+        window.__rpLastPaymentErrorMessage === String(message || "") &&
+        now - Number(window.__rpLastPaymentErrorAt || 0) < 1200
+    ) {
+        return;
+    }
+    window.__rpLastPaymentErrorMessage = String(message || "");
+    window.__rpLastPaymentErrorAt = now;
+
     // Try to use global notification system if available
     if (window.showError) {
         window.showError(message);
@@ -2569,7 +2582,8 @@ function bindPayButton() {
     const payForm = document.querySelector('.payment-card-form');
     const payButton = document.querySelector('.default-pay-button');
     
-    if (payForm) {
+    if (payForm && payForm.dataset.submitBound !== '1') {
+        payForm.dataset.submitBound = '1';
         payForm.addEventListener('submit', submitPayment);
     }
     
@@ -2704,7 +2718,6 @@ function setupPaymentLayout() {
     const addCardBtn = document.querySelector('.add-card-btn');
     const middleColumn = document.getElementById('paymentMiddleColumn');
     const defaultPayActions = document.querySelector('.default-pay-actions');
-    const defaultPayButton = document.querySelector('.default-pay-button');
 
     function toggleCardForm(show) {
         if (middleColumn) {
@@ -2730,15 +2743,7 @@ function setupPaymentLayout() {
         });
     }
 
-    if (defaultPayButton) {
-        if (defaultPayButton.dataset.submitBound !== '1') {
-            defaultPayButton.dataset.submitBound = '1';
-            defaultPayButton.addEventListener('click', function (e) {
-                // Используем тот же submitPayment, что и для формы
-                submitPayment(e);
-            });
-        }
-    }
+    // default-pay-button click is bound in bindPayButton(); avoid duplicate listeners here.
 
     // начальное состояние: форма скрыта, видна только правая кнопка "Оплатить"
     toggleCardForm(false);
