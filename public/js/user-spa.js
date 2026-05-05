@@ -188,6 +188,47 @@
             this.navigate(initialRoute, false);
         }
 
+        showGatewayResultToast(kind, message) {
+            if (kind === 'success') {
+                if (typeof window.showSuccess === 'function') {
+                    window.showSuccess(message, 4500);
+                    return true;
+                }
+                if (typeof window.showNotification === 'function') {
+                    window.showNotification(message, 'success', 4500);
+                    return true;
+                }
+                return false;
+            }
+            if (typeof window.showError === 'function') {
+                window.showError(message, 5000);
+                return true;
+            }
+            if (typeof window.showNotification === 'function') {
+                window.showNotification(message, 'error', 5000);
+                return true;
+            }
+            return false;
+        }
+
+        flushPendingGatewayPaymentResult() {
+            try {
+                const raw = sessionStorage.getItem('pendingGatewayPaymentResult');
+                if (!raw) return;
+                const pending = JSON.parse(raw);
+                if (!pending || !pending.kind || !pending.message) {
+                    sessionStorage.removeItem('pendingGatewayPaymentResult');
+                    return;
+                }
+                if (this.showGatewayResultToast(pending.kind, pending.message)) {
+                    sessionStorage.removeItem('pendingGatewayPaymentResult');
+                }
+            } catch (e) {
+                console.warn('Failed to flush pending gateway payment result', e);
+                sessionStorage.removeItem('pendingGatewayPaymentResult');
+            }
+        }
+
         handleGatewayPaymentResult() {
             try {
                 const params = new URLSearchParams(window.location.search || '');
@@ -200,8 +241,8 @@
                     const msg = orderId
                         ? `Payment successful (ORDER: ${orderId}).`
                         : 'Payment successful.';
-                    if (typeof window.showSuccess === 'function') {
-                        window.showSuccess(msg, 4500);
+                    if (!this.showGatewayResultToast('success', msg)) {
+                        sessionStorage.setItem('pendingGatewayPaymentResult', JSON.stringify({ kind: 'success', message: msg }));
                     }
                 } else if (ok === 'online_payment_failed') {
                     let msg = 'Payment failed or canceled.';
@@ -213,8 +254,8 @@
                     if (orderId) {
                         msg += ` ORDER: ${orderId}.`;
                     }
-                    if (typeof window.showError === 'function') {
-                        window.showError(msg, 5000);
+                    if (!this.showGatewayResultToast('error', msg)) {
+                        sessionStorage.setItem('pendingGatewayPaymentResult', JSON.stringify({ kind: 'error', message: msg }));
                     }
                 }
 
@@ -660,6 +701,9 @@
 
         afterContentRender(route) {
             this.executeInlineScripts();
+            this.flushPendingGatewayPaymentResult();
+            setTimeout(() => this.flushPendingGatewayPaymentResult(), 600);
+            setTimeout(() => this.flushPendingGatewayPaymentResult(), 1800);
 
             // Обновляем имя и аватар пользователя в шапке на всех страницах
             if (typeof loadUserProfileForHeader === 'function') {
