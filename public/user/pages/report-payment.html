@@ -1904,6 +1904,13 @@ async function submitPayment(event) {
     if (event) {
         event.preventDefault();
     }
+    // Guard against accidental double-submit (double click / duplicated listeners).
+    const nowTs = Date.now();
+    const lastSubmitTs = Number(window.__rpLastSubmitTs || 0);
+    if (lastSubmitTs && (nowTs - lastSubmitTs) < 3000) {
+        return false;
+    }
+    window.__rpLastSubmitTs = nowTs;
     const isWalletFlow = !!(event && event.isWalletFlow === true);
     if (!isWalletFlow) {
         clearWalletSessionData();
@@ -2724,10 +2731,13 @@ function setupPaymentLayout() {
     }
 
     if (defaultPayButton) {
-        defaultPayButton.addEventListener('click', function (e) {
-            // Используем тот же submitPayment, что и для формы
-            submitPayment(e);
-        });
+        if (defaultPayButton.dataset.submitBound !== '1') {
+            defaultPayButton.dataset.submitBound = '1';
+            defaultPayButton.addEventListener('click', function (e) {
+                // Используем тот же submitPayment, что и для формы
+                submitPayment(e);
+            });
+        }
     }
 
     // начальное состояние: форма скрыта, видна только правая кнопка "Оплатить"
