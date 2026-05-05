@@ -33,8 +33,29 @@
     <link rel="stylesheet" href="/css/admin.css">
     <link rel="stylesheet" href="/css/dark-theme.css?v=dark-select-3">
 
+    <style>
+        /* Prevent any admin UI flash before auth guard completes. */
+        html.auth-pending body {
+            visibility: hidden !important;
+        }
+    </style>
+
     <!-- Role-based UI guard: применяется максимально рано, чтобы не было "вспышки" лишних пунктов меню -->
     <script>
+        document.documentElement.classList.add('auth-pending');
+
+        (function preAuthRedirectGuard() {
+            try {
+                var role = (localStorage.getItem('userRole') || '').trim().toUpperCase();
+                var staffRoles = ['ROOT', 'ADMIN', 'OPERATOR', 'SALES'];
+                if (staffRoles.indexOf(role) === -1) {
+                    window.location.replace('/');
+                }
+            } catch (_e) {
+                window.location.replace('/');
+            }
+        })();
+
         (function applyRoleGuardEarly() {
             try {
                 var storedRole = (localStorage.getItem('userRole') || '').trim().toUpperCase();
@@ -69,7 +90,6 @@
             padding: 0 !important;
             overflow-x: hidden !important;
             background-color: #1a1d2e !important;
-            visibility: hidden !important;
         }
 
         body {
@@ -774,8 +794,7 @@
             
             try {
                 const response = await fetch(`${APP_API_BASE}/api/auth/check`, {
-                    credentials: 'include',
-                    signal: AbortSignal.timeout(5000)
+                    credentials: 'include'
                 });
                 if (!response.ok) {
                     // Not authenticated, redirect to login
@@ -783,8 +802,8 @@
                     return;
                 }
                 // Session valid, show the page
+                document.documentElement.classList.remove('auth-pending');
                 document.body.style.visibility = 'visible';
-                document.documentElement.style.visibility = 'visible';
             } catch (error) {
                 console.error('Session check failed:', error);
                 // On error, redirect to login for safety
