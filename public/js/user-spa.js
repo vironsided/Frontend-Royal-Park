@@ -153,6 +153,7 @@
             if (!this.contentContainer) return;
 
             this.routes.dashboard.content = this.contentContainer.innerHTML;
+            this.handleGatewayPaymentResult();
 
             const initialRoute = this.getRouteFromLocation();
             
@@ -185,6 +186,47 @@
             this.updateActiveMenu(initialRoute);
             this.updatePageTitle(initialRoute);
             this.navigate(initialRoute, false);
+        }
+
+        handleGatewayPaymentResult() {
+            try {
+                const params = new URLSearchParams(window.location.search || '');
+                const ok = (params.get('ok') || '').trim();
+                if (!ok) return;
+
+                const orderId = (params.get('order_id') || '').trim();
+                const reason = (params.get('reason') || '').trim();
+                if (ok === 'online_payment_success') {
+                    const msg = orderId
+                        ? `Payment successful (ORDER: ${orderId}).`
+                        : 'Payment successful.';
+                    if (typeof window.showSuccess === 'function') {
+                        window.showSuccess(msg, 4500);
+                    }
+                } else if (ok === 'online_payment_failed') {
+                    let msg = 'Payment failed or canceled.';
+                    if (reason === 'declined') {
+                        msg = 'Payment was declined by gateway.';
+                    } else if (reason === 'signature') {
+                        msg = 'Payment callback signature validation failed.';
+                    }
+                    if (orderId) {
+                        msg += ` ORDER: ${orderId}.`;
+                    }
+                    if (typeof window.showError === 'function') {
+                        window.showError(msg, 5000);
+                    }
+                }
+
+                // Remove one-time gateway query markers to avoid repeated toast on refresh.
+                const next = new URL(window.location.href);
+                next.searchParams.delete('ok');
+                next.searchParams.delete('order_id');
+                next.searchParams.delete('reason');
+                history.replaceState(history.state, '', next.pathname + next.search + next.hash);
+            } catch (e) {
+                console.warn('Failed to process gateway payment result marker', e);
+            }
         }
 
         getRouteFromLocation() {
