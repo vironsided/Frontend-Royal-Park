@@ -205,6 +205,7 @@ function addRippleEffect() {
 
 // Logout functionality
 async function logout() {
+    const backendLogoutUrl = `${API_BASE_URL}/logout`;
     try {
         // Call backend logout endpoint to clear session
         await fetch(`${API_BASE_URL}/api/auth/logout`, {
@@ -218,8 +219,8 @@ async function logout() {
         localStorage.removeItem('authToken');
         localStorage.removeItem('userRole');
         localStorage.removeItem('username');
-        // Redirect to login
-        window.location.href = '/';
+        // Force top-level backend logout to guarantee cookie removal.
+        window.location.replace(backendLogoutUrl);
     }
 }
 

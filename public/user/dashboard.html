@@ -609,6 +609,7 @@
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', async function(e) {
                     e.preventDefault();
+                    const backendLogoutUrl = `${API_BASE_URL}/logout`;
                     try {
                         await fetch(`${API_BASE_URL}/api/auth/logout`, {
                             method: 'POST',
@@ -619,7 +620,7 @@
                     }
                     localStorage.clear();
                     sessionStorage.clear();
-                    window.location.replace('/');
+                    window.location.replace(backendLogoutUrl);
                 });
             }
             const accountProfileBtn = document.getElementById('accountProfileBtn');

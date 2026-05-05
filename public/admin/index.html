@@ -1112,6 +1112,7 @@
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', async function (e) {
                     e.preventDefault();
+                    const backendLogoutUrl = `${APP_API_BASE}/logout`;
 
                     try {
                         // Call backend logout to clear session cookie
@@ -1132,10 +1133,10 @@
                         showInfo(t('logout_goodbye', 'До свидания!'));
                     }
 
-                    // Redirect to login page after a short delay
-                    setTimeout(() => {
-                        window.location.href = '/';
-                    }, 500);
+                    // Force top-level logout on backend domain as a final step.
+                    // This reliably clears HttpOnly session cookie in browsers
+                    // with stricter cross-origin cookie behavior.
+                    window.location.replace(backendLogoutUrl);
                 });
             }
 
