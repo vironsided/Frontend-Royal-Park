@@ -125,7 +125,9 @@
         // Загрузка статистики
         async function loadDashboardStats() {
             try {
-                const response = await fetch(`${API_BASE}/api/dashboard/stats`);
+                const response = await fetch(`${API_BASE}/api/dashboard/stats`, {
+                    credentials: 'include'
+                });
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -221,7 +223,9 @@
         // Загрузка последних платежей
         async function loadRecentPayments() {
             try {
-                const response = await fetch(`${API_BASE}/api/dashboard/recent-payments?limit=4`);
+                const response = await fetch(`${API_BASE}/api/dashboard/recent-payments?limit=4`, {
+                    credentials: 'include'
+                });
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -291,7 +295,9 @@
         // Загрузка последней активности
         async function loadRecentActivity() {
             try {
-                const response = await fetch(`${API_BASE}/api/dashboard/recent-activity?limit=5`);
+                const response = await fetch(`${API_BASE}/api/dashboard/recent-activity?limit=5`, {
+                    credentials: 'include'
+                });
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -576,7 +582,9 @@
         // Загрузка данных для графика
         async function loadChartData(period = 'week') {
             try {
-                const response = await fetch(`${API_BASE}/api/dashboard/payment-chart?period=${period}`);
+                const response = await fetch(`${API_BASE}/api/dashboard/payment-chart?period=${period}`, {
+                    credentials: 'include'
+                });
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
