@@ -169,7 +169,6 @@
             <!-- Default pay action when user doesn't add a new card -->
             <div class="default-pay-actions">
                 <button type="button" class="pay-button default-pay-button" data-i18n="payment_pay_button">Оплатить</button>
-                <div id="gpay_container" style="display:none; margin-top: 12px;"></div>
             </div>
         </div>
     </div>
@@ -195,23 +194,6 @@ var currentCardData = {
 var selectedSavedCard = null;
 window.selectedSavedCard = null;
 var ADVANCE_TOPUP_SCOPE = 'advance_topup';
-var GPAY_SCRIPT_URL = 'https://pay.google.com/gp/p/js/pay.js';
-var GPAY_CLIENT_INSTANCE = null;
-var GPAY_IS_READY = false;
-var GPAY_BUTTON_RENDERED = false;
-var GPAY_SCRIPT_LOADING_PROMISE = null;
-var GPAY_CONFIG = window.GPAY_CONFIG || {
-    environment: 'TEST',
-    merchantId: '',
-    merchantName: 'Royal Park',
-    merchantOrigin: window.location.origin,
-    gateway: 'azericardgpay',
-    gatewayMerchantId: '',
-    allowedCardNetworks: ['VISA', 'MASTERCARD', 'AMEX', 'JCB', 'DISCOVER', 'DCI'],
-    allowedCardAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
-    currencyCode: 'AZN'
-};
-var GPAY_CONFIG_LOADED = false;
 
 function isAdvanceTopupScope(scope) {
     return scope === ADVANCE_TOPUP_SCOPE;
@@ -354,10 +336,6 @@ function clearPaymentSessionData() {
     sessionStorage.removeItem('paymentSelectedLineIds');
     sessionStorage.removeItem('paymentSelectedLinesSummary');
     sessionStorage.removeItem('paymentTimestamp');
-    sessionStorage.removeItem('paymentWalletProvider');
-    sessionStorage.removeItem('paymentWalletToken');
-    sessionStorage.removeItem('paymentWalletEci');
-    sessionStorage.removeItem('paymentWalletTavv');
 }
 
 function stopPaymentCountdown() {
@@ -377,13 +355,6 @@ function stopPaymentCountdown() {
         timerEl.style.background = '';
         timerEl.style.color = '';
     }
-}
-
-function clearWalletSessionData() {
-    sessionStorage.removeItem('paymentWalletProvider');
-    sessionStorage.removeItem('paymentWalletToken');
-    sessionStorage.removeItem('paymentWalletEci');
-    sessionStorage.removeItem('paymentWalletTavv');
 }
 
 function parsePaymentAmountFromUi() {
@@ -406,208 +377,6 @@ function parsePaymentAmountFromUi() {
     const storedAmount = parseFloat(sessionStorage.getItem('paymentAmount') || '0');
     if (Number.isFinite(storedAmount) && storedAmount > 0) return storedAmount;
     return 0;
-}
-
-function getGooglePayBaseRequest() {
-    return { apiVersion: 2, apiVersionMinor: 0 };
-}
-
-async function loadGooglePayRuntimeConfig() {
-    if (GPAY_CONFIG_LOADED) return GPAY_CONFIG;
-    try {
-        const resp = await fetch(`${API_BASE}/api/azericard/wallet-config`, {
-            method: 'GET',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        if (!resp.ok) {
-            GPAY_CONFIG_LOADED = true;
-            return GPAY_CONFIG;
-        }
-        const data = await resp.json();
-        const cfg = data?.google_pay || {};
-        GPAY_CONFIG = Object.assign({}, GPAY_CONFIG, {
-            environment: cfg.environment || GPAY_CONFIG.environment,
-            gateway: cfg.gateway || GPAY_CONFIG.gateway,
-            gatewayMerchantId: cfg.gatewayMerchantId || GPAY_CONFIG.gatewayMerchantId,
-            merchantId: cfg.merchantId || GPAY_CONFIG.merchantId,
-            merchantName: cfg.merchantName || GPAY_CONFIG.merchantName,
-            merchantOrigin: cfg.merchantOrigin || GPAY_CONFIG.merchantOrigin,
-            currencyCode: cfg.currencyCode || GPAY_CONFIG.currencyCode
-        });
-    } catch (e) {
-        console.warn('Failed to load wallet config:', e);
-    } finally {
-        GPAY_CONFIG_LOADED = true;
-    }
-    return GPAY_CONFIG;
-}
-
-function getGooglePayBaseCardPaymentMethod() {
-    return {
-        type: 'CARD',
-        parameters: {
-            allowedAuthMethods: GPAY_CONFIG.allowedCardAuthMethods || ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
-            allowedCardNetworks: GPAY_CONFIG.allowedCardNetworks || ['VISA', 'MASTERCARD']
-        }
-    };
-}
-
-function getGooglePayTokenizationSpecification() {
-    return {
-        type: 'PAYMENT_GATEWAY',
-        parameters: {
-            gateway: GPAY_CONFIG.gateway || 'azericardgpay',
-            gatewayMerchantId: GPAY_CONFIG.gatewayMerchantId || ''
-        }
-    };
-}
-
-function getGooglePayCardPaymentMethod() {
-    return Object.assign({}, getGooglePayBaseCardPaymentMethod(), {
-        tokenizationSpecification: getGooglePayTokenizationSpecification()
-    });
-}
-
-function getGooglePayPaymentsClient() {
-    if (GPAY_CLIENT_INSTANCE === null && window.google?.payments?.api?.PaymentsClient) {
-        GPAY_CLIENT_INSTANCE = new google.payments.api.PaymentsClient({
-            environment: GPAY_CONFIG.environment || 'TEST'
-        });
-    }
-    return GPAY_CLIENT_INSTANCE;
-}
-
-function loadGooglePayScript() {
-    if (window.google?.payments?.api) return Promise.resolve();
-    if (GPAY_SCRIPT_LOADING_PROMISE) return GPAY_SCRIPT_LOADING_PROMISE;
-
-    GPAY_SCRIPT_LOADING_PROMISE = new Promise((resolve, reject) => {
-        const existing = document.querySelector('script[data-gpay-script="1"]');
-        if (existing) {
-            existing.addEventListener('load', () => resolve(), { once: true });
-            existing.addEventListener('error', () => reject(new Error('Google Pay script failed to load')), { once: true });
-            return;
-        }
-        const script = document.createElement('script');
-        script.src = GPAY_SCRIPT_URL;
-        script.async = true;
-        script.dataset.gpayScript = '1';
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error('Google Pay script failed to load'));
-        document.head.appendChild(script);
-    });
-
-    return GPAY_SCRIPT_LOADING_PROMISE;
-}
-
-function getGooglePayIsReadyToPayRequest() {
-    return Object.assign({}, getGooglePayBaseRequest(), {
-        allowedPaymentMethods: [getGooglePayBaseCardPaymentMethod()]
-    });
-}
-
-function getGooglePayTransactionInfo() {
-    const amount = parsePaymentAmountFromUi();
-    return {
-        totalPriceStatus: 'FINAL',
-        totalPrice: amount > 0 ? amount.toFixed(2) : '0.01',
-        currencyCode: GPAY_CONFIG.currencyCode || 'AZN'
-    };
-}
-
-function getGooglePayPaymentDataRequest() {
-    const req = Object.assign({}, getGooglePayBaseRequest(), {
-        allowedPaymentMethods: [getGooglePayCardPaymentMethod()],
-        transactionInfo: getGooglePayTransactionInfo(),
-        merchantInfo: {
-            merchantName: GPAY_CONFIG.merchantName || 'Royal Park',
-            merchantOrigin: GPAY_CONFIG.merchantOrigin || window.location.origin
-        }
-    });
-    if (GPAY_CONFIG.merchantId) {
-        req.merchantInfo.merchantId = GPAY_CONFIG.merchantId;
-    }
-    return req;
-}
-
-async function handleGooglePayButtonClicked() {
-    try {
-        const paymentsClient = getGooglePayPaymentsClient();
-        if (!paymentsClient) throw new Error('Google Pay client is not initialized');
-
-        const paymentData = await paymentsClient.loadPaymentData(getGooglePayPaymentDataRequest());
-        const paymentToken = paymentData?.paymentMethodData?.tokenizationData?.token || '';
-        if (!paymentToken) {
-            throw new Error('Google Pay token is empty');
-        }
-
-        sessionStorage.setItem('paymentWalletProvider', 'google_pay');
-        sessionStorage.setItem('paymentWalletToken', paymentToken);
-        sessionStorage.removeItem('paymentWalletEci');
-        sessionStorage.removeItem('paymentWalletTavv');
-
-        const payButton = document.querySelector('.default-pay-button');
-        await submitPayment({ preventDefault() {}, target: payButton || document.body, isWalletFlow: true });
-    } catch (err) {
-        if (err?.statusCode === 'CANCELED') return;
-        console.error('Google Pay flow failed:', err);
-        clearWalletSessionData();
-        showPaymentError('Google Pay token almaq mümkün olmadı');
-    }
-}
-
-function setGooglePayContainerVisibility(visible) {
-    const container = document.getElementById('gpay_container');
-    if (!container) return;
-    container.style.display = visible ? '' : 'none';
-}
-
-async function setupGooglePayButton() {
-    const container = document.getElementById('gpay_container');
-    const cardMethodInput = document.getElementById('paymentMethodCard');
-    if (!container || !cardMethodInput) return;
-
-    const shouldShow = !!cardMethodInput.checked;
-    if (!shouldShow) {
-        setGooglePayContainerVisibility(false);
-        clearWalletSessionData();
-        return;
-    }
-
-    try {
-        await loadGooglePayRuntimeConfig();
-        if (!String(GPAY_CONFIG.gatewayMerchantId || '').trim()) {
-            console.warn('Google Pay disabled: missing gatewayMerchantId from backend wallet config');
-            setGooglePayContainerVisibility(false);
-            return;
-        }
-        await loadGooglePayScript();
-        const paymentsClient = getGooglePayPaymentsClient();
-        if (!paymentsClient) return;
-
-        const ready = await paymentsClient.isReadyToPay(getGooglePayIsReadyToPayRequest());
-        GPAY_IS_READY = !!ready?.result;
-        if (!GPAY_IS_READY) {
-            setGooglePayContainerVisibility(false);
-            return;
-        }
-
-        if (!GPAY_BUTTON_RENDERED) {
-            const button = paymentsClient.createButton({
-                onClick: handleGooglePayButtonClicked,
-                allowedPaymentMethods: [getGooglePayBaseCardPaymentMethod()]
-            });
-            container.innerHTML = '';
-            container.appendChild(button);
-            GPAY_BUTTON_RENDERED = true;
-        }
-        setGooglePayContainerVisibility(true);
-    } catch (e) {
-        GPAY_IS_READY = false;
-        setGooglePayContainerVisibility(false);
-        console.warn('Google Pay is unavailable:', e);
-    }
 }
 
 function startPaymentCountdown(paymentTimestamp) {
@@ -1911,10 +1680,6 @@ async function submitPayment(event) {
         return false;
     }
     window.__rpLastSubmitTs = nowTs;
-    const isWalletFlow = !!(event && event.isWalletFlow === true);
-    if (!isWalletFlow) {
-        clearWalletSessionData();
-    }
     const lang = (typeof window.getUiLanguage === 'function'
         ? window.getUiLanguage()
         : (localStorage.getItem('language') || 'az'));
@@ -2265,20 +2030,12 @@ async function submitPayment(event) {
                 : (paymentScope === 'all' ? 'Оплата всех счетов' : 'Оплата счета'));
 
             const terminalCategory = sessionStorage.getItem('paymentTerminalCategory') || null;
-            const walletProvider = sessionStorage.getItem('paymentWalletProvider') || null;
-            const walletToken = sessionStorage.getItem('paymentWalletToken') || null;
-            const walletEci = sessionStorage.getItem('paymentWalletEci') || null;
-            const walletTavv = sessionStorage.getItem('paymentWalletTavv') || null;
             const initiatePayload = {
                 resident_id: residentId,
                 amount: amount,
                 invoice_id: invoiceIdForRequest || null,
                 description,
-                terminal_category: terminalCategory,
-                wallet_provider: walletProvider,
-                wallet_token: walletToken,
-                wallet_eci: walletEci,
-                wallet_tavv: walletTavv
+                terminal_category: terminalCategory
             };
 
             const response = await fetch(`${API_BASE}/api/azericard/initiate`, {
@@ -2678,8 +2435,6 @@ function setupSavedCardSelection() {
     if (advanceMethodInput) {
         advanceMethodInput.addEventListener('change', () => {
             if (!advanceMethodInput.checked) return;
-            clearWalletSessionData();
-            setGooglePayContainerVisibility(false);
             if (advanceCard && !advanceCard.classList.contains('disabled') && advanceCard.getAttribute('aria-disabled') !== 'true') {
                 applySelection(advanceCard);
             } else {
@@ -2691,9 +2446,7 @@ function setupSavedCardSelection() {
     if (cardMethodInput) {
         cardMethodInput.addEventListener('change', () => {
             if (cardMethodInput.checked) {
-                clearWalletSessionData();
                 applyCardGatewaySelection();
-                setupGooglePayButton();
             }
         });
     }
@@ -2704,12 +2457,10 @@ function setupSavedCardSelection() {
     );
     if (cardMethodInput && cardMethodInput.checked) {
         applyCardGatewaySelection();
-        setupGooglePayButton();
     } else if (availableCards.length > 0) {
         applySelection(availableCards[0]);
     } else if (cardMethodInput) {
         applyCardGatewaySelection();
-        setupGooglePayButton();
     }
 }
 
@@ -2966,7 +2717,6 @@ if (document.readyState === 'loading') {
         await loadSavedCards();
         bindPayButton();
         setupSavedCardSelection();
-        await setupGooglePayButton();
         setupPaymentLayout();
         setupAdvanceTopupButton();
         setupPaymentDataCleanup();
@@ -2977,7 +2727,6 @@ if (document.readyState === 'loading') {
         await loadSavedCards();
         bindPayButton();
         setupSavedCardSelection();
-        await setupGooglePayButton();
         setupPaymentLayout();
         setupAdvanceTopupButton();
         setupPaymentDataCleanup();
