@@ -4173,11 +4173,33 @@ class LanguageManager {
     init() {
         // Apply saved language on page load
         this.applyLanguage(this.currentLanguage);
+        this.syncLanguageButtons(this.currentLanguage);
         
         // Create language selector if it doesn't exist
         if (!document.querySelector('.language-selector')) {
             this.createLanguageSelector();
+        } else {
+            this.bindExistingLanguageButtons();
         }
+    }
+
+    bindExistingLanguageButtons() {
+        const buttons = document.querySelectorAll('.language-btn, .lang-btn');
+        buttons.forEach(btn => {
+            if (btn.dataset.i18nBound === '1') return;
+            btn.dataset.i18nBound = '1';
+            btn.addEventListener('click', () => {
+                const lang = btn.getAttribute('data-lang');
+                if (lang) this.changeLanguage(lang);
+            });
+        });
+        this.syncLanguageButtons(this.currentLanguage);
+    }
+
+    syncLanguageButtons(lang) {
+        document.querySelectorAll('.language-btn, .lang-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+        });
     }
     
     createLanguageSelector() {
@@ -4210,18 +4232,7 @@ class LanguageManager {
             document.body.appendChild(selector);
         }
         
-        // Add event listeners
-        selector.querySelectorAll('.language-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const lang = btn.getAttribute('data-lang');
-                this.changeLanguage(lang);
-            });
-            
-            // Highlight active language
-            if (btn.getAttribute('data-lang') === this.currentLanguage) {
-                btn.classList.add('active');
-            }
-        });
+        this.bindExistingLanguageButtons();
     }
     
     changeLanguage(lang) {
@@ -4234,10 +4245,8 @@ class LanguageManager {
             localStorage.setItem('language', lang);
         }
         
-        // Update active button
-        document.querySelectorAll('.language-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
-        });
+        // Update active button in all language switcher variants.
+        this.syncLanguageButtons(lang);
         
         // Apply translations
         this.applyLanguage(lang);
@@ -4259,6 +4268,7 @@ class LanguageManager {
     applyLanguage(lang) {
         // Update current language
         this.currentLanguage = lang;
+        this.syncLanguageButtons(lang);
         
         // Translate all elements with data-i18n attribute
         // Search in main document (covers everything including SPA content)
