@@ -1035,7 +1035,7 @@
                 `;
             }).join('') + `
                 <tr class="total-row">
-                    <td colspan="5" data-i18n="user_invoice_items_total_row">Итого к оплате</td>
+                    <td colspan="5">${window.i18n?.translate?.('user_invoice_items_total_row', lang) || 'Итого к оплате'}</td>
                     <td class="total-value">${formatCurrency(total)}</td>
                     <td></td>
                 </tr>
