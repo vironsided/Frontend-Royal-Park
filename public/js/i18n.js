@@ -4786,7 +4786,24 @@ class LanguageManager {
     
     translate(key, lang = null) {
         lang = lang || this.currentLanguage;
-        return translations[lang]?.[key] || key;
+        const direct = translations[lang]?.[key];
+        if (direct) return direct;
+
+        // Safety fallback for late-added keys when browser caches an older language slice.
+        const fallbackByLang = {
+            az: {
+                payment_wallet_pay_button: "Apple Pay / Google Pay ilə ödə",
+            },
+            en: {
+                payment_wallet_pay_button: "Pay with Apple Pay / Google Pay",
+            },
+            ru: {
+                payment_wallet_pay_button: "Оплатить Apple Pay / Google Pay",
+            },
+        };
+        if (fallbackByLang[lang]?.[key]) return fallbackByLang[lang][key];
+
+        return translations.en?.[key] || translations.ru?.[key] || key;
     }
 
     t(key, lang = null) {
