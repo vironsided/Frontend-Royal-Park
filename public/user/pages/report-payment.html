@@ -169,6 +169,7 @@
             <!-- Default pay action when user doesn't add a new card -->
             <div class="default-pay-actions">
                 <button type="button" class="pay-button default-pay-button" data-i18n="payment_pay_button">Оплатить</button>
+                <button type="button" class="pay-button wallet-pay-button" style="margin-left: 10px;">Оплатить Apple Pay / Google Pay</button>
             </div>
         </div>
     </div>
@@ -1692,6 +1693,7 @@ async function submitPayment(event) {
         payButton = document.querySelector('.default-pay-button');
     }
     const originalText = payButton ? payButton.textContent : 'Оплатить';
+    const useWalletTerminal = !!(event && event.useWalletTerminal === true);
 
     // Понимаем, использует ли пользователь форму "новая карта" или сохранённые карты / аванс
     const isUsingNewCardForm = !!(event && event.target && event.target.closest && event.target.closest('.payment-middle-column'));
@@ -2030,12 +2032,14 @@ async function submitPayment(event) {
                 : (paymentScope === 'all' ? 'Оплата всех счетов' : 'Оплата счета'));
 
             const terminalCategory = sessionStorage.getItem('paymentTerminalCategory') || null;
+            const terminalGroup = useWalletTerminal ? 'wallet' : null;
             const initiatePayload = {
                 resident_id: residentId,
                 amount: amount,
                 invoice_id: invoiceIdForRequest || null,
                 description,
-                terminal_category: terminalCategory
+                terminal_category: terminalCategory,
+                terminal_group: terminalGroup
             };
 
             const response = await fetch(`${API_BASE}/api/azericard/initiate`, {
@@ -2338,6 +2342,7 @@ if (!document.getElementById('payment-toast-styles')) {
 function bindPayButton() {
     const payForm = document.querySelector('.payment-card-form');
     const payButton = document.querySelector('.default-pay-button');
+    const walletPayButton = document.querySelector('.wallet-pay-button');
     
     if (payForm && payForm.dataset.submitBound !== '1') {
         payForm.dataset.submitBound = '1';
@@ -2350,6 +2355,17 @@ function bindPayButton() {
             if (!payForm) {
                 submitPayment(e);
             }
+        });
+    }
+
+    if (walletPayButton && !walletPayButton.dataset.bound) {
+        walletPayButton.dataset.bound = 'true';
+        walletPayButton.addEventListener('click', function(e) {
+            submitPayment({
+                preventDefault() {},
+                target: walletPayButton,
+                useWalletTerminal: true
+            });
         });
     }
 }
