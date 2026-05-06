@@ -219,6 +219,7 @@ async function logout() {
         localStorage.removeItem('authToken');
         localStorage.removeItem('userRole');
         localStorage.removeItem('username');
+        localStorage.removeItem('sessionToken');
         // Force top-level backend logout to guarantee cookie removal.
         window.location.replace(backendLogoutUrl);
     }

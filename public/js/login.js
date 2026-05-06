@@ -83,6 +83,11 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem('authToken', 'authenticated');
             localStorage.setItem('userRole', data.role);
             localStorage.setItem('username', data.username);
+            if (data.session_token) {
+                localStorage.setItem('sessionToken', data.session_token);
+            } else {
+                localStorage.removeItem('sessionToken');
+            }
 
             try {
                 const lang = (window.i18n && window.i18n.currentLanguage)
