@@ -1008,6 +1008,38 @@ body.user-app #userSpaContent {
     gap: 6px;
 }
 
+.payment-history-page .ph-btn {
+    min-height: 36px;
+    border-radius: 8px;
+    border: 1px solid rgba(177, 186, 136, 0.36);
+    padding: 0 12px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.payment-history-page .ph-btn-primary {
+    background: linear-gradient(135deg, #c5cd9f 0%, #b1ba88 100%);
+    color: #ffffff;
+    border-color: rgba(177, 186, 136, 0.6);
+}
+
+.payment-history-page .ph-btn-primary:hover {
+    filter: brightness(1.03);
+    box-shadow: 0 3px 10px rgba(177, 186, 136, 0.3);
+}
+
+.payment-history-page .ph-btn-secondary {
+    background: rgba(255, 255, 255, 0.96);
+    color: #56565c;
+}
+
+.payment-history-page .ph-btn-secondary:hover {
+    background: #ffffff;
+    border-color: rgba(177, 186, 136, 0.45);
+}
+
 .payment-history-page .ph-chip {
     display: inline-flex;
     align-items: center;
@@ -1043,6 +1075,83 @@ body.user-app #userSpaContent {
 
 .payment-history-page .ph-row:hover {
     background: rgba(177, 186, 136, 0.08);
+}
+
+.payment-history-page .user-bills-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.payment-history-page .ph-table {
+    min-width: 1120px;
+}
+
+.payment-history-page .ph-table th,
+.payment-history-page .ph-table td {
+    font-size: 0.84rem;
+}
+
+.payment-history-page .ph-table th {
+    font-weight: 600;
+}
+
+.payment-history-page .table-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(177, 186, 136, 0.25);
+    background: rgba(255, 255, 255, 0.45);
+}
+
+.payment-history-page .pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.payment-history-page .pagination-pages {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.payment-history-page .btn-pagination {
+    min-width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid rgba(177, 186, 136, 0.3);
+    background: rgba(255, 255, 255, 0.92);
+    color: #56565c;
+    padding: 0 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.payment-history-page .btn-pagination:hover:not(:disabled) {
+    background: rgba(177, 186, 136, 0.18);
+    border-color: rgba(177, 186, 136, 0.45);
+}
+
+.payment-history-page .btn-pagination.active {
+    background: linear-gradient(135deg, #c5cd9f 0%, #b1ba88 100%);
+    color: #ffffff;
+    border-color: #b1ba88;
+}
+
+.payment-history-page .btn-pagination.disabled,
+.payment-history-page .btn-pagination:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.payment-history-page .pagination-info {
+    color: var(--text-secondary);
+    font-size: 0.86rem;
 }
 
 .payment-history-page .ph-detail-modal {
@@ -1114,6 +1223,9 @@ body.user-app #userSpaContent {
     .payment-history-page .ph-filter-search {
         grid-column: span 2;
     }
+    .payment-history-page .ph-table {
+        min-width: 980px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -1125,6 +1237,7 @@ body.user-app #userSpaContent {
     }
     .payment-history-page .ph-filter-actions {
         justify-content: flex-start;
+        flex-wrap: wrap;
     }
     .payment-history-page .ph-summary {
         width: 100%;
@@ -1132,6 +1245,29 @@ body.user-app #userSpaContent {
     .payment-history-page .ph-summary-item {
         flex: 1;
         min-width: 0;
+    }
+    .payment-history-page .table-pagination {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 10px;
+        gap: 8px;
+    }
+    .payment-history-page .pagination-controls {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    .payment-history-page .pagination-pages {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    .payment-history-page .pagination-info {
+        text-align: center;
+        font-size: 0.8rem;
+    }
+    .payment-history-page .btn-pagination {
+        min-width: 30px;
+        height: 30px;
+        font-size: 0.74rem;
     }
 }
 
