@@ -1,0 +1,451 @@
+<section class="user-bills-section payment-history-page">
+    <div class="user-bills-card">
+        <div class="user-bills-header ph-header">
+            <h2 data-i18n="user_payment_history_title">История платежей</h2>
+            <div class="ph-summary">
+                <div class="ph-summary-item">
+                    <span class="ph-summary-label" data-i18n="user_ph_total_confirmed">Успешно</span>
+                    <span class="ph-summary-value" id="phSummaryConfirmed">0.00 ₼</span>
+                </div>
+                <div class="ph-summary-item">
+                    <span class="ph-summary-label" data-i18n="user_ph_total_topup">Пополнения</span>
+                    <span class="ph-summary-value" id="phSummaryTopup">0.00 ₼</span>
+                </div>
+                <div class="ph-summary-item">
+                    <span class="ph-summary-label" data-i18n="user_ph_total_failed">Неуспешно</span>
+                    <span class="ph-summary-value" id="phSummaryFailed">0.00 ₼</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="ph-filters">
+            <div class="ph-filter-row">
+                <label class="ph-filter">
+                    <span data-i18n="user_ph_date_from">С даты</span>
+                    <input type="date" id="phDateFrom">
+                </label>
+                <label class="ph-filter">
+                    <span data-i18n="user_ph_date_to">По дату</span>
+                    <input type="date" id="phDateTo">
+                </label>
+                <label class="ph-filter">
+                    <span data-i18n="user_ph_status">Статус</span>
+                    <select id="phStatus">
+                        <option value="" data-i18n="all">Все</option>
+                        <option value="confirmed" data-i18n="user_ph_status_confirmed">Подтвержден</option>
+                        <option value="initiated" data-i18n="user_ph_status_initiated">В обработке</option>
+                        <option value="declined" data-i18n="user_ph_status_declined">Отклонен</option>
+                        <option value="signature_failed" data-i18n="user_ph_status_signature_failed">Ошибка подписи</option>
+                        <option value="error" data-i18n="error">Ошибка</option>
+                    </select>
+                </label>
+                <label class="ph-filter">
+                    <span data-i18n="user_ph_operation_type">Тип операции</span>
+                    <select id="phType">
+                        <option value="" data-i18n="all">Все</option>
+                        <option value="invoice_payment" data-i18n="user_ph_type_invoice_payment">Оплата счета</option>
+                        <option value="advance_topup" data-i18n="user_ph_type_advance_topup">Пополнение аванса</option>
+                        <option value="advance_writeoff" data-i18n="user_ph_type_advance_writeoff">Списание аванса</option>
+                        <option value="manual_adjustment" data-i18n="user_ph_type_manual_adjustment">Корректировка</option>
+                    </select>
+                </label>
+            </div>
+            <div class="ph-filter-row">
+                <label class="ph-filter">
+                    <span data-i18n="user_ph_payment_method">Метод оплаты</span>
+                    <select id="phMethod">
+                        <option value="" data-i18n="all">Все</option>
+                        <option value="bank_card" data-i18n="user_ph_method_bank_card">Банковская карта</option>
+                        <option value="apple_pay">Apple Pay</option>
+                        <option value="google_pay">Google Pay</option>
+                        <option value="cash" data-i18n="user_ph_method_cash">Наличные</option>
+                        <option value="transfer" data-i18n="user_ph_method_transfer">Перевод</option>
+                        <option value="advance_internal" data-i18n="user_ph_method_advance_internal">Внутренний аванс</option>
+                    </select>
+                </label>
+                <label class="ph-filter">
+                    <span data-i18n="user_ph_category">Категория</span>
+                    <select id="phCategory">
+                        <option value="" data-i18n="all">Все</option>
+                        <option value="utility" data-i18n="user_ph_category_utility">Коммунальные</option>
+                        <option value="maintenance" data-i18n="user_ph_category_maintenance">Сервис</option>
+                        <option value="advance" data-i18n="user_ph_category_advance">Аванс</option>
+                    </select>
+                </label>
+                <label class="ph-filter ph-filter-search">
+                    <span data-i18n="search">Поиск</span>
+                    <input type="text" id="phSearch" data-i18n-placeholder="search_payments" placeholder="Поиск платежей...">
+                </label>
+                <div class="ph-filter-actions">
+                    <button type="button" class="btn-pagination" id="phApplyFilters" data-i18n="apply">Применить</button>
+                    <button type="button" class="btn-pagination" id="phResetFilters" data-i18n="reset">Сбросить</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="user-bills-table-wrapper">
+            <table class="user-bills-table ph-table">
+                <thead>
+                    <tr>
+                        <th data-i18n="user_ah_th_date">Дата</th>
+                        <th data-i18n="user_ph_status">Статус</th>
+                        <th data-i18n="user_ph_operation_type">Тип операции</th>
+                        <th data-i18n="user_ph_payment_method">Метод оплаты</th>
+                        <th data-i18n="user_ph_category">Категория</th>
+                        <th data-i18n="user_ah_th_invoice">Счет</th>
+                        <th data-i18n="user_ph_ref_order">Order/Ref</th>
+                        <th data-i18n="user_ah_th_amount">Сумма</th>
+                    </tr>
+                </thead>
+                <tbody id="phTableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="table-pagination">
+            <div class="pagination-controls">
+                <button class="btn-pagination" id="phPrevBtn" disabled><i class="bi bi-chevron-double-left"></i></button>
+                <div class="pagination-pages" id="phPageButtons"></div>
+                <button class="btn-pagination" id="phNextBtn" disabled><i class="bi bi-chevron-double-right"></i></button>
+            </div>
+            <div class="pagination-info">
+                <span><span data-i18n="pagination_page">Стр.</span> <span id="phCurrentPage">1</span> <span data-i18n="pagination_of">из</span> <span id="phTotalPages">1</span> - <span data-i18n="pagination_total">всего</span> <span id="phTotalItems">0</span></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="ph-detail-modal" id="phDetailModal" style="display:none;">
+        <div class="ph-detail-dialog">
+            <div class="ph-detail-header">
+                <h3 data-i18n="user_ph_detail_title">Детали операции</h3>
+                <button class="ph-detail-close" id="phDetailClose" aria-label="Close">&times;</button>
+            </div>
+            <div class="ph-detail-body" id="phDetailBody"></div>
+        </div>
+    </div>
+</section>
+
+<script>
+(function () {
+    'use strict';
+    const API = window.getApiBase ? window.getApiBase() : (window.API_BASE_URL || 'http://localhost:8000');
+    const state = {
+        page: 1,
+        perPage: 25,
+        pages: 1,
+        total: 0,
+        items: []
+    };
+    const lang = () => localStorage.getItem('language') || 'ru';
+    const L = {
+        loading: { ru: 'Загрузка...', az: 'Yuklenir...', en: 'Loading...' },
+        empty: { ru: 'Операции не найдены', az: 'Emeliyyat tapilmadi', en: 'No operations found' },
+        error: { ru: 'Ошибка загрузки', az: 'Yukleme xetasi', en: 'Loading error' }
+    };
+    const enumLabels = {
+        status: {
+            confirmed: { ru: 'Подтвержден', az: 'Tesdiqlenib', en: 'Confirmed' },
+            initiated: { ru: 'В обработке', az: 'Prosessde', en: 'Initiated' },
+            declined: { ru: 'Отклонен', az: 'Legv edildi', en: 'Declined' },
+            signature_failed: { ru: 'Ошибка подписи', az: 'Imza xetasi', en: 'Signature failed' },
+            error: { ru: 'Ошибка', az: 'Xeta', en: 'Error' }
+        },
+        type: {
+            invoice_payment: { ru: 'Оплата счета', az: 'Hesab odenisi', en: 'Invoice payment' },
+            advance_topup: { ru: 'Пополнение аванса', az: 'Avans artirma', en: 'Advance top-up' },
+            advance_writeoff: { ru: 'Списание аванса', az: 'Avans silinmesi', en: 'Advance write-off' },
+            manual_adjustment: { ru: 'Корректировка', az: 'Duzelis', en: 'Manual adjustment' }
+        },
+        method: {
+            bank_card: { ru: 'Банковская карта', az: 'Bank karti', en: 'Bank card' },
+            apple_pay: { ru: 'Apple Pay', az: 'Apple Pay', en: 'Apple Pay' },
+            google_pay: { ru: 'Google Pay', az: 'Google Pay', en: 'Google Pay' },
+            cash: { ru: 'Наличные', az: 'Nagd', en: 'Cash' },
+            transfer: { ru: 'Перевод', az: 'Kocurme', en: 'Transfer' },
+            advance_internal: { ru: 'Внутренний аванс', az: 'Daxili avans', en: 'Internal advance' },
+            unknown: { ru: 'Неизвестно', az: 'Namelum', en: 'Unknown' }
+        },
+        category: {
+            utility: { ru: 'Коммунальные', az: 'Kommunal', en: 'Utility' },
+            maintenance: { ru: 'Сервис', az: 'Xidmet', en: 'Maintenance' },
+            advance: { ru: 'Аванс', az: 'Avans', en: 'Advance' }
+        }
+    };
+
+    const els = {
+        body: document.getElementById('phTableBody'),
+        page: document.getElementById('phCurrentPage'),
+        pages: document.getElementById('phTotalPages'),
+        total: document.getElementById('phTotalItems'),
+        prev: document.getElementById('phPrevBtn'),
+        next: document.getElementById('phNextBtn'),
+        pageButtons: document.getElementById('phPageButtons'),
+        applyBtn: document.getElementById('phApplyFilters'),
+        resetBtn: document.getElementById('phResetFilters'),
+        summaryConfirmed: document.getElementById('phSummaryConfirmed'),
+        summaryTopup: document.getElementById('phSummaryTopup'),
+        summaryFailed: document.getElementById('phSummaryFailed'),
+        modal: document.getElementById('phDetailModal'),
+        modalBody: document.getElementById('phDetailBody'),
+        modalClose: document.getElementById('phDetailClose')
+    };
+
+    function t(key) {
+        const l = lang();
+        return (L[key] && L[key][l]) || (L[key] && L[key].ru) || key;
+    }
+
+    function enumLabel(group, key) {
+        const l = lang();
+        const table = enumLabels[group] || {};
+        return (table[key] && (table[key][l] || table[key].ru)) || key || '-';
+    }
+
+    function escapeHtml(v) {
+        return String(v || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function formatMoney(v) {
+        return Number(v || 0).toFixed(2) + ' ₼';
+    }
+
+    function formatDate(v) {
+        if (!v) return '-';
+        try {
+            const d = new Date(v);
+            const l = lang();
+            const locale = l === 'az' ? 'az-AZ' : l === 'en' ? 'en-US' : 'ru-RU';
+            return d.toLocaleString(locale, {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (e) {
+            return v;
+        }
+    }
+
+    function getFilters() {
+        return {
+            date_from: document.getElementById('phDateFrom')?.value || '',
+            date_to: document.getElementById('phDateTo')?.value || '',
+            status: document.getElementById('phStatus')?.value || '',
+            operation_type: document.getElementById('phType')?.value || '',
+            payment_method: document.getElementById('phMethod')?.value || '',
+            category: document.getElementById('phCategory')?.value || '',
+            q: document.getElementById('phSearch')?.value || ''
+        };
+    }
+
+    function statusClass(status) {
+        return 'ph-status-' + String(status || 'error').replace(/_/g, '-');
+    }
+
+    function renderRows(items) {
+        if (!els.body) return;
+        if (!items || !items.length) {
+            els.body.innerHTML = '<tr><td colspan="8" class="ah-table-empty">' + t('empty') + '</td></tr>';
+            return;
+        }
+        els.body.innerHTML = items.map((item) => {
+            const ref = item.order_id || item.reference || '-';
+            const invoice = item.invoice_number || '-';
+            const category = item.category ? enumLabel('category', item.category) : '-';
+            return '<tr class="ph-row" data-entry-id="' + escapeHtml(item.id) + '">' +
+                '<td>' + formatDate(item.created_at) + '</td>' +
+                '<td><span class="ph-chip ' + statusClass(item.status) + '">' + escapeHtml(enumLabel('status', item.status)) + '</span></td>' +
+                '<td>' + escapeHtml(enumLabel('type', item.operation_type)) + '</td>' +
+                '<td>' + escapeHtml(enumLabel('method', item.payment_method)) + '</td>' +
+                '<td>' + escapeHtml(category) + '</td>' +
+                '<td>' + escapeHtml(invoice) + '</td>' +
+                '<td>' + escapeHtml(ref) + '</td>' +
+                '<td class="ah-cell-amount">' + formatMoney(item.amount) + '</td>' +
+            '</tr>';
+        }).join('');
+
+        els.body.querySelectorAll('.ph-row').forEach((row) => {
+            row.addEventListener('click', () => {
+                const entryId = row.getAttribute('data-entry-id');
+                if (entryId) openDetail(entryId);
+            });
+        });
+    }
+
+    function buildPages(totalPages, currentPage) {
+        const out = [];
+        if (totalPages <= 7) {
+            for (let i = 1; i <= totalPages; i++) out.push(i);
+            return out;
+        }
+        out.push(1);
+        if (currentPage > 3) out.push('...');
+        const from = Math.max(2, currentPage - 1);
+        const to = Math.min(totalPages - 1, currentPage + 1);
+        for (let i = from; i <= to; i++) out.push(i);
+        if (currentPage < totalPages - 2) out.push('...');
+        out.push(totalPages);
+        return out;
+    }
+
+    function renderPagination() {
+        if (els.page) els.page.textContent = String(state.page);
+        if (els.pages) els.pages.textContent = String(state.pages || 1);
+        if (els.total) els.total.textContent = String(state.total || 0);
+        if (els.prev) els.prev.disabled = state.page <= 1;
+        if (els.next) els.next.disabled = state.page >= state.pages;
+        if (!els.pageButtons) return;
+        els.pageButtons.innerHTML = '';
+        const pages = buildPages(state.pages || 1, state.page || 1);
+        pages.forEach((p) => {
+            if (p === '...') {
+                const span = document.createElement('span');
+                span.className = 'btn-pagination disabled';
+                span.textContent = '...';
+                els.pageButtons.appendChild(span);
+                return;
+            }
+            const btn = document.createElement('button');
+            btn.className = 'btn-pagination' + (p === state.page ? ' active' : '');
+            btn.textContent = String(p);
+            btn.addEventListener('click', () => {
+                state.page = p;
+                loadPage();
+            });
+            els.pageButtons.appendChild(btn);
+        });
+    }
+
+    function renderSummary(summary) {
+        if (els.summaryConfirmed) els.summaryConfirmed.textContent = formatMoney(summary?.total_confirmed || 0);
+        if (els.summaryTopup) els.summaryTopup.textContent = formatMoney(summary?.total_topup || 0);
+        if (els.summaryFailed) els.summaryFailed.textContent = formatMoney(summary?.total_failed || 0);
+    }
+
+    async function loadPage() {
+        if (!els.body) return;
+        els.body.innerHTML = '<tr><td colspan="8" class="ah-table-empty">' + t('loading') + '</td></tr>';
+        try {
+            const filters = getFilters();
+            const qs = new URLSearchParams();
+            qs.set('page', String(state.page));
+            qs.set('per_page', String(state.perPage));
+            Object.keys(filters).forEach((k) => {
+                if (filters[k]) qs.set(k, filters[k]);
+            });
+            const resp = await fetch(API + '/api/resident/payment-history?' + qs.toString(), {
+                credentials: 'include'
+            });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const data = await resp.json();
+            state.items = data.items || [];
+            state.total = data.pagination?.total || 0;
+            state.pages = data.pagination?.pages || 1;
+            state.page = data.pagination?.page || 1;
+            renderSummary(data.summary || {});
+            renderRows(state.items);
+            renderPagination();
+        } catch (err) {
+            console.error('payment history load error', err);
+            els.body.innerHTML = '<tr><td colspan="8" class="ah-table-empty">' + t('error') + '</td></tr>';
+        }
+    }
+
+    function toPrettyJson(obj) {
+        try {
+            return JSON.stringify(obj || {}, null, 2);
+        } catch (e) {
+            return '{}';
+        }
+    }
+
+    async function openDetail(entryId) {
+        if (!els.modal || !els.modalBody) return;
+        els.modal.style.display = 'flex';
+        els.modalBody.innerHTML = '<div class="ah-table-empty">' + t('loading') + '</div>';
+        try {
+            const resp = await fetch(API + '/api/resident/payment-history/' + encodeURIComponent(entryId), {
+                credentials: 'include'
+            });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const data = await resp.json();
+            let html = '<div class="ph-detail-entry"><code>' + escapeHtml(entryId) + '</code></div>';
+            if (data.payment) {
+                html += '<h4>Payment</h4><pre>' + escapeHtml(toPrettyJson(data.payment)) + '</pre>';
+            }
+            if (data.gateway) {
+                html += '<h4>Gateway</h4><pre>' + escapeHtml(toPrettyJson(data.gateway)) + '</pre>';
+            }
+            if (data.transaction) {
+                html += '<h4>Transaction</h4><pre>' + escapeHtml(toPrettyJson(data.transaction)) + '</pre>';
+            }
+            if (data.applications) {
+                html += '<h4>Applications</h4><pre>' + escapeHtml(toPrettyJson(data.applications)) + '</pre>';
+            }
+            if (data.lines) {
+                html += '<h4>Invoice Lines</h4><pre>' + escapeHtml(toPrettyJson(data.lines)) + '</pre>';
+            }
+            if (data.request_payload || data.callback_payload) {
+                html += '<h4>Gateway Payload</h4><pre>' + escapeHtml(toPrettyJson({
+                    request_payload: data.request_payload || {},
+                    callback_payload: data.callback_payload || {}
+                })) + '</pre>';
+            }
+            els.modalBody.innerHTML = html;
+        } catch (err) {
+            els.modalBody.innerHTML = '<div class="ah-table-empty">' + t('error') + '</div>';
+        }
+    }
+
+    function resetFilters() {
+        ['phDateFrom', 'phDateTo', 'phStatus', 'phType', 'phMethod', 'phCategory', 'phSearch'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (el.tagName === 'SELECT') {
+                el.value = '';
+            } else {
+                el.value = '';
+            }
+        });
+        state.page = 1;
+        loadPage();
+    }
+
+    els.prev?.addEventListener('click', () => {
+        if (state.page <= 1) return;
+        state.page -= 1;
+        loadPage();
+    });
+    els.next?.addEventListener('click', () => {
+        if (state.page >= state.pages) return;
+        state.page += 1;
+        loadPage();
+    });
+    els.applyBtn?.addEventListener('click', () => {
+        state.page = 1;
+        loadPage();
+    });
+    els.resetBtn?.addEventListener('click', resetFilters);
+    document.getElementById('phSearch')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            state.page = 1;
+            loadPage();
+        }
+    });
+    els.modalClose?.addEventListener('click', () => {
+        if (els.modal) els.modal.style.display = 'none';
+    });
+    els.modal?.addEventListener('click', (e) => {
+        if (e.target === els.modal) els.modal.style.display = 'none';
+    });
+    window.addEventListener('languageChanged', () => loadPage());
+
+    loadPage();
+})();
+</script>

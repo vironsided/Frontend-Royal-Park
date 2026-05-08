@@ -929,6 +929,212 @@ body.user-app #userSpaContent {
     text-align: center;
 }
 
+/* Payment history page */
+.payment-history-page .ph-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.payment-history-page .ph-summary {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.payment-history-page .ph-summary-item {
+    background: rgba(177, 186, 136, 0.12);
+    border: 1px solid rgba(177, 186, 136, 0.25);
+    border-radius: 10px;
+    padding: 8px 12px;
+    min-width: 120px;
+}
+
+.payment-history-page .ph-summary-label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+}
+
+.payment-history-page .ph-summary-value {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.payment-history-page .ph-filters {
+    margin-top: 12px;
+    margin-bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.payment-history-page .ph-filter-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.payment-history-page .ph-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.payment-history-page .ph-filter span {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.payment-history-page .ph-filter input,
+.payment-history-page .ph-filter select {
+    border: 1px solid rgba(177, 186, 136, 0.3);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--text-primary);
+    padding: 7px 9px;
+    min-height: 36px;
+}
+
+.payment-history-page .ph-filter-search {
+    grid-column: span 2;
+}
+
+.payment-history-page .ph-filter-actions {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+.payment-history-page .ph-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 0.73rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.payment-history-page .ph-status-confirmed {
+    background: rgba(34, 197, 94, 0.14);
+    color: rgb(34, 197, 94);
+}
+
+.payment-history-page .ph-status-initiated {
+    background: rgba(245, 158, 11, 0.14);
+    color: rgb(202, 138, 4);
+}
+
+.payment-history-page .ph-status-declined,
+.payment-history-page .ph-status-signature-failed,
+.payment-history-page .ph-status-error {
+    background: rgba(239, 68, 68, 0.14);
+    color: rgb(220, 38, 38);
+}
+
+.payment-history-page .ph-row {
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.payment-history-page .ph-row:hover {
+    background: rgba(177, 186, 136, 0.08);
+}
+
+.payment-history-page .ph-detail-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 2500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.payment-history-page .ph-detail-dialog {
+    width: min(820px, 100%);
+    max-height: 85vh;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.payment-history-page .ph-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.payment-history-page .ph-detail-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.payment-history-page .ph-detail-body {
+    overflow: auto;
+    padding: 12px 16px;
+}
+
+.payment-history-page .ph-detail-body h4 {
+    margin: 12px 0 6px;
+}
+
+.payment-history-page .ph-detail-body pre {
+    margin: 0;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    font-size: 0.76rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+@media (max-width: 980px) {
+    .payment-history-page .ph-filter-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .payment-history-page .ph-filter-search {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 768px) {
+    .payment-history-page .ph-filter-row {
+        grid-template-columns: 1fr;
+    }
+    .payment-history-page .ph-filter-search {
+        grid-column: auto;
+    }
+    .payment-history-page .ph-filter-actions {
+        justify-content: flex-start;
+    }
+    .payment-history-page .ph-summary {
+        width: 100%;
+    }
+    .payment-history-page .ph-summary-item {
+        flex: 1;
+        min-width: 0;
+    }
+}
+
 /* Bills List */
 .bills-list {
     display: flex;

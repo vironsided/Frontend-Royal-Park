@@ -46,6 +46,11 @@
                     path: '/user/pages/advance-history.html',
                     bodyClass: ''
                 },
+                'payment-history': {
+                    type: 'remote',
+                    path: '/user/pages/payment-history.html',
+                    bodyClass: ''
+                },
                 news: {
                     type: 'remote',
                     path: '/user/pages/news.html',
@@ -122,6 +127,14 @@
                     breadcrumb: [
                         { text: 'Главная', icon: 'bi-house-door', key: 'home', route: 'dashboard' },
                         { text: 'Списания аванса', key: 'user_nav_advance_history' }
+                    ]
+                },
+                'payment-history': {
+                    title: 'История платежей',
+                    titleKey: 'user_nav_payment_history',
+                    breadcrumb: [
+                        { text: 'Главная', icon: 'bi-house-door', key: 'home', route: 'dashboard' },
+                        { text: 'История платежей', key: 'user_nav_payment_history' }
                     ]
                 },
                 news: {
