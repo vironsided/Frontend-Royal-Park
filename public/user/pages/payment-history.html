@@ -139,7 +139,22 @@
     const L = {
         loading: { ru: 'Загрузка...', az: 'Yuklenir...', en: 'Loading...' },
         empty: { ru: 'Операции не найдены', az: 'Emeliyyat tapilmadi', en: 'No operations found' },
-        error: { ru: 'Ошибка загрузки', az: 'Yukleme xetasi', en: 'Loading error' }
+        error: { ru: 'Ошибка загрузки', az: 'Yukleme xetasi', en: 'Loading error' },
+        detailsPayment: { ru: 'Платеж', az: 'Odenis', en: 'Payment' },
+        detailsTransaction: { ru: 'Операция', az: 'Emeliyyat', en: 'Transaction' },
+        detailsApplications: { ru: 'Применение к счетам', az: 'Hesablara tetbiq', en: 'Applications' },
+        detailsLines: { ru: 'Списания по услугам', az: 'Xidmet uzre silinmeler', en: 'Service breakdown' },
+        detailsNoLines: { ru: 'Нет данных по услугам', az: 'Xidmet melumati yoxdur', en: 'No service details' },
+        detailsDate: { ru: 'Дата', az: 'Tarix', en: 'Date' },
+        detailsStatus: { ru: 'Статус', az: 'Status', en: 'Status' },
+        detailsType: { ru: 'Тип операции', az: 'Emeliyyat novu', en: 'Operation type' },
+        detailsMethod: { ru: 'Метод оплаты', az: 'Odenis metodu', en: 'Payment method' },
+        detailsCategory: { ru: 'Категория', az: 'Kateqoriya', en: 'Category' },
+        detailsAmount: { ru: 'Сумма', az: 'Mebleg', en: 'Amount' },
+        detailsOrderRef: { ru: 'Номер операции', az: 'Emeliyyat nomresi', en: 'Operation reference' },
+        detailsInvoice: { ru: 'Счет', az: 'Hesab', en: 'Invoice' },
+        detailsComment: { ru: 'Комментарий', az: 'Serh', en: 'Comment' },
+        detailsApplied: { ru: 'Применено', az: 'Tetbiq olunub', en: 'Applied' }
     };
     const enumLabels = {
         status: {
@@ -356,12 +371,51 @@
         }
     }
 
-    function toPrettyJson(obj) {
-        try {
-            return JSON.stringify(obj || {}, null, 2);
-        } catch (e) {
-            return '{}';
+    function detailText(key) {
+        const l = lang();
+        return (L[key] && L[key][l]) || (L[key] && L[key].ru) || key;
+    }
+
+    function renderInfoRows(rows) {
+        return '<div class="ph-detail-grid">' + rows.map((r) => {
+            const label = escapeHtml(r.label || '');
+            const value = escapeHtml(r.value == null || r.value === '' ? '-' : String(r.value));
+            return '<div class="ph-detail-row"><div class="ph-detail-label">' + label + '</div><div class="ph-detail-value">' + value + '</div></div>';
+        }).join('') + '</div>';
+    }
+
+    function renderApplications(applications) {
+        if (!applications || !applications.length) return '';
+        const items = applications.map((app) => {
+            return '<div class="ph-detail-list-row">' +
+                '<div>' + escapeHtml(app.invoice_number || '-') + '</div>' +
+                '<div>' + escapeHtml(app.invoice_period || '-') + '</div>' +
+                '<div>' + formatMoney(app.amount_applied || 0) + '</div>' +
+            '</div>';
+        }).join('');
+        return '<h4>' + detailText('detailsApplications') + '</h4>' +
+            '<div class="ph-detail-list">' +
+                '<div class="ph-detail-list-head"><div>' + detailText('detailsInvoice') + '</div><div>Period</div><div>' + detailText('detailsApplied') + '</div></div>' +
+                items +
+            '</div>';
+    }
+
+    function renderLines(lines) {
+        if (!lines || !lines.length) {
+            return '<h4>' + detailText('detailsLines') + '</h4><div class="ph-detail-empty">' + detailText('detailsNoLines') + '</div>';
         }
+        const items = lines.map((ln) => {
+            return '<div class="ph-detail-list-row">' +
+                '<div>' + escapeHtml(ln.description || '-') + '</div>' +
+                '<div>' + formatMoney(ln.amount_total || 0) + '</div>' +
+                '<div>' + formatMoney(ln.applied_share || 0) + '</div>' +
+            '</div>';
+        }).join('');
+        return '<h4>' + detailText('detailsLines') + '</h4>' +
+            '<div class="ph-detail-list">' +
+                '<div class="ph-detail-list-head"><div>Description</div><div>' + detailText('detailsAmount') + '</div><div>' + detailText('detailsApplied') + '</div></div>' +
+                items +
+            '</div>';
     }
 
     async function openDetail(entryId) {
@@ -374,27 +428,41 @@
             });
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
             const data = await resp.json();
-            let html = '<div class="ph-detail-entry"><code>' + escapeHtml(entryId) + '</code></div>';
+            let html = '';
+
             if (data.payment) {
-                html += '<h4>Payment</h4><pre>' + escapeHtml(toPrettyJson(data.payment)) + '</pre>';
+                const p = data.payment || {};
+                const g = data.gateway || {};
+                html += '<h4>' + detailText('detailsPayment') + '</h4>';
+                html += renderInfoRows([
+                    { label: detailText('detailsDate'), value: formatDate(p.received_at) },
+                    { label: detailText('detailsStatus'), value: enumLabel('status', String(g.status || '').toLowerCase()) || '-' },
+                    { label: detailText('detailsMethod'), value: p.method || '-' },
+                    { label: detailText('detailsAmount'), value: formatMoney(p.amount_total || 0) },
+                    { label: detailText('detailsOrderRef'), value: g.order_id || p.reference || '-' },
+                    { label: detailText('detailsComment'), value: p.comment || '-' }
+                ]);
             }
-            if (data.gateway) {
-                html += '<h4>Gateway</h4><pre>' + escapeHtml(toPrettyJson(data.gateway)) + '</pre>';
-            }
+
             if (data.transaction) {
-                html += '<h4>Transaction</h4><pre>' + escapeHtml(toPrettyJson(data.transaction)) + '</pre>';
+                const tx = data.transaction || {};
+                html += '<h4>' + detailText('detailsTransaction') + '</h4>';
+                html += renderInfoRows([
+                    { label: detailText('detailsDate'), value: formatDate(tx.created_at) },
+                    { label: detailText('detailsStatus'), value: enumLabel('status', String(tx.gateway_status || '').toLowerCase()) || '-' },
+                    { label: detailText('detailsMethod'), value: enumLabel('method', tx.wallet_method_guess || 'bank_card') },
+                    { label: detailText('detailsAmount'), value: formatMoney(tx.amount_total || 0) },
+                    { label: detailText('detailsCategory'), value: enumLabel('category', tx.terminal_category) },
+                    { label: detailText('detailsOrderRef'), value: tx.order_id || '-' }
+                ]);
             }
+
             if (data.applications) {
-                html += '<h4>Applications</h4><pre>' + escapeHtml(toPrettyJson(data.applications)) + '</pre>';
+                html += renderApplications(data.applications);
             }
+
             if (data.lines) {
-                html += '<h4>Invoice Lines</h4><pre>' + escapeHtml(toPrettyJson(data.lines)) + '</pre>';
-            }
-            if (data.request_payload || data.callback_payload) {
-                html += '<h4>Gateway Payload</h4><pre>' + escapeHtml(toPrettyJson({
-                    request_payload: data.request_payload || {},
-                    callback_payload: data.callback_payload || {}
-                })) + '</pre>';
+                html += renderLines(data.lines);
             }
             els.modalBody.innerHTML = html;
         } catch (err) {
