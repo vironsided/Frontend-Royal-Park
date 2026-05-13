@@ -1223,6 +1223,13 @@ body[data-theme="dark"] .payment-history-page .ph-filter input[type="date"]::-we
     border-bottom: 1px solid var(--border-color);
 }
 
+.ph-detail-header h3 {
+    margin: 0;
+    color: #2f3238 !important;
+    font-size: 1.55rem;
+    font-weight: 700;
+}
+
 .ph-detail-close {
     width: 34px;
     height: 34px;
@@ -1242,6 +1249,9 @@ body[data-theme="dark"] .payment-history-page .ph-filter input[type="date"]::-we
 
 .ph-detail-body h4 {
     margin: 12px 0 6px;
+    color: #2f3238 !important;
+    font-size: 1.02rem;
+    font-weight: 700;
 }
 
 .ph-detail-body pre {
