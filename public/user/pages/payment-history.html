@@ -204,6 +204,11 @@
         modalClose: document.getElementById('phDetailClose')
     };
 
+    // Keep modal outside SPA content container so fixed centering is stable.
+    if (els.modal && els.modal.parentElement !== document.body) {
+        document.body.appendChild(els.modal);
+    }
+
     function t(key) {
         const l = lang();
         return (L[key] && L[key][l]) || (L[key] && L[key].ru) || key;

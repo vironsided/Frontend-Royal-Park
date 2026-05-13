@@ -1004,8 +1004,10 @@ body.user-app #userSpaContent {
 }
 
 .payment-history-page .ph-filter input[type="date"]::-webkit-calendar-picker-indicator {
-    opacity: 0.9;
+    opacity: 1 !important;
     cursor: pointer;
+    filter: none !important;
+    color: #5f6878;
 }
 
 .payment-history-page .ph-filter-search {
@@ -1176,7 +1178,7 @@ body[data-theme="dark"] .payment-history-page .ph-filter select {
     background: #ffffff !important;
     color: #2f3238 !important;
     border-color: rgba(177, 186, 136, 0.35) !important;
-    color-scheme: light;
+    color-scheme: light !important;
 }
 
 [data-theme="dark"] .payment-history-page select option,
@@ -1185,18 +1187,24 @@ body[data-theme="dark"] .payment-history-page select option {
     color: #2f3238 !important;
 }
 
-.payment-history-page .ph-detail-modal {
+[data-theme="dark"] .payment-history-page .ph-filter input[type="date"]::-webkit-calendar-picker-indicator,
+body[data-theme="dark"] .payment-history-page .ph-filter input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 1 !important;
+    filter: none !important;
+}
+
+.ph-detail-modal {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.35);
-    z-index: 2500;
+    z-index: 9999;
     display: none;
     align-items: center;
     justify-content: center;
     padding: 16px;
 }
 
-.payment-history-page .ph-detail-dialog {
+.ph-detail-dialog {
     width: min(820px, 100%);
     max-height: 85vh;
     background: var(--bg-primary);
@@ -1207,7 +1215,7 @@ body[data-theme="dark"] .payment-history-page select option {
     flex-direction: column;
 }
 
-.payment-history-page .ph-detail-header {
+.ph-detail-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1215,7 +1223,7 @@ body[data-theme="dark"] .payment-history-page select option {
     border-bottom: 1px solid var(--border-color);
 }
 
-.payment-history-page .ph-detail-close {
+.ph-detail-close {
     width: 34px;
     height: 34px;
     border-radius: 8px;
@@ -1227,16 +1235,16 @@ body[data-theme="dark"] .payment-history-page select option {
     cursor: pointer;
 }
 
-.payment-history-page .ph-detail-body {
+.ph-detail-body {
     overflow: auto;
     padding: 12px 16px;
 }
 
-.payment-history-page .ph-detail-body h4 {
+.ph-detail-body h4 {
     margin: 12px 0 6px;
 }
 
-.payment-history-page .ph-detail-body pre {
+.ph-detail-body pre {
     margin: 0;
     padding: 10px;
     border-radius: 8px;
@@ -1247,41 +1255,41 @@ body[data-theme="dark"] .payment-history-page select option {
     word-break: break-word;
 }
 
-.payment-history-page .ph-detail-grid {
+.ph-detail-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px 12px;
 }
 
-.payment-history-page .ph-detail-row {
+.ph-detail-row {
     border: 1px solid rgba(177, 186, 136, 0.22);
     border-radius: 8px;
     padding: 8px 10px;
     background: rgba(255, 255, 255, 0.72);
 }
 
-.payment-history-page .ph-detail-label {
+.ph-detail-label {
     font-size: 0.76rem;
     color: var(--text-secondary);
     margin-bottom: 4px;
 }
 
-.payment-history-page .ph-detail-value {
+.ph-detail-value {
     font-size: 0.88rem;
     color: var(--text-primary);
     font-weight: 600;
     word-break: break-word;
 }
 
-.payment-history-page .ph-detail-list {
+.ph-detail-list {
     margin-top: 6px;
     border: 1px solid rgba(177, 186, 136, 0.2);
     border-radius: 8px;
     overflow: hidden;
 }
 
-.payment-history-page .ph-detail-list-head,
-.payment-history-page .ph-detail-list-row {
+.ph-detail-list-head,
+.ph-detail-list-row {
     display: grid;
     grid-template-columns: 1.6fr 1fr 1fr;
     gap: 8px;
@@ -1289,16 +1297,16 @@ body[data-theme="dark"] .payment-history-page select option {
     font-size: 0.82rem;
 }
 
-.payment-history-page .ph-detail-list-head {
+.ph-detail-list-head {
     font-weight: 700;
     background: rgba(177, 186, 136, 0.22);
 }
 
-.payment-history-page .ph-detail-list-row {
+.ph-detail-list-row {
     border-top: 1px solid rgba(177, 186, 136, 0.14);
 }
 
-.payment-history-page .ph-detail-empty {
+.ph-detail-empty {
     font-size: 0.85rem;
     color: var(--text-secondary);
     padding: 6px 0;
@@ -1357,11 +1365,11 @@ body[data-theme="dark"] .payment-history-page select option {
         height: 30px;
         font-size: 0.74rem;
     }
-    .payment-history-page .ph-detail-grid {
+    .ph-detail-grid {
         grid-template-columns: 1fr;
     }
-    .payment-history-page .ph-detail-list-head,
-    .payment-history-page .ph-detail-list-row {
+    .ph-detail-list-head,
+    .ph-detail-list-row {
         grid-template-columns: 1fr;
     }
 }
