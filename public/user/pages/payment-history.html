@@ -46,7 +46,6 @@
                         <option value="invoice_payment" data-i18n="user_ph_type_invoice_payment">Оплата счета</option>
                         <option value="advance_topup" data-i18n="user_ph_type_advance_topup">Пополнение аванса</option>
                         <option value="advance_writeoff" data-i18n="user_ph_type_advance_writeoff">Списание аванса</option>
-                        <option value="manual_adjustment" data-i18n="user_ph_type_manual_adjustment">Корректировка</option>
                     </select>
                 </label>
             </div>
@@ -56,10 +55,7 @@
                     <select id="phMethod">
                         <option value="" data-i18n="all">Все</option>
                         <option value="bank_card" data-i18n="user_ph_method_bank_card">Банковская карта</option>
-                        <option value="apple_pay">Apple Pay</option>
-                        <option value="google_pay">Google Pay</option>
-                        <option value="cash" data-i18n="user_ph_method_cash">Наличные</option>
-                        <option value="transfer" data-i18n="user_ph_method_transfer">Перевод</option>
+                        <option value="wallet_pay" data-i18n="user_ph_method_wallet_combined">Apple Pay/Google Pay</option>
                         <option value="advance_internal" data-i18n="user_ph_method_advance_internal">Внутренний аванс</option>
                     </select>
                 </label>
@@ -167,15 +163,11 @@
         type: {
             invoice_payment: { ru: 'Оплата счета', az: 'Hesab odenisi', en: 'Invoice payment' },
             advance_topup: { ru: 'Пополнение аванса', az: 'Avans artirma', en: 'Advance top-up' },
-            advance_writeoff: { ru: 'Списание аванса', az: 'Avans silinmesi', en: 'Advance write-off' },
-            manual_adjustment: { ru: 'Корректировка', az: 'Duzelis', en: 'Manual adjustment' }
+            advance_writeoff: { ru: 'Списание аванса', az: 'Avans silinmesi', en: 'Advance write-off' }
         },
         method: {
             bank_card: { ru: 'Банковская карта', az: 'Bank karti', en: 'Bank card' },
-            apple_pay: { ru: 'Apple Pay', az: 'Apple Pay', en: 'Apple Pay' },
-            google_pay: { ru: 'Google Pay', az: 'Google Pay', en: 'Google Pay' },
-            cash: { ru: 'Наличные', az: 'Nagd', en: 'Cash' },
-            transfer: { ru: 'Перевод', az: 'Kocurme', en: 'Transfer' },
+            wallet_pay: { ru: 'Apple Pay/Google Pay', az: 'Apple Pay/Google Pay', en: 'Apple Pay/Google Pay' },
             advance_internal: { ru: 'Внутренний аванс', az: 'Daxili avans', en: 'Internal advance' },
             unknown: { ru: 'Неизвестно', az: 'Namelum', en: 'Unknown' }
         },
@@ -252,15 +244,35 @@
     }
 
     function getFilters() {
+        let method = document.getElementById('phMethod')?.value || '';
+        if (method === 'wallet_pay') {
+            method = 'apple_pay,google_pay';
+        } else if (method === 'bank_card') {
+            // Keep old records visible if they were stored as cash/transfer in past data.
+            method = 'bank_card,cash,transfer';
+        }
         return {
             date_from: document.getElementById('phDateFrom')?.value || '',
             date_to: document.getElementById('phDateTo')?.value || '',
             status: document.getElementById('phStatus')?.value || '',
             operation_type: document.getElementById('phType')?.value || '',
-            payment_method: document.getElementById('phMethod')?.value || '',
+            payment_method: method,
             category: document.getElementById('phCategory')?.value || '',
             q: document.getElementById('phSearch')?.value || ''
         };
+    }
+
+    function normalizedUiMethod(method) {
+        if (method === 'apple_pay' || method === 'google_pay') return 'wallet_pay';
+        if (method === 'cash' || method === 'transfer') return 'bank_card';
+        return method || 'unknown';
+    }
+
+    function normalizedUiMethodFromPaymentRaw(rawMethod) {
+        const m = String(rawMethod || '').toLowerCase();
+        if (m === 'advance') return 'advance_internal';
+        if (m === 'online' || m === 'card' || m === 'cash' || m === 'transfer') return 'bank_card';
+        return 'unknown';
     }
 
     function statusClass(status) {
@@ -281,7 +293,7 @@
                 '<td>' + formatDate(item.created_at) + '</td>' +
                 '<td><span class="ph-chip ' + statusClass(item.status) + '">' + escapeHtml(enumLabel('status', item.status)) + '</span></td>' +
                 '<td>' + escapeHtml(enumLabel('type', item.operation_type)) + '</td>' +
-                '<td>' + escapeHtml(enumLabel('method', item.payment_method)) + '</td>' +
+                '<td>' + escapeHtml(enumLabel('method', normalizedUiMethod(item.payment_method))) + '</td>' +
                 '<td>' + escapeHtml(category) + '</td>' +
                 '<td>' + escapeHtml(invoice) + '</td>' +
                 '<td>' + escapeHtml(ref) + '</td>' +
@@ -442,7 +454,7 @@
                 html += renderInfoRows([
                     { label: detailText('detailsDate'), value: formatDate(p.received_at) },
                     { label: detailText('detailsStatus'), value: enumLabel('status', String(g.status || '').toLowerCase()) || '-' },
-                    { label: detailText('detailsMethod'), value: p.method || '-' },
+                    { label: detailText('detailsMethod'), value: enumLabel('method', normalizedUiMethodFromPaymentRaw(p.method)) },
                     { label: detailText('detailsAmount'), value: formatMoney(p.amount_total || 0) },
                     { label: detailText('detailsOrderRef'), value: g.order_id || p.reference || '-' },
                     { label: detailText('detailsComment'), value: p.comment || '-' }
@@ -455,7 +467,7 @@
                 html += renderInfoRows([
                     { label: detailText('detailsDate'), value: formatDate(tx.created_at) },
                     { label: detailText('detailsStatus'), value: enumLabel('status', String(tx.gateway_status || '').toLowerCase()) || '-' },
-                    { label: detailText('detailsMethod'), value: enumLabel('method', tx.wallet_method_guess || 'bank_card') },
+                    { label: detailText('detailsMethod'), value: enumLabel('method', normalizedUiMethod(tx.wallet_method_guess || 'bank_card')) },
                     { label: detailText('detailsAmount'), value: formatMoney(tx.amount_total || 0) },
                     { label: detailText('detailsCategory'), value: enumLabel('category', tx.terminal_category) },
                     { label: detailText('detailsOrderRef'), value: tx.order_id || '-' }
