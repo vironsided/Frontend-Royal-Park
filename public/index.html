@@ -342,22 +342,19 @@
   // Back/forward-cache (bfcache) handling. When the user presses the browser Back
   // button from the dashboard, the browser restores THIS login page from cache as-is
   // (login.js does not re-run) — leaving a stale "Uğurla daxil oldunuz! Yönləndirilirsiniz…"
-  // toast and a filled form on screen. Fix both: always reset the view on restore, and
-  // if the session is still valid, send the (already-authenticated) user back to the app.
+  // toast and a filled form on screen. On a cache restore, present a clean login form:
+  // clear the toast, reset the button, and empty the fields.
   (function(){
-    function resetLoginView(){
+    window.addEventListener('pageshow', function(e){
+      if (!e.persisted) return;            // only when restored from bfcache
       var a = document.getElementById('alert');
       if (a){ a.className = 'alert c-el'; a.textContent = ''; }
       var b = document.getElementById('loginSubmitBtn');
       if (b){ b.classList.remove('loading'); b.disabled = false; }
-    }
-    window.addEventListener('pageshow', function(e){
-      if (!e.persisted) return;            // only when restored from bfcache
-      resetLoginView();                    // clear stale success toast / button state
-      var base = window.API_BASE || '';
-      fetch(base + '/api/auth/check', { credentials: 'include' })
-        .then(function(r){ if (r.ok) window.location.replace('/user/dashboard.html'); })
-        .catch(function(){ /* not logged in / offline — stay on the login page */ });
+      var u = document.getElementById('username');
+      if (u){ u.value = ''; }
+      var pw = document.getElementById('password');
+      if (pw){ pw.value = ''; pw.type = 'password'; }
     });
   })();
 </script>
