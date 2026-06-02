@@ -339,22 +339,41 @@
 <script src="/js/login.js"></script>
 
 <script>
-  // Back/forward-cache (bfcache) handling. When the user presses the browser Back
-  // button from the dashboard, the browser restores THIS login page from cache as-is
-  // (login.js does not re-run) — leaving a stale "Uğurla daxil oldunuz! Yönləndirilirsiniz…"
-  // toast and a filled form on screen. On a cache restore, present a clean login form:
-  // clear the toast, reset the button, and empty the fields.
+  // While a valid session exists, the login page must never be shown — send the user
+  // to their home. This makes Back/Forward consistent (logged in -> always the app, never
+  // a stale login screen) and clears any toast restored from the back-forward cache.
+  // Routing by role mirrors login.js, so non-residents don't loop through the resident guard.
   (function(){
-    window.addEventListener('pageshow', function(e){
-      if (!e.persisted) return;            // only when restored from bfcache
+    window.addEventListener('pageshow', function(){
+      // clear any bfcache-restored stale "logged in / redirecting" toast + button state
       var a = document.getElementById('alert');
       if (a){ a.className = 'alert c-el'; a.textContent = ''; }
       var b = document.getElementById('loginSubmitBtn');
       if (b){ b.classList.remove('loading'); b.disabled = false; }
-      var u = document.getElementById('username');
-      if (u){ u.value = ''; }
-      var pw = document.getElementById('password');
-      if (pw){ pw.value = ''; pw.type = 'password'; }
+      // If localStorage hints we're logged in, hide the page instantly while we confirm
+      // the session, so the login form never flashes before the redirect. (Logout clears
+      // localStorage, so a logged-out user is not hidden and sees the form immediately.)
+      var root = document.documentElement, likely = false;
+      try { likely = localStorage.getItem('authToken') === 'authenticated'; } catch (_) {}
+      if (likely) root.style.visibility = 'hidden';
+      var reveal = function(){ root.style.visibility = ''; };
+      var safety = likely ? setTimeout(reveal, 2500) : 0;   // never get stuck on a blank page
+
+      var base = window.API_BASE || '';
+      fetch(base + '/api/auth/check', { credentials: 'include' })
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(d){
+          if (d && d.authenticated){
+            var dest = d.require_password_change ? '/qr-password-setup.html?from_login=true'
+                     : d.role === 'RESIDENT'      ? '/user/dashboard.html'
+                     : d.role === 'SALES'         ? '/admin/#/sales'
+                     :                              '/admin/#/dashboard';
+            window.location.replace(dest);       // logged in -> go to your home
+          } else {
+            clearTimeout(safety); reveal();        // not logged in -> show the login form
+          }
+        })
+        .catch(function(){ clearTimeout(safety); reveal(); });
     });
   })();
 </script>
