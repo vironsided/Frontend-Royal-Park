@@ -1,145 +1,337 @@
 <!DOCTYPE html>
 <html lang="ru" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RoyalPark - Вход в систему</title>
-    
-    <!-- Favicon: Royal Park tree emblem (брендбук Logo new.pdf) -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/images/branding/favicon-32.png?v=rp1">
-    <link rel="icon" type="image/png" sizes="192x192" href="/images/branding/favicon-192.png?v=rp1">
-    <link rel="apple-touch-icon" href="/images/branding/apple-touch-icon.png?v=rp1">
-    <link rel="shortcut icon" href="/favicon.ico?v=rp1">
-    
-    <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    
-    <!-- Animate.css -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Royal Park</title>
 
-    <!-- Брендбук Royal Park: логотип/заголовки — Spectral, основной текст — Times New Roman -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="/css/global.css?v=brand-spectral-1">
-    <link rel="stylesheet" href="/css/login.css?v=brand-spectral-1">
-    <link rel="stylesheet" href="/css/dark-theme.css">
+<!-- Favicon: Royal Park tree emblem -->
+<link rel="icon" type="image/png" sizes="32x32" href="/images/branding/favicon-32.png?v=rp1">
+<link rel="icon" type="image/png" sizes="192x192" href="/images/branding/favicon-192.png?v=rp1">
+<link rel="apple-touch-icon" href="/images/branding/apple-touch-icon.png?v=rp1">
+<link rel="shortcut icon" href="/favicon.ico?v=rp1">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --olive-50:#f5f6ee; --olive-100:#ebede7; --olive-200:#dde2c8;
+    --olive-300:#cdd3ad; --olive-400:#b1ba88; --olive-500:#9aa972;
+    --olive-600:#7e8c59; --olive-700:#626d45; --olive-800:#474f31;
+    --milk:#efefe6; --emblem:#ebede7; --ink:#56565c; --ink-soft:#7c7c83; --ink-faint:#a6a6ad;
+    --bg:var(--milk); --surface:rgba(255,255,255,.62); --border:rgba(86,86,92,.14);
+    --accent:var(--olive-400); --focus:0 0 0 4px rgba(177,186,136,.38); --radius:22px;
+    --font-display:'Spectral',Georgia,serif;
+    --font-ui:'Times New Roman',Times,Georgia,serif;
+    --ease:cubic-bezier(.22,.61,.36,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--font-ui);color:var(--ink);background:var(--bg);overflow:hidden;-webkit-font-smoothing:antialiased}
+  #scene{position:fixed;inset:0;z-index:0;display:block}
+  .sky{position:fixed;inset:0;z-index:-1;background:
+      radial-gradient(120% 80% at 78% 8%, #fcfcf7 0%, var(--milk) 42%, #e7e8dc 100%),
+      linear-gradient(180deg,#f3f4ec 0%, #e9ebdd 100%);}
+  .sun{position:fixed;top:-12vmin;right:6vw;width:46vmin;height:46vmin;z-index:0;
+    background:radial-gradient(circle at 50% 50%, rgba(255,255,255,.9), rgba(205,211,173,.35) 45%, transparent 70%);
+    filter:blur(6px);animation:breathe 9s var(--ease) infinite;pointer-events:none}
+  @keyframes breathe{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.08);opacity:1}}
+  .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.05;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");}
+
+  .stage{position:relative;z-index:2;height:100%;display:grid;grid-template-columns:1.05fr .95fr}
+  @media (max-width:920px){.stage{grid-template-columns:1fr}}
+
+  .topbar{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:26px 34px}
+  .brandmark{display:flex;align-items:center;gap:12px;opacity:0;animation:rise .9s var(--ease) .15s forwards}
+  .brandmark .logo{height:48px;width:auto;display:block}
+  .controls{display:flex;gap:10px;opacity:0;animation:rise .9s var(--ease) .3s forwards}
+  .seg{display:flex;border:1px solid var(--border);border-radius:999px;overflow:hidden;background:rgba(255,255,255,.5);backdrop-filter:blur(8px)}
+  .seg button{border:0;background:transparent;font-family:var(--font-ui);font-weight:600;font-size:12.5px;color:var(--ink-soft);padding:9px 13px;cursor:pointer;transition:.2s}
+  .seg button[aria-pressed="true"]{background:var(--olive-400);color:#2c3120}
+
+  .brandside{position:relative;display:flex;flex-direction:column;justify-content:center;padding:0 7vw}
+  @media (max-width:920px){.brandside{display:none}}
+  .kicker{font-size:12px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--olive-600);opacity:0;animation:rise .9s var(--ease) .5s forwards}
+  .headline{font-family:var(--font-display);font-weight:300;font-size:clamp(40px,5.4vw,76px);line-height:1.02;letter-spacing:-.02em;color:var(--ink);margin:18px 0 22px;max-width:12ch}
+  .headline .word{display:inline-block;opacity:0;filter:blur(12px);transform:translateY(18px);animation:unblur 1.1s var(--ease) forwards}
+  .sub{font-size:16.5px;line-height:1.7;color:var(--ink-soft);max-width:42ch;opacity:0;animation:rise 1s var(--ease) 1.1s forwards}
+  .feat{display:flex;gap:26px;margin-top:34px}
+  .feat .f{opacity:0;animation:rise 1s var(--ease) forwards}
+  .feat .f:nth-child(1){animation-delay:1.25s}.feat .f:nth-child(2){animation-delay:1.38s}.feat .f:nth-child(3){animation-delay:1.51s}
+  .feat .n{font-family:var(--font-display);font-size:26px;color:var(--olive-600);font-weight:400}
+  .feat .t{font-size:13px;color:var(--ink-soft);margin-top:2px}
+
+  .formside{display:flex;align-items:center;justify-content:center;padding:24px}
+  .card{position:relative;width:min(430px,100%);background:var(--surface);border:1px solid rgba(255,255,255,.65);border-radius:var(--radius);
+    backdrop-filter:blur(22px) saturate(1.1);
+    box-shadow:0 1px 0 rgba(255,255,255,.7) inset, 0 30px 70px -28px rgba(71,79,49,.4), 0 8px 26px -16px rgba(86,86,92,.3);
+    padding:40px 38px 34px;opacity:0;transform:translateY(26px) scale(.985);animation:cardIn 1s var(--ease) .45s forwards;will-change:transform}
+  .card::before{content:"";position:absolute;inset:0;border-radius:var(--radius);padding:1px;
+    background:linear-gradient(140deg,rgba(255,255,255,.9),rgba(177,186,136,.25),transparent 60%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+  .c-el{opacity:0;animation:rise .7s var(--ease) forwards}
+  .card h1{font-family:var(--font-display);font-weight:400;font-size:27px;letter-spacing:-.01em;color:var(--ink);animation-delay:.7s}
+  .card .lead{font-size:14.5px;color:var(--ink-soft);margin:7px 0 26px;animation-delay:.78s}
+
+  .field{position:relative;margin-bottom:16px;animation-delay:.86s}
+  .field+.field{animation-delay:.96s}
+  .field label{position:absolute;left:46px;top:16px;font-size:15px;color:var(--ink-faint);pointer-events:none;transition:.22s var(--ease);font-weight:500}
+  .field .ic{position:absolute;left:16px;top:15px;width:18px;height:18px;color:var(--olive-600);opacity:.8}
+  .field input{width:100%;height:54px;padding:18px 46px 4px 44px;font-family:var(--font-ui);font-size:15px;color:var(--ink);
+    background:rgba(255,255,255,.7);border:1.5px solid var(--border);border-radius:14px;outline:none;transition:.22s var(--ease)}
+  .field input:focus{border-color:var(--olive-400);background:#fff;box-shadow:var(--focus)}
+  .field input:focus~label,.field input:not(:placeholder-shown)~label,
+  .field input:-webkit-autofill~label,.field input:autofill~label{top:8px;left:45px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--olive-700)}
+  .field input::placeholder{color:transparent}
+  /* Autofill: render exactly like manual input — no vertical shift, no yellow box.
+     Chrome paints autofilled fields with its own !important styles (crbug 41457553:
+     "Autofill inputs change size on preview"), which re-lays-out the text. We pin the
+     same box model + font, mask Chrome's background with a huge inset shadow, and freeze
+     the background transition that triggers the repaint/jump. */
+  .field input:-webkit-autofill,
+  .field input:-webkit-autofill:hover,
+  .field input:-webkit-autofill:focus,
+  .field input:-webkit-autofill:active,
+  .field input:autofill{
+    font-family:var(--font-ui);font-size:15px;line-height:normal;
+    -webkit-text-fill-color:var(--ink);caret-color:var(--ink);
+    -webkit-box-shadow:0 0 0 1000px rgba(255,255,255,.7) inset;box-shadow:0 0 0 1000px rgba(255,255,255,.7) inset;
+    transition:background-color 9999s ease-in-out 0s,color 9999s ease-in-out 0s}
+  .field input:-webkit-autofill:focus,
+  .field input:autofill:focus{
+    -webkit-box-shadow:0 0 0 1000px #fff inset,var(--focus);box-shadow:0 0 0 1000px #fff inset,var(--focus)}
+  .reveal{position:absolute;right:12px;top:14px;width:30px;height:30px;border:0;border-radius:8px;background:transparent;cursor:pointer;color:var(--ink-faint);display:grid;place-items:center;transition:.2s}
+  .reveal:hover{color:var(--olive-700);background:var(--olive-100)}
+
+  .row{display:flex;justify-content:space-between;align-items:center;margin:6px 2px 20px;animation-delay:1.04s}
+  .row a{font-size:13px;color:var(--olive-700);text-decoration:none;font-weight:600;border-bottom:1px solid transparent;transition:.2s}
+  .row a:hover{border-color:var(--olive-400)}
+  .check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);cursor:pointer;user-select:none}
+  .check input{accent-color:var(--olive-500);width:15px;height:15px}
+
+  .btn{position:relative;width:100%;height:54px;border:0;border-radius:14px;cursor:pointer;overflow:hidden;
+    background:linear-gradient(180deg,var(--olive-600),var(--olive-700));color:#fff;font-family:var(--font-ui);
+    font-weight:700;font-size:15.5px;letter-spacing:.01em;animation-delay:1.12s;
+    box-shadow:0 10px 24px -10px rgba(71,79,49,.7);transition:transform .2s var(--ease),box-shadow .2s}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 16px 30px -12px rgba(71,79,49,.7)}
+  .btn:active{transform:translateY(0)}
+  .btn .lbl{position:relative;z-index:2;display:inline-flex;gap:9px;align-items:center;justify-content:center;transition:.2s}
+  .btn .btn-icon{display:inline-flex}
+  .btn .shine{position:absolute;top:0;left:-130%;width:60%;height:100%;z-index:1;background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-18deg)}
+  .btn:hover .shine{animation:sweep .9s var(--ease)}
+  .btn.loading .lbl{opacity:0}
+  .btn.loading::after{content:"";position:absolute;z-index:3;inset:0;margin:auto;width:22px;height:22px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+
+  .secure{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:22px;font-size:12px;color:var(--ink-faint);animation-delay:1.36s}
+  .secure svg{width:13px;height:13px}
+
+  /* login.js alert box */
+  .alert{min-height:0;overflow:hidden;border-radius:12px;font-size:13.5px;font-weight:600;text-align:center;transition:.3s var(--ease);margin-bottom:0}
+  .alert.show{min-height:44px;padding:12px;margin-bottom:14px}
+  .alert.alert-error{background:#f7e9e6;color:#9c4a3c;border:1px solid #e7cdc6}
+  .alert.alert-success{background:var(--olive-100);color:var(--olive-800);border:1px solid var(--olive-300)}
+
+  @keyframes rise{to{opacity:1;transform:none}}
+  @keyframes unblur{to{opacity:1;filter:blur(0);transform:none}}
+  @keyframes cardIn{to{opacity:1;transform:none}}
+  @keyframes sweep{to{left:130%}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .watermark{position:absolute;right:1vw;top:50%;transform:translateY(-50%) scale(.92);width:min(46vh,460px);height:auto;opacity:0;pointer-events:none;z-index:-1;animation:wmIn 1.6s var(--ease) .6s forwards}
+  @keyframes wmIn{to{opacity:.08;transform:translateY(-50%) scale(1)}}
+  .sweep{position:fixed;inset:0;z-index:3;pointer-events:none;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.55) 48%,transparent 66%);transform:translateX(-100%);animation:loadsweep 1.7s var(--ease) .2s 1}
+  @keyframes loadsweep{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none!important}
+    .brandmark,.controls,.kicker,.sub,.feat .f,.headline .word,.card,.c-el{opacity:1!important;transform:none!important;filter:none!important}
+  }
+</style>
 </head>
 <body class="login-page">
-    <!-- Animated Background -->
-    <div class="animated-background">
-        <div class="gradient-bg"></div>
-        <div class="floating-shapes">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-            <div class="shape shape-3"></div>
-            <div class="shape shape-4"></div>
-            <div class="shape shape-5"></div>
-            <div class="shape shape-6"></div>
-        </div>
-        <canvas id="particles"></canvas>
+  <div class="sky"></div>
+  <div class="sun"></div>
+  <canvas id="scene"></canvas>
+  <div class="grain"></div>
+  <div class="sweep"></div>
+
+  <header class="topbar">
+    <div class="brandmark">
+      <img class="logo" src="/images/branding/royal-park-logo.webp" alt="Royal Park Baku" />
     </div>
-
-    <div class="login-container">
-        <div class="login-box animate__animated animate__fadeInUp">
-            <div class="login-header">
-                <div class="login-logo">
-                    <img
-                        class="login-logo-img"
-                        src="/images/branding/royal-park-logo.webp"
-                        alt="Royal Park BAKU"
-                        width="300"
-                        height="104"
-                        loading="eager"
-                        decoding="async"
-                    />
-                </div>
-                <h1 class="animate__animated animate__fadeIn animate__delay-1s">Royal Park</h1>
-                <p class="animate__animated animate__fadeIn animate__delay-2s" data-i18n="login_subtitle">Система управления коммунальными услугами</p>
-            </div>
-
-            <div id="alert" class="alert"></div>
-
-            <form class="login-form" id="loginForm">
-                <div class="form-group">
-                    <label for="username" class="form-label">
-                        <i class="bi bi-person-circle"></i> <span data-i18n="username">Имя пользователя</span>
-                    </label>
-                    <div class="input-group">
-                        <span class="input-icon">
-                            <i class="bi bi-person-fill"></i>
-                        </span>
-                        <input 
-                            type="text" 
-                            id="username" 
-                            name="username" 
-                            class="form-control" 
-                            data-i18n-placeholder="username_placeholder"
-                            placeholder="Введите имя пользователя"
-                            required
-                        >
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="password" class="form-label">
-                        <i class="bi bi-shield-lock"></i> <span data-i18n="password">Пароль</span>
-                    </label>
-                    <div class="input-group">
-                        <span class="input-icon">
-                            <i class="bi bi-lock-fill"></i>
-                        </span>
-                        <input 
-                            type="password" 
-                            id="password" 
-                            name="password" 
-                            class="form-control" 
-                            data-i18n-placeholder="password_placeholder"
-                            placeholder="Введите пароль"
-                            required
-                        >
-                        <span class="password-toggle" onclick="togglePassword()">
-                            <i class="bi bi-eye" id="toggleIcon"></i>
-                        </span>
-                    </div>
-                </div>
-
-                <!-- <div class="forgot-password">
-                    <a href="#forgot" data-i18n="forgot_password">Забыли пароль?</a>
-                </div> -->
-
-                <button type="submit" class="btn btn-primary login-btn" id="loginSubmitBtn">
-                    <span class="btn-text" data-i18n="login_button">Войти в систему</span>
-                    <span class="btn-icon"><i class="bi bi-arrow-right-circle"></i></span>
-                </button>
-            </form>
-
-            <div class="login-footer">
-                <p><i class="bi bi-shield-check"></i> <span data-i18n="secure_connection">Защищенное соединение</span></p>
-                <p class="copyright" data-i18n="copyright">&copy; 2024 RoyalPark. Все права защищены.</p>
-            </div>
-        </div>
+    <div class="controls">
+      <div class="seg" id="langSeg" role="group" aria-label="Язык">
+        <button data-lang="az" aria-pressed="true">AZ</button>
+        <button data-lang="en" aria-pressed="false">EN</button>
+        <button data-lang="ru" aria-pressed="false">RU</button>
+      </div>
     </div>
+  </header>
 
-    <!-- Bootstrap 5 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Theme Management -->
-    <script src="/js/theme.js?v=milky-olivia-1"></script>
+  <main class="stage">
+    <section class="brandside">
+      <img class="watermark" src="/images/branding/royal-park-logo.webp" alt="" aria-hidden="true" />
+      <div class="kicker">Royal Park · <span data-i18n="login_subtitle">Личный кабинет</span></div>
+      <h1 class="headline" id="headline"></h1>
+      <p class="sub" id="sub"></p>
+      <div class="feat">
+        <div class="f"><div class="n"></div><div class="t"></div></div>
+        <div class="f"><div class="n"></div><div class="t"></div></div>
+        <div class="f"><div class="n"></div><div class="t"></div></div>
+      </div>
+    </section>
 
-    <!-- Global App Config -->
-    <script src="/js/config.js"></script>
-    
-    <!-- Language Management -->
-    <script src="/js/i18n.js?v=milky-olivia-1"></script>
-    <script src="/js/i18n-auto.js"></script>
-    
-    <!-- Custom JS -->
-    <script src="/js/login.js"></script>
+    <section class="formside">
+      <form class="card login-form" id="loginForm" autocomplete="on" novalidate>
+        <h1 class="c-el" id="cardTitle"></h1>
+        <p class="lead c-el" id="cardLead"></p>
+
+        <div id="alert" class="alert c-el"></div>
+
+        <div class="field c-el">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+          <input id="username" name="username" type="text" placeholder=" " autocomplete="username" required />
+          <label for="username" data-i18n="username">Имя пользователя</label>
+        </div>
+
+        <div class="field c-el">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          <input id="password" name="password" type="password" placeholder=" " autocomplete="current-password" required />
+          <label for="password" data-i18n="password">Пароль</label>
+          <button class="reveal" type="button" id="pwToggle" aria-label="Показать пароль">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+
+        <div class="row c-el">
+          <label class="check"><input type="checkbox" id="remember" checked> <span id="rememberLbl"></span></label>
+          <span id="qrHint" style="font-size:12px;color:var(--ink-faint)"></span>
+        </div>
+
+        <button type="submit" class="btn c-el" id="loginSubmitBtn">
+          <span class="shine"></span>
+          <span class="lbl"><span class="btn-text" data-i18n="login_button">Войти</span><span class="btn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
+        </button>
+
+        <div class="secure c-el">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          <span data-i18n="secure_connection">Защищённое соединение</span> · © 2026 Royal Park
+        </div>
+      </form>
+    </section>
+  </main>
+
+<script>
+  // ---- Brand copy in 3 languages (audit U6: no RU/AZ mixing). Form labels are
+  // translated by i18n.js via data-i18n; this dictionary covers the brand-specific
+  // text that has no i18n keys, and switches together with the language. ----
+  const BRAND_I18N = {
+    az:{ headline:["Sakit","yaşıl","həyət —","bir","toxunuşla."], em:"yaşıl",
+      sub:"Hesabları ödəyin, göstəriciləri izləyin və müraciət göndərin — rahat və bir yerdə. Həyətiniz cibinizdə.",
+      feats:[{n:"24/7",t:"Onlayn ödəniş"},{n:"1 toxunuş",t:"İdarəyə müraciət"},{n:"Canlı",t:"Sayğac göstəriciləri"}],
+      cardTitle:"Kabinetə giriş", cardLead:"Royal Park-da sizi yenidən görməyə şadıq.",
+      remember:"Məni xatırla", hint:"İlk giriş — İdarənin QR kodu ilə",
+      ariaLang:"Dil", ariaShowPw:"Şifrəni göstər" },
+    en:{ headline:["A","quiet","green","courtyard —","one tap away."], em:"green",
+      sub:"Pay your bills, track meter readings and send requests — calmly, all in one place. Your courtyard in your pocket.",
+      feats:[{n:"24/7",t:"Online payment"},{n:"1 tap",t:"Requests to management"},{n:"Live",t:"Meter readings"}],
+      cardTitle:"Sign in", cardLead:"Glad to see you again at Royal Park.",
+      remember:"Remember me", hint:"First login — via QR from the management",
+      ariaLang:"Language", ariaShowPw:"Show password" },
+    ru:{ headline:["Тихий","зелёный","двор —","в одном","касании."], em:"зелёный",
+      sub:"Оплачивайте счета, следите за показаниями и оставляйте заявки — спокойно и в одном месте. Ваш двор в вашем телефоне.",
+      feats:[{n:"24/7",t:"Оплата онлайн"},{n:"1 клик",t:"Заявки в УК"},{n:"Live",t:"Показания счётчиков"}],
+      cardTitle:"Вход в кабинет", cardLead:"Рады видеть вас снова в Royal Park.",
+      remember:"Запомнить меня", hint:"Первый вход — по QR от УК",
+      ariaLang:"Язык", ariaShowPw:"Показать пароль" }
+  };
+  let _appliedLang=null;
+  function currentLang(){
+    const l=(window.i18n&&window.i18n.currentLanguage)||localStorage.getItem('language')||'az';
+    return BRAND_I18N[l]?l:'az';
+  }
+  function buildHeadline(words,em){
+    const h=document.getElementById('headline');
+    h.innerHTML=words.map(w=>{const it=(w===em);return `<span class="word"${it?' style="font-style:italic;color:var(--olive-600)"':''}>${w}&nbsp;</span>`;}).join('');
+    document.querySelectorAll('.headline .word').forEach((el,i)=>el.style.animationDelay=(0.55+i*0.11)+'s');
+  }
+  function applyBrandLang(lang){
+    if(lang===_appliedLang) return; _appliedLang=lang;
+    const d=BRAND_I18N[lang]||BRAND_I18N.az;
+    buildHeadline(d.headline,d.em);
+    const set=(id,v)=>{const e=document.getElementById(id); if(e)e.textContent=v;};
+    set('sub',d.sub); set('cardTitle',d.cardTitle); set('cardLead',d.cardLead); set('rememberLbl',d.remember); set('qrHint',d.hint);
+    document.querySelectorAll('.feat .f').forEach((f,i)=>{ if(d.feats[i]){const n=f.querySelector('.n'),t=f.querySelector('.t'); if(n)n.textContent=d.feats[i].n; if(t)t.textContent=d.feats[i].t;}});
+    document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.lang===lang)));
+    const seg=document.getElementById('langSeg'); if(seg&&d.ariaLang) seg.setAttribute('aria-label',d.ariaLang);
+    const tg=document.getElementById('pwToggle'); if(tg&&d.ariaShowPw) tg.setAttribute('aria-label',d.ariaShowPw);
+    document.documentElement.lang=lang;
+  }
+  applyBrandLang(currentLang());
+  // re-sync after i18n.js initialises (it may pick a stored/default language)
+  setTimeout(()=>applyBrandLang(currentLang()), 450);
+
+  // password reveal (own toggle; does not depend on login.js)
+  (function(){
+    const p=document.getElementById('password'), tg=document.getElementById('pwToggle');
+    if(p&&tg) tg.addEventListener('click',()=>{const s=p.type==='password';p.type=s?'text':'password';});
+  })();
+
+  // language segment -> i18n.js (form labels) + brand dictionary (brand copy)
+  document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{
+    const lang=b.dataset.lang;
+    try{
+      if(window.i18n){ if(typeof window.i18n.setLanguage==='function') window.i18n.setLanguage(lang);
+        else if(typeof window.i18n.changeLanguage==='function') window.i18n.changeLanguage(lang); }
+      localStorage.setItem('language',lang);
+    }catch(_){}
+    applyBrandLang(lang);
+  }));
+
+  // Living garden backdrop
+  (function(){
+    const cv=document.getElementById('scene'), ctx=cv.getContext('2d');
+    const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let W,H,DPR,blades=[],seeds=[],mouse={x:.5},raf;
+    const OLIVE=['#9aa972','#b1ba88','#7e8c59','#cdd3ad'];
+    function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+'px';cv.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);build();}
+    function build(){blades=[];const layers=4,perLayer=Math.max(26,Math.floor(W/16));
+      for(let l=0;l<layers;l++){const depth=l/(layers-1);
+        for(let i=0;i<perLayer;i++)blades.push({x:Math.random()*W,base:H-(6+depth*4),h:(40+depth*150)*(0.6+Math.random()*0.7),w:1+depth*2.4,sway:0.3+Math.random()*0.7,phase:Math.random()*Math.PI*2,color:OLIVE[(Math.random()*OLIVE.length)|0],alpha:0.18+depth*0.5,depth});}
+      blades.sort((a,b)=>a.depth-b.depth);
+      seeds=[];const n=Math.max(14,Math.floor(W/60));for(let i=0;i<n;i++)seeds.push(newSeed(true));}
+    function newSeed(init){return{x:Math.random()*W,y:init?Math.random()*H:H+10,r:1+Math.random()*2.2,vx:.1+Math.random()*.3,vy:-(.15+Math.random()*.4),sw:Math.random()*Math.PI*2,a:.2+Math.random()*.5};}
+    function draw(t){ctx.clearRect(0,0,W,H);const wind=Math.sin(t/2200)*0.5+(mouse.x-0.5)*1.4;
+      for(const b of blades){const k=Math.sin(t/1000*b.sway+b.phase);const tipX=b.x+(k*10+wind*22)*(b.h/150);const tipY=b.base-b.h;const cx=b.x+(k*5+wind*10);
+        ctx.beginPath();ctx.moveTo(b.x-b.w,b.base);ctx.quadraticCurveTo(cx,b.base-b.h*0.55,tipX,tipY);ctx.quadraticCurveTo(cx,b.base-b.h*0.55,b.x+b.w,b.base);ctx.closePath();ctx.fillStyle=b.color;ctx.globalAlpha=b.alpha;ctx.fill();}
+      ctx.globalAlpha=1;
+      for(const s of seeds){s.sw+=0.02;s.x+=s.vx+Math.sin(s.sw)*0.3+wind*0.4;s.y+=s.vy;if(s.y<-10||s.x>W+10)Object.assign(s,newSeed(false));
+        ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.fillStyle='rgba(255,255,255,'+s.a+')';ctx.fill();
+        ctx.beginPath();ctx.arc(s.x,s.y,s.r*0.5,0,7);ctx.fillStyle='rgba(177,186,136,'+(s.a*0.8)+')';ctx.fill();}
+      raf=requestAnimationFrame(draw);}
+    addEventListener('resize',resize);addEventListener('pointermove',e=>{mouse.x=e.clientX/innerWidth;});
+    resize(); if(reduce){draw(0);cancelAnimationFrame(raf);} else raf=requestAnimationFrame(draw);
+  })();
+
+  // card 3D tilt + watermark parallax
+  (function(){
+    const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const card=document.getElementById('loginForm'), wm=document.querySelector('.watermark');
+    if(reduce||!card) return;
+    addEventListener('pointermove',e=>{const nx=(e.clientX/innerWidth-0.5),ny=(e.clientY/innerHeight-0.5);
+      card.style.transform=`perspective(1100px) rotateY(${nx*4.2}deg) rotateX(${-ny*4.2}deg)`;
+      if(wm) wm.style.transform=`translateY(-50%) translate(${nx*22}px,${ny*16}px) scale(1)`;});
+    addEventListener('pointerleave',()=>{card.style.transform='';});
+  })();
+</script>
+
+<!-- Real app scripts: same-origin config (proxy + escapeHtml), i18n, and the actual login handler -->
+<script src="/js/config.js"></script>
+<script src="/js/i18n.js?v=brand-redesign-1"></script>
+<script src="/js/i18n-auto.js"></script>
+<script src="/js/login.js"></script>
 </body>
 </html>
