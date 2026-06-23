@@ -36,7 +36,11 @@ const CSP = [
     `connect-src 'self' ${API_BASE}`,
     "frame-ancestors 'self'",
     "base-uri 'self'",
-    "form-action 'self'",
+    // AzeriCard redirect: the bank-card flow does a top-level form.submit() to the
+    // 3DSecure gateway (testmpi.3dsecure.az / mpi.3dsecure.az). 'self' alone makes
+    // the browser silently block that POST (payment hangs on "Обработка"), so the
+    // 3dsecure.az gateway must be allowed for form submissions.
+    "form-action 'self' https://*.3dsecure.az",
     "object-src 'none'",
 ].join('; ');
 
