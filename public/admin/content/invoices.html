@@ -1754,16 +1754,23 @@
         const html = `
             <html><head><title>${esc(t('invoices_export_title', 'Отчет по счетам'))}</title>
             <style>
-                body { font-family: Arial, sans-serif; margin: 24px; color: #111; }
-                table { width: 100%; border-collapse: collapse; font-size: 11px; }
-                th, td { border: 1px solid #ccc; padding: 6px; text-align: left; vertical-align: top; }
+                @page { size: A4 landscape; margin: 8mm; }
+                * { box-sizing: border-box; }
+                body { font-family: Arial, sans-serif; margin: 0; color: #111; }
+                h2 { font-size: 15px; margin: 0 0 6px; }
+                p { font-size: 11px; margin: 2px 0; }
+                table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 8.5px; margin-top: 8px; }
+                th, td { border: 1px solid #ccc; padding: 3px 4px; text-align: left; vertical-align: top; word-wrap: break-word; overflow-wrap: anywhere; }
                 th { background: #f3f4f6; }
+                td:nth-child(9), td:nth-child(10), td:nth-child(11) { text-align: right; }
+                tbody tr { page-break-inside: avoid; }
             </style></head><body>
                 <h2>${esc(t('invoices_export_title', 'Отчет по счетам'))}</h2>
                 <p><strong>${esc(t('tariffs_export_generated', 'Сформировано'))}:</strong> ${esc(new Date().toLocaleString())}</p>
                 <p><strong>${esc(t('payments_export_filters', 'Фильтры'))}:</strong> ${esc(filtersText)}</p>
                 <p><strong>${esc(t('invoices_export_count_invoices', 'Количество'))}:</strong> ${rows.length}</p>
                 <table>
+                    <colgroup><col style="width:5%"><col style="width:3%"><col style="width:3%"><col style="width:7%"><col style="width:6%"><col style="width:5%"><col style="width:8%"><col style="width:6%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:14%"><col style="width:13%"></colgroup>
                     <thead><tr><th>${esc(t('invoices_export_column_period','Период'))}</th><th>${esc(t('invoices_export_column_block','Блок'))}</th><th>${esc(t('invoices_export_column_unit','№ дома'))}</th><th>${esc(t('invoices_export_column_resident_name','ФИО жителя'))}</th><th>${esc(t('invoices_export_column_resident_phone','Телефон жителя'))}</th><th>${esc(t('invoices_export_column_resident_code','Код резидента'))}</th><th>${esc(t('invoices_export_column_invoice_number','№ инвойса'))}</th><th>${esc(t('invoices_export_column_status','Статус'))}</th><th>${esc(t('invoices_export_column_amount','Начислено'))}</th><th>${esc(t('invoices_export_column_paid','Оплачено'))}</th><th>${esc(t('invoices_export_column_remaining','Остаток'))}</th><th>${esc(t('invoices_export_column_due_date','Срок оплаты'))}</th><th>${esc(t('invoices_export_column_payment_method','Метод оплаты'))}</th><th>${esc(t('invoices_export_column_lines','Состав начисления'))}</th><th>${esc(t('invoices_export_column_remaining_by_services','Остаток по услугам'))}</th></tr></thead>
                     <tbody>${tableRows || '<tr><td colspan="15">' + t('readings_no_records', 'Нет данных') + '</td></tr>'}</tbody>
                 </table>
