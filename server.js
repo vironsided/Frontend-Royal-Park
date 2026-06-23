@@ -219,6 +219,21 @@ app.get('/js/config.js', (req, res) => {
             });
         };
     }
+
+    // Pending-password gate: an account that logged in with a TEMP password
+    // (require_password_change) must finish setting a permanent password + profile
+    // before reaching ANY panel — including via the browser Back button. Applies to
+    // every role. Skips the login page and the setup page itself.
+    if (!onLoginPage()) {
+        fetch(normalizedBase + "/api/auth/check", { credentials: "include" })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((d) => {
+                if (d && d.authenticated && d.require_password_change) {
+                    window.location.replace("/qr-password-setup.html?from_login=true");
+                }
+            })
+            .catch(() => {});
+    }
 })();
 `);
 });
