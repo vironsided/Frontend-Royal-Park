@@ -82,7 +82,22 @@ function apiProxy(req, res) {
         headers: { ...req.headers, host: API_URL.host },
     };
     const pReq = client.request(options, (pRes) => {
-        res.writeHead(pRes.statusCode || 502, pRes.headers);
+        const headers = { ...pRes.headers };
+        // Keep backend self-redirects same-origin. FastAPI's trailing-slash 307
+        // (e.g. /api/blocks -> /api/blocks/) builds an ABSOLUTE Location using the
+        // backend host (we forward Host: <backend>). If passed through, the browser
+        // follows it cross-site, OUT of this proxy, where the first-party session
+        // cookie doesn't exist -> 401 -> the SPA bounces to login. Rewrite any
+        // Location that points at the backend origin to a relative path so the
+        // redirect is re-proxied with the cookie intact. (Redirects to the frontend,
+        // e.g. AzeriCard success/fail, don't match and pass through untouched.)
+        const loc = headers.location || headers.Location;
+        if (loc && API_URL && String(loc).indexOf(API_URL.origin) === 0) {
+            const rel = String(loc).slice(API_URL.origin.length) || '/';
+            headers.location = rel;
+            delete headers.Location;
+        }
+        res.writeHead(pRes.statusCode || 502, headers);
         pRes.pipe(res);
     });
     pReq.on('error', () => { if (!res.headersSent) res.status(502).json({ detail: 'Upstream unavailable' }); });
