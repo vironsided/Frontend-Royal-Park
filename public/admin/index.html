@@ -1471,7 +1471,7 @@
                 }
                 // Дёргаем сервер, чтобы статус сохранился
                 try {
-                    await fetch(`${API_BASE}/api/notifications/${id}/public`, { method: 'GET', credentials: 'include' });
+                    await fetch(`${API_BASE}/api/notifications/${id}`, { method: 'GET', credentials: 'include' });
                     // После ответа уточняем реальное количество
                     const unread = await fetchUnreadCount();
                     updateNotificationCount(unread);
@@ -1631,7 +1631,7 @@
                     setAppealsBadge(0);
 
                     // Параллельно дергаем сервер (не блокируем UI)
-                    Promise.all(unreadIds.map(id => fetch(`${API_BASE}/api/notifications/${id}/public`, { method: 'GET', credentials: 'include' }).catch(() => null)))
+                    Promise.all(unreadIds.map(id => fetch(`${API_BASE}/api/notifications/${id}`, { method: 'GET', credentials: 'include' }).catch(() => null)))
                         .finally(async () => {
                             const unread = await fetchUnreadCount();
                             updateNotificationCount(unread);
