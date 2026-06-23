@@ -219,7 +219,7 @@
                         </div>
                         <div class="step-input-group">
                             <label data-i18n="tariffs_step_unit">Ед. изм.</label>
-                            <input type="text" value="кВт-ч" class="unit-chip" readonly>
+                            <input type="text" value="" class="unit-chip" readonly>
                         </div>
                         <div class="step-input-group">
                             <label data-i18n="amount">Цена</label>
@@ -480,17 +480,27 @@
         }
     }
 
+    // Return a unit-KIND token (kwh/m3/month), NOT a localized string — the token is
+    // cached on each tariff step and resolved to the current language at render/export
+    // time via localizedUnit(), so switching the UI language re-localizes the units.
     function getUnitForMeterType(meterType) {
-        const units = {
-            'ELECTRIC': 'кВт-ч',
-            'GAS': 'м³',
-            'WATER': 'м³',
-            'SEWERAGE': 'м³',
-            'SERVICE': 'мес.',
-            'RENT': 'мес.',
-            'CONSTRUCTION': 'мес.'
+        const kinds = {
+            'ELECTRIC': 'kwh',
+            'GAS': 'm3',
+            'WATER': 'm3',
+            'SEWERAGE': 'm3',
+            'SERVICE': 'month',
+            'RENT': 'month',
+            'CONSTRUCTION': 'month'
         };
-        return units[meterType] || '';
+        return kinds[meterType] || '';
+    }
+
+    // Resolve a unit-kind token to the localized unit label in the CURRENT language.
+    function localizedUnit(kind) {
+        const keys = { kwh: 'user_unit_kwh', m3: 'user_unit_m3', month: 'readings_unit_month_short' };
+        const key = keys[kind];
+        return key ? t(key, kind) : (kind || '');
     }
 
     function normalizeTariffsFromApi(tariffs = []) {
@@ -659,7 +669,7 @@
     function formatSteps(steps = [], purposeKey = '') {
         return steps.map(step => {
             const price = formatValue(step.price ?? 0);
-            const unit = step.unit || '';
+            const unit = localizedUnit(step.unit);
 
             // Для аренды и услуг - просто цена и единица
             if (purposeKey === 'rent' || purposeKey === 'service') {
@@ -723,7 +733,7 @@
             const steps = Array.isArray(t?.steps) ? t.steps : [];
             const formattedSteps = steps.map((step) => {
                 const price = formatValue(step?.price ?? 0);
-                const unit = step?.unit || '';
+                const unit = localizedUnit(step?.unit);
                 if (step?.from_date && step?.to_date) {
                     return `${step.from_date} - ${step.to_date}: ${price} ₼ / ${unit}`;
                 }
@@ -1025,16 +1035,17 @@
 
     // Функция для получения единицы измерения по типу тарифа
     function getUnitForPurpose(purpose) {
-        const unitMap = {
-            'electricity': 'кВт-ч',
-            'gas': 'м³',
-            'water': 'м³',
-            'sewerage': 'м³',
-            'service': 'мес.',
-            'rent': 'мес.',
-            'construction': 'мес.'
+        const kinds = {
+            'electricity': 'kwh',
+            'gas': 'm3',
+            'water': 'm3',
+            'sewerage': 'm3',
+            'service': 'month',
+            'rent': 'month',
+            'construction': 'month'
         };
-        return unitMap[purpose] || 'ед.';
+        const kind = kinds[purpose];
+        return kind ? localizedUnit(kind) : '';
     }
 
     // Обновление единиц измерения при изменении типа тарифа

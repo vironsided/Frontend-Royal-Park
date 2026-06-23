@@ -216,18 +216,18 @@
                 }
 
                 const patterns = [
-                    { regex: /^(?:Электричество|Elektrik|Electricity)\s+([\d.]+)\s*(?:кВт·ч|kWh)$/i, key: 'meter_electricity', unit: 'kWh' },
-                    { regex: /^(?:Вода|Su|Water)\s+([\d.]+)\s*(?:м³|m³|m3)$/i, key: 'meter_cold_water', unit: 'm³' },
-                    { regex: /^(?:Горячая\s+вода|İsti\s+su|Hot\s+water)\s+([\d.]+)\s*(?:м³|m³|m3)$/i, key: 'meter_hot_water', unit: 'm³' },
-                    { regex: /^(?:Канализация(?:\s*\(авто\))?|Kanalizasiya(?:\s*\(auto\))?|Sewerage(?:\s*\(auto\))?)\s+([\d.]+)\s*(?:м³|m³|m3)$/i, key: 'meter_sewerage', unit: 'm³' },
-                    { regex: /^(?:Газ|Qaz|Gas)\s+([\d.]+)\s*(?:м³|m³|m3)$/i, key: 'meter_gas', unit: 'm³' },
+                    { regex: /^(?:Электричество|Elektrik|Electricity)\s+([\d.]+)\s*(?:кВт·ч|kWh)$/i, key: 'meter_electricity', unit: 'kWh', unitKey: 'user_unit_kwh' },
+                    { regex: /^(?:Вода|Su|Water)\s+([\d.]+)\s*(?:м³|m³|m3)$/i, key: 'meter_cold_water', unit: 'm³', unitKey: 'user_unit_m3' },
+                    { regex: /^(?:Горячая\s+вода|İsti\s+su|Hot\s+water)\s+([\d.]+)\s*(?:м³|m³|m3)$/i, key: 'meter_hot_water', unit: 'm³', unitKey: 'user_unit_m3' },
+                    { regex: /^(?:Канализация(?:\s*\(авто\))?|Kanalizasiya(?:\s*\(auto\))?|Sewerage(?:\s*\(auto\))?)\s+([\d.]+)\s*(?:м³|m³|m3)$/i, key: 'meter_sewerage', unit: 'm³', unitKey: 'user_unit_m3' },
+                    { regex: /^(?:Газ|Qaz|Gas)\s+([\d.]+)\s*(?:м³|m³|m3)$/i, key: 'meter_gas', unit: 'm³', unitKey: 'user_unit_m3' },
                 ];
                 for (const p of patterns) {
                     const m = source.match(p.regex);
                     if (m) {
                         const translatedLabel = t(p.key, p.key);
                         if (p.key === 'meter_sewerage' || isSewerageLine) return { label: translatedLabel, consumed: '—' };
-                        return { label: translatedLabel, consumed: `${m[1]} ${p.unit}` };
+                        return { label: translatedLabel, consumed: `${m[1]} ${t(p.unitKey, p.unit)}` };
                     }
                 }
                 if (isSewerageLine) return { label: t('meter_sewerage', 'Sewerage'), consumed: '—' };
