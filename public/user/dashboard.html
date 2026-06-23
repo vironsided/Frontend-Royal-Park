@@ -90,6 +90,53 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* -----------------------------------------------------------
+           Temporarily disabled nav section (visible but inactive).
+           Currently used for «Пропуск авто» until the feature ships.
+           RE-ENABLE: delete this block + the `nav-item--soon` class and
+           `.nav-soon-badge` in the markup + remove the route from
+           `this.disabledRoutes` in /js/user-spa.js.
+           ----------------------------------------------------------- */
+        .nav-item--soon {
+            cursor: not-allowed !important;
+        }
+        .nav-item--soon .nav-icon,
+        .nav-item--soon .nav-text {
+            opacity: 0.5;
+        }
+        .nav-item--soon:hover {
+            background: transparent !important;
+            transform: none !important;
+        }
+        .nav-item--soon .nav-soon-badge {
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.1rem 0.45rem;
+            border-radius: 999px;
+            font-size: 0.62rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            color: #6b7280;
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            white-space: nowrap;
+        }
+        .nav-item--soon .nav-soon-badge i {
+            font-size: 0.68rem;
+        }
+        /* Dark resident theme: lighten the badge for contrast on the dark sidebar. */
+        [data-theme="dark"] .nav-item--soon .nav-soon-badge {
+            color: #c3cad8;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.14);
+        }
+        .sidebar.collapsed .nav-soon-badge {
+            display: none;
+        }
     </style>
 </head>
 <body class="user-app">
@@ -164,6 +211,14 @@
                     <a href="#news" class="nav-item" data-user-route="news">
                         <span class="nav-icon"><i class="bi bi-newspaper"></i></span>
                         <span class="nav-text" data-i18n="user_nav_user_news">Новости</span>
+                    </a>
+                    <!-- TEMP: Пропуск авто disabled (under construction) — visible but inactive.
+                         To RE-ENABLE: remove `nav-item--soon` + the `.nav-soon-badge` span below,
+                         and remove 'access' from `this.disabledRoutes` in /js/user-spa.js -->
+                    <a href="#access" class="nav-item nav-item--soon" data-user-route="access" aria-disabled="true">
+                        <span class="nav-icon"><i class="bi bi-car-front-fill"></i></span>
+                        <span class="nav-text" data-i18n="user_nav_access">Пропуск авто</span>
+                        <span class="nav-soon-badge"><i class="bi bi-hourglass-split"></i><span data-i18n="nav_soon">Скоро</span></span>
                     </a>
                 </div>
 

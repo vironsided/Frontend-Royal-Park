@@ -1482,7 +1482,7 @@
             });
         } catch (stepError) {
             if (typeof showError === 'function') {
-                showError(`❌ ${stepError.message}`);
+                showError(`${stepError.message}`);
             } else {
                 alert(stepError.message);
             }

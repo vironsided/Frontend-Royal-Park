@@ -1382,7 +1382,7 @@
             if (meterData && meterData.id) {
                 const existingService = container.querySelector(`[data-meter-id="${meterData.id}"]`);
                 if (existingService) {
-                    console.warn('⚠️ Service with ID', meterData.id, 'already exists, skipping addService call');
+                    console.warn('Service with ID', meterData.id, 'already exists, skipping addService call');
                     return;
                 }
             }
@@ -1396,13 +1396,13 @@
                     if (serialInput && typeSelect && 
                         serialInput.value === meterData.serial_number && 
                         typeSelect.value === meterData.meter_type.toLowerCase()) {
-                        console.warn('⚠️ Service with serial', meterData.serial_number, 'and type', meterData.meter_type, 'already exists, skipping');
+                        console.warn('Service with serial', meterData.serial_number, 'and type', meterData.meter_type, 'already exists, skipping');
                         return;
                     }
                 }
             }
             
-            console.log('✅ Adding new service:', meterData?.id || 'new', meterData?.meter_type, meterData?.serial_number);
+            console.log('Adding new service:', meterData?.id || 'new', meterData?.meter_type, meterData?.serial_number);
             const newService = document.createElement('div');
             newService.className = 'service-row';
             

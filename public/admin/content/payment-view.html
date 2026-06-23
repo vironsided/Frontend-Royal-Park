@@ -177,10 +177,10 @@
                 }
 
                 const data = await response.json();
-                console.log('📋 Open invoices data:', data);
+                console.log('Open invoices data:', data);
                 openInvoices = data.invoices || [];
-                console.log('📋 Open invoices count:', openInvoices.length);
-                console.log('📋 Open invoices:', openInvoices);
+                console.log('Open invoices count:', openInvoices.length);
+                console.log('Open invoices:', openInvoices);
 
                 // Build distribution rows
                 currentDistributionRows = openInvoices.map(inv => {
@@ -195,11 +195,11 @@
                         apply: existingApp ? parseFloat(existingApp.amount_applied) : 0,
                         due_date: inv.due_date || null
                     };
-                    console.log('📋 Distribution row:', row);
+                    console.log('Distribution row:', row);
                     return row;
                 });
 
-                console.log('📋 Total distribution rows:', currentDistributionRows.length);
+                console.log('Total distribution rows:', currentDistributionRows.length);
                 renderDistributionTable();
                 currentAdvanceBalance = await fetchAdvanceBalance(paymentId);
                 currentDueDate = getEarliestDueDate(openInvoices);

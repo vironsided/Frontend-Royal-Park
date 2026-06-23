@@ -1,4 +1,4 @@
-// 🌍 Auto-translation Helper
+//  Auto-translation Helper
 // Автоматически применяет переводы к стандартным элементам
 
 (function() {

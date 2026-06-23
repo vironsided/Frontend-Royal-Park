@@ -307,6 +307,7 @@
                         <thead>
                             <tr>
                                 <th data-i18n="residents_col_type">Тип</th>
+                                <th data-i18n="readings_serial">Серийный номер</th>
                                 <th data-i18n="tariff">Тариф</th>
                                 <th data-i18n="meter_previous">Предыдущее</th>
                                 <th data-i18n="readings_new_or_mark">Новое / Отметить</th>
@@ -318,7 +319,7 @@
                         </thead>
                         <tbody id="meterTableBody">
                             <tr>
-                                <td colspan="8" class="text-muted text-center" data-i18n="readings_select_resident_to_see_tariffs">Выберите резидента, чтобы увидеть тарифы
+                                <td colspan="9" class="text-muted text-center" data-i18n="readings_select_resident_to_see_tariffs">Выберите резидента, чтобы увидеть тарифы
                                 </td>
                             </tr>
                         </tbody>
@@ -2951,7 +2952,7 @@
             section.classList.add('hidden');
             document.getElementById('meterTableBody').innerHTML = `
                     <tr>
-                        <td colspan="8" class="text-muted text-center">Выберите резидента, чтобы увидеть тарифы</td>
+                        <td colspan="9" class="text-muted text-center">Выберите резидента, чтобы увидеть тарифы</td>
                     </tr>`;
         }
         resetMeterPhotoState();
@@ -2978,7 +2979,7 @@
             
             // If block is selected, reload residents list with new date filter
             if (blockName) {
-                console.log('📅 Date changed, reloading residents list for block:', blockName);
+                console.log('Date changed, reloading residents list for block:', blockName);
                 // Save current resident ID to restore it after reload (if it's still in the list)
                 const savedResidentId = residentId ? parseInt(residentId) : null;
                 loadResidents(false, savedResidentId); // false = apply filter, savedResidentId = try to restore selection
@@ -2986,7 +2987,7 @@
             
             // If resident is already selected, reload meter details
             if (residentId) {
-                console.log('📅 Date changed, reloading meter details for resident:', residentId);
+                console.log('Date changed, reloading meter details for resident:', residentId);
                 // Small delay to ensure residents list is updated first
                 setTimeout(() => {
                     const currentResidentId = document.getElementById('modalResident')?.value;
@@ -3009,7 +3010,7 @@
             return;
         }
 
-        tbody.innerHTML = '<tr><td colspan="7" class="text-muted text-center">Загрузка...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-muted text-center">Загрузка...</td></tr>';
         section.classList.remove('hidden');
 
         try {
@@ -3024,7 +3025,7 @@
                 }
             }
 
-            console.log('🔍 renderMeterDetails - dateStr:', dateStr, 'residentId:', residentId);
+            console.log('renderMeterDetails - dateStr:', dateStr, 'residentId:', residentId);
 
             let url = `${API_BASE}/api/readings/resident/${residentId}/meters?date=${dateStr}`;
             const response = await fetch(url, { credentials: 'include' });
@@ -3049,7 +3050,7 @@
             renderMeterTable(meters);
         } catch (error) {
             console.error('Error loading meters:', error);
-            tbody.innerHTML = `<tr><td colspan="7" class="text-danger text-center">Ошибка загрузки: ${error.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" class="text-danger text-center">Ошибка загрузки: ${error.message}</td></tr>`;
         }
     }
 
@@ -3148,6 +3149,7 @@
             sewerRow.setAttribute('data-linked-water-meter-id', meterId);
             sewerRow.innerHTML = `
                 <td><span class="meter-type-pill">${t('readings_sewerage_auto', 'Канализация (авто)')}</span></td>
+                <td><span class="meter-serial">—</span></td>
                 <td class="auto-sewer-tariff">—</td>
                 <td>—</td>
                 <td>от воды</td>
@@ -3196,6 +3198,7 @@
             stableRow.setAttribute('data-linked-meter-id', meterId);
             stableRow.innerHTML = `
                 <td><span class="meter-type-pill">${t('stable_tariff', 'Стабильный тариф')}</span></td>
+                <td><span class="meter-serial">—</span></td>
                 <td class="auto-stable-tariff">—</td>
                 <td>—</td>
                 <td>${t('readings_auto', 'авто')}</td>
@@ -3240,7 +3243,7 @@
         }
 
         if (metersToRender.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-muted text-center">Для выбранного резидента нет счётчиков</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" class="text-muted text-center">Для выбранного резидента нет счётчиков</td></tr>';
             return;
         }
 
@@ -3280,7 +3283,7 @@
             const isFixed = meter.is_fixed;
 
             // Debug logging
-            console.log('🔍 Meter data:', {
+            console.log('Meter data:', {
                 meter_id: meter.meter_id,
                 type: meter.display_type,
                 prev_value_backend: meter.prev_value,
@@ -3343,6 +3346,7 @@
                             data-expected-last-reading-id="${expectedLastReadingId || ''}"
                             data-payment-locked="${paymentLocked ? '1' : '0'}">
                             <td><span class="meter-type-pill">${meterDisplayType}</span></td>
+                            <td><span class="meter-serial">${meter.serial || '—'}</span></td>
                             <td>${meter.tariff_name}</td>
                             <td>${prevDisplay}</td>
                             <td>
@@ -3417,6 +3421,7 @@
                         data-expected-last-reading-id="${expectedLastReadingId || ''}"
                         data-payment-locked="${paymentLocked ? '1' : '0'}">
                         <td><span class="meter-type-pill">${meterDisplayType}</span></td>
+                        <td><span class="meter-serial">${meter.serial || '—'}</span></td>
                         <td>${meter.tariff_name}</td>
                         <td>${(prev !== null && prev !== undefined) ? prev.toFixed(3) : '0.000'} ${meter.unit}</td>
                         <td>

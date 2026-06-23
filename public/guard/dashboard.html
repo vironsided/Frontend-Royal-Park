@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="az" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Royal Park · КПП</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/images/branding/favicon-32.png?v=rp1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Security command-center palette — graphite + amber (distinct from the resident green/white) */
+    --bg:#0d1117;--bg-grad:#11171f;
+    --surface:#151b23;--surface-2:#1a212b;--surface-3:#212a36;
+    --border:rgba(255,255,255,.08);--border-2:rgba(255,255,255,.14);
+    --ink:#e9eef5;--ink-soft:#9aabbf;--ink-faint:#5e6c81;
+    --accent:#f6a821;--accent-2:#ffc24d;--accent-ink:#1c1305;--accent-bg:rgba(246,168,33,.12);
+    --ok:#36d399;--okbg:rgba(54,211,153,.13);--warn:#f6a821;--warnbg:rgba(246,168,33,.13);
+    --bad:#ff5d52;--badbg:rgba(255,93,82,.13);--info:#5aa9ff;--infobg:rgba(90,169,255,.13);
+    --radius:16px;--radius-sm:11px;--shadow:0 14px 40px -18px rgba(0,0,0,.65);
+    --font:'IBM Plex Sans',system-ui,-apple-system,Segoe UI,sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);min-height:100vh;
+    background:
+      linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px),
+      radial-gradient(1200px 600px at 80% -10%,#1b2533 0%,transparent 60%),
+      radial-gradient(900px 500px at -5% 0%,#16202b 0%,transparent 55%),var(--bg);
+    background-size:42px 42px,42px 42px,auto,auto,auto;
+    background-attachment:fixed}
+  ::selection{background:var(--accent);color:var(--accent-ink)}
+  /* ---- topbar ---- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 26px;
+    background:rgba(13,17,23,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
+  .brand{display:flex;align-items:center;gap:13px}
+  .brand img{height:34px;width:auto;filter:brightness(0) invert(1);opacity:.92}
+  .brand .t{font-weight:700;font-size:17px;letter-spacing:.2px;color:var(--ink);line-height:1.1}
+  .brand .sub{font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.16em;font-weight:600;margin-top:2px}
+  .top-right{display:flex;align-items:center;gap:18px}
+  .seg{display:flex;border:1px solid var(--border-2);border-radius:999px;overflow:hidden;background:var(--surface-2)}
+  .seg button{border:0;background:transparent;font-family:var(--font);font-weight:600;font-size:12px;color:var(--ink-soft);padding:7px 13px;cursor:pointer;transition:.15s}
+  .seg button:hover{color:var(--ink)}
+  .seg button.on{background:var(--accent);color:var(--accent-ink)}
+  .clock{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--accent-2);letter-spacing:.08em;
+    display:inline-flex;align-items:center;gap:8px;padding:6px 13px;border:1px solid rgba(246,168,33,.3);
+    border-radius:9px;background:var(--accent-bg)}
+  .clock .d{font-size:11px;color:var(--ink-soft);letter-spacing:.05em;font-weight:500}
+  @media(max-width:900px){.clock{display:none}}
+  .who{font-size:13px;color:var(--ink-soft);display:inline-flex;align-items:center;gap:7px} .who b{font-weight:600;color:var(--ink)}
+  .who i{color:var(--accent)}
+  .logout{border:1px solid var(--border-2);background:var(--surface-2);color:var(--ink-soft);cursor:pointer;font-size:16px;width:36px;height:36px;border-radius:10px;display:grid;place-items:center;transition:.15s}
+  .logout:hover{color:var(--bad);border-color:var(--bad)}
+  /* ---- tabs ---- */
+  .tabs{display:flex;gap:8px;padding:20px 26px 0;flex-wrap:wrap}
+  .tab{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--border);background:var(--surface);border-radius:12px;padding:12px 20px;font-weight:700;font-size:13px;color:var(--ink-soft);cursor:pointer;transition:.15s;
+    text-transform:uppercase;letter-spacing:.07em;position:relative;overflow:hidden}
+  .tab:hover{color:var(--ink);border-color:var(--border-2)}
+  .tab i{font-size:16px;opacity:.85}
+  .tab.on{background:var(--accent-bg);color:var(--accent-2);border-color:rgba(246,168,33,.45);
+    box-shadow:inset 0 -2px 0 var(--accent), 0 6px 18px -10px rgba(246,168,33,.55)}
+  .tab.on i{opacity:1}
+  .tab .badge{background:var(--bad);color:#fff;font-size:11px;font-weight:700;line-height:1;border-radius:999px;min-width:19px;height:19px;padding:0 6px;display:none;align-items:center;justify-content:center;font-family:var(--mono)}
+  .wrap{padding:18px 26px 48px;max-width:1920px;margin:0 auto}
+  .pane{display:none}
+  .pane.on{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  /* ---- stats ---- */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:20px}
+  @media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{background:var(--surface-2);border:1px solid var(--border);border-radius:13px;padding:16px 18px;position:relative;overflow:hidden}
+  .stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--st,var(--accent))}
+  .stat::after{content:"";position:absolute;right:-22px;top:-22px;width:74px;height:74px;border-radius:50%;
+    background:radial-gradient(circle,var(--st,var(--accent)) 0%,transparent 70%);opacity:.10}
+  .stat .n{font-family:var(--mono);font-size:34px;font-weight:700;color:var(--st,var(--ink));line-height:1;text-shadow:0 0 18px color-mix(in srgb,var(--st,var(--accent)) 35%, transparent)}
+  .stat .l{font-size:11px;color:var(--ink-soft);margin-top:7px;text-transform:uppercase;letter-spacing:.08em}
+  .stat.ok{--st:var(--ok)} .stat.info{--st:var(--info)} .stat.warn{--st:var(--accent-2)} .stat.bad{--st:var(--bad)}
+  /* ---- cards / grid ---- */
+  .gate-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:820px){.gate-grid{grid-template-columns:1fr}}
+  .card{border:1px solid var(--border);border-radius:14px;padding:20px;background:var(--surface-2)}
+  .card h3{font-weight:600;font-size:15px;margin-bottom:16px;color:var(--ink);letter-spacing:.01em;display:flex;align-items:center;gap:8px}
+  .card h3::before{content:"";width:7px;height:7px;border-radius:2px;background:var(--accent);transform:rotate(45deg)}
+  label.fl{display:block;font-size:11.5px;color:var(--ink-soft);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+  input,select{height:44px;border:1.5px solid var(--border-2);border-radius:10px;padding:0 13px;font-size:14.5px;font-family:var(--font);background:var(--surface-3);width:100%;color:var(--ink);-webkit-text-fill-color:var(--ink);transition:.15s}
+  input:focus,select:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+  input::placeholder{color:var(--ink-faint);-webkit-text-fill-color:var(--ink-faint)}
+  select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239aabbf' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px}
+  .plate-in{font-family:var(--mono);font-size:24px;font-weight:700;letter-spacing:.16em;text-align:center;text-transform:uppercase;height:54px !important}
+  .radios{display:flex;gap:9px;margin:12px 0}
+  .radios label{flex:1;border:1.5px solid var(--border-2);border-radius:10px;padding:10px;text-align:center;cursor:pointer;font-weight:600;font-size:14px;color:var(--ink-soft);transition:.15s}
+  .radios label:hover{border-color:var(--ink-faint)}
+  .radios input{display:none}
+  .radios label:has(input:checked){border-color:var(--accent);background:var(--accent-bg);color:var(--accent-2)}
+  /* ---- buttons ---- */
+  .btn{border:0;border-radius:10px;padding:12px 18px;font-family:var(--font);font-weight:700;font-size:14.5px;cursor:pointer;
+    background:linear-gradient(180deg,var(--accent-2),var(--accent));color:var(--accent-ink);width:100%;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.15s;box-shadow:0 6px 16px -8px rgba(246,168,33,.6)}
+  .btn:hover{filter:brightness(1.07);transform:translateY(-1px)}
+  .btn:active{transform:none}
+  .btn.ghost{background:transparent;border:1.5px solid var(--border-2);color:var(--ink);box-shadow:none}
+  .btn.ghost:hover{border-color:var(--accent);color:var(--accent-2)}
+  .btn.danger{background:transparent;border:1.5px solid rgba(255,93,82,.45);color:var(--bad);box-shadow:none}
+  .btn.danger:hover{background:var(--badbg);border-color:var(--bad)}
+  .btn.sm{width:auto;padding:9px 15px;font-size:13px}
+  .btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none;box-shadow:none;transform:none;filter:none}
+  .btn.is-done{opacity:1;cursor:default;pointer-events:none;box-shadow:none;transform:none;filter:none;
+    background:var(--okbg);color:var(--ok);border:1.5px solid rgba(54,211,153,.35)}
+  /* ---- result ---- */
+  .result{min-height:210px;display:flex;flex-direction:column;justify-content:center}
+  .res-hint{color:var(--ink-faint);text-align:center;font-size:14px;line-height:1.6}
+  .res-banner{border-radius:13px;padding:18px;text-align:center;margin-bottom:15px;border:1px solid transparent}
+  .res-banner .big{font-family:var(--mono);font-size:24px;font-weight:700;letter-spacing:.06em;
+    display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+  .res-banner .who{font-size:13.5px;margin-top:7px;opacity:.95;font-family:var(--font)}
+  .res-ok{background:var(--okbg);color:var(--ok);border-color:rgba(54,211,153,.3)}
+  .res-warn{background:var(--warnbg);color:var(--accent-2);border-color:rgba(246,168,33,.3)}
+  .res-bad{background:var(--badbg);color:var(--bad);border-color:rgba(255,93,82,.35)}
+  .res-bad .big{font-size:23px}
+  .fld{margin-bottom:11px;position:relative}
+  .picker-list{position:absolute;left:0;right:0;top:72px;background:var(--surface-3);border:1px solid var(--border-2);border-radius:10px;box-shadow:var(--shadow);z-index:5;max-height:210px;overflow:auto;display:none}
+  .picker-list div{padding:10px 13px;cursor:pointer;font-size:13.5px;border-bottom:1px solid var(--border);color:var(--ink-soft)}
+  .picker-list div:last-child{border-bottom:0}
+  .picker-list div:hover{background:var(--accent-bg);color:var(--ink)}
+  .picker-list b{color:var(--ink)}
+  .row2{display:flex;gap:10px}.row2>*{flex:1}
+  /* ---- lists (requests / vehicles / journal) ---- */
+  .list{display:flex;flex-direction:column;gap:10px}
+  .item{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--border);border-radius:12px;padding:14px 16px;background:var(--surface-2);transition:.15s}
+  .item:hover{border-color:var(--border-2)}
+  .plate,.item .plate{font-family:var(--mono);font-weight:600;font-size:16px;letter-spacing:.05em;color:var(--ink)}
+  /* AZ license-plate chip — white plate pops on the dark deck */
+  .pchip{display:inline-flex;align-items:stretch;border:2px solid #0b0d12;border-radius:7px;overflow:hidden;
+    background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.5);vertical-align:middle;flex:none}
+  .pchip .pband{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    background:#fff;padding:3px 5px;border-right:1.5px solid #1c1f26}
+  .pchip .pflag{width:15px;height:10px;border-radius:2px;border:.5px solid rgba(28,31,38,.3);
+    background:
+      radial-gradient(circle 1.3px at 56% 50%, #e8112d 0 1.3px, transparent 1.5px),
+      radial-gradient(circle 1.9px at 50% 50%, #fff 0 1.9px, transparent 2.1px),
+      linear-gradient(180deg,#0098c3 0 33.4%, #e8112d 33.4% 66.7%, #00ae65 66.7% 100%)}
+  .pchip .paz{font-size:8px;font-weight:800;color:#1c1f26;letter-spacing:.05em;line-height:1;font-family:Arial,sans-serif}
+  .pchip .pnum{display:flex;align-items:center;padding:4px 11px;font-family:var(--mono);
+    font-size:16px;font-weight:700;letter-spacing:.1em;color:#15171c}
+  .pchip.lg .pnum{font-size:20px;padding:6px 14px}
+  .pchip.lg .pflag{width:18px;height:12px}
+  .item .meta,.meta{font-size:12.5px;color:var(--ink-soft);margin-top:3px}
+  .pill{font-size:10.5px;font-weight:700;border-radius:999px;padding:3px 10px;text-transform:uppercase;letter-spacing:.04em;display:inline-block;vertical-align:middle}
+  .pill-ok{background:var(--okbg);color:var(--ok)}.pill-warn{background:var(--warnbg);color:var(--accent-2)}
+  .pill-gray{background:rgba(255,255,255,.07);color:var(--ink-soft)}.pill-bad{background:var(--badbg);color:var(--bad)}
+  .empty{color:var(--ink-faint);padding:34px 18px;text-align:center;font-size:14px}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+  .toolbar input,.toolbar select{width:auto;min-width:170px}
+  .err{color:var(--bad);font-size:13px;min-height:16px;margin-top:6px;display:block}
+  /* ---- KPP page: main content (left) + always-visible requests rail (right) ---- */
+  .kpp-layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;align-items:start}
+  @media(max-width:1180px){.kpp-layout{grid-template-columns:1fr}}
+  .kpp-main{min-width:0}
+  .kpp-side{position:sticky;top:84px;background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:16px;max-height:calc(100vh - 104px);display:flex;flex-direction:column}
+  @media(max-width:1180px){.kpp-side{position:static;max-height:none}}
+  .side-head{display:flex;align-items:center;gap:9px;font-weight:700;font-size:13px;color:var(--ink);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+  .side-head i{color:var(--accent);font-size:16px}
+  .side-head .side-count{margin-left:auto;background:var(--bad);color:#fff;font-size:11px;font-weight:700;font-family:var(--mono);min-width:20px;height:20px;border-radius:999px;display:none;align-items:center;justify-content:center;padding:0 6px}
+  .kpp-side .list{overflow:auto;gap:11px;padding-right:2px}
+  /* compact (vertical) request card for the narrow rail */
+  .req-card{display:flex;flex-direction:column;gap:11px;border:1px solid var(--border);border-radius:12px;padding:13px 14px;background:var(--surface-3);transition:.15s;animation:fade .25s ease}
+  .req-card:hover{border-color:var(--border-2)}
+  .req-card .rc-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .req-card .rc-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .req-card .rc-acts .btn{width:100%}
+  /* ---- KPP top: live camera + feed ---- */
+  .kpp-top{display:grid;grid-template-columns:minmax(400px,0.95fr) 1.3fr;gap:20px;align-items:start;margin-bottom:20px}
+  @media(max-width:1080px){.kpp-top{grid-template-columns:1fr}}
+  .livecam{position:sticky;top:84px;background:#06080b;border-radius:14px;overflow:hidden;border:1px solid var(--border-2);box-shadow:var(--shadow)}
+  .livecam .lc-head{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--surface-2);color:var(--ink);font-size:12.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+  .livecam .lc-live{display:inline-flex;align-items:center;gap:7px;color:#ff5b5b;font-weight:700;font-size:11px;letter-spacing:.12em}
+  .livecam .lc-live::before{content:"";width:8px;height:8px;border-radius:50%;background:#ff5b5b;box-shadow:0 0 8px #ff5b5b;animation:lcpulse 1.2s ease-in-out infinite}
+  @keyframes lcpulse{0%,100%{opacity:1}50%{opacity:.25}}
+  .livecam{--lc:rgba(246,168,33,.8)}
+  .livecam .lc-body{position:relative}
+  .livecam .lc-body::before,.livecam .lc-body::after,
+  .livecam .lc-corner::before,.livecam .lc-corner::after{content:"";position:absolute;width:22px;height:22px;z-index:3;pointer-events:none}
+  .livecam .lc-body::before{left:10px;top:10px;border-left:2px solid var(--lc);border-top:2px solid var(--lc)}
+  .livecam .lc-body::after{right:10px;top:10px;border-right:2px solid var(--lc);border-top:2px solid var(--lc)}
+  .livecam .lc-corner::before{left:10px;bottom:10px;border-left:2px solid var(--lc);border-bottom:2px solid var(--lc)}
+  .livecam .lc-corner::after{right:10px;bottom:10px;border-right:2px solid var(--lc);border-bottom:2px solid var(--lc)}
+  .livecam img{display:block;width:100%;background:#06080b;min-height:300px;object-fit:contain}
+  .livecam .lc-off{color:var(--ink-faint);text-align:center;padding:70px 16px;font-size:13px;line-height:1.6}
+  /* ---- gate feed cards ---- */
+  .gate-feed-title{font-weight:700;color:var(--ink);margin:0 2px 14px;font-size:14px;display:flex;align-items:center;gap:9px;text-transform:uppercase;letter-spacing:.04em}
+  .gate-feed-title::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--bad);box-shadow:0 0 8px var(--bad);animation:lcpulse 1.2s ease-in-out infinite}
+  .gate-card{display:flex;gap:15px;border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:13px;background:var(--surface-2);transition:.15s}
+  .gate-card:hover{border-color:var(--border-2)}
+  .gate-card.bl{border-color:rgba(255,93,82,.5);background:var(--badbg)}
+  .gate-snap{width:208px;height:138px;object-fit:cover;border-radius:11px;background:#0c1118;flex:none;border:1px solid var(--border)}
+  .gate-snap.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;color:var(--ink-faint);font-size:12px}
+  .gate-snap.empty i{font-size:27px;opacity:.6}
+  .gate-info{flex:1;display:flex;flex-direction:column;gap:13px;min-width:0}
+  .gate-head{display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+  .gate-head .plate{font-size:18px}
+  .gate-form{display:flex;flex-direction:column;gap:11px}
+  .gate-vfields{display:grid;grid-template-columns:1fr 1fr;gap:11px 12px;align-items:start}
+  @media(max-width:680px){.gate-vfields{grid-template-columns:1fr}}
+  .gate-form .fld{position:relative;margin-bottom:0;min-width:0}
+  .gate-actions{display:grid;grid-template-columns:2fr 1fr;gap:10px}
+  .gate-actions .btn{width:100%}
+  @media(max-width:680px){.gate-actions{grid-template-columns:1fr}}
+  /* scrollbars */
+  *::-webkit-scrollbar{width:10px;height:10px}
+  *::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:10px;border:2px solid transparent;background-clip:content-box}
+  *::-webkit-scrollbar-thumb:hover{background:#2c3744;background-clip:content-box}
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="/images/branding/royal-park-logo.webp" alt="Royal Park">
+      <div><div class="t">Royal Park</div><div class="sub" data-t="g_sub">Mühafizə · KPP</div></div>
+    </div>
+    <div class="top-right">
+      <div class="seg" id="langSeg">
+        <button data-lang="az">AZ</button><button data-lang="en">EN</button><button data-lang="ru">RU</button>
+      </div>
+      <span class="clock" id="gClock"><i class="bi bi-clock"></i><span id="gClockTime">--:--:--</span><span class="d" id="gClockDate"></span></span>
+      <span class="who"><i class="bi bi-person-badge"></i> <b id="guardName">—</b></span>
+      <button class="logout" id="logoutBtn" title="Çıxış"><i class="bi bi-box-arrow-right"></i></button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab on" data-tab="gate"><i class="bi bi-sign-stop"></i> <span data-t="g_tab_gate">KPP</span><span class="badge" id="gateBadge">0</span></button>
+    <button class="tab" data-tab="vehicles"><i class="bi bi-car-front"></i> <span data-t="g_tab_vehicles">Avtomobillər</span></button>
+    <button class="tab" data-tab="journal"><i class="bi bi-journal-text"></i> <span data-t="g_tab_journal">Jurnal</span></button>
+  </nav>
+
+  <div class="wrap">
+    <!-- GATE -->
+    <section class="pane on" data-pane="gate">
+     <div class="kpp-layout">
+      <div class="kpp-main">
+      <div class="kpp-top">
+        <div class="livecam">
+          <div class="lc-head"><span data-t="g_live_cam">Canlı kamera</span><span class="lc-live" data-t="g_live">LIVE</span></div>
+          <div class="lc-body"><span class="lc-corner"></span>
+            <img id="live-cam" alt="">
+            <div class="lc-off" id="lc-off" data-t="g_cam_off">Kamera axını yoxdur — rp-anpr işə salın</div>
+          </div>
+        </div>
+        <div id="gate-feed"></div>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="gate-grid">
+        <div class="card">
+          <h3 data-t="g_gate_title">Şlaqbaumdakı avtomobil</h3>
+          <label class="fl" data-t="g_plate">Nömrə</label>
+          <input id="g-plate" class="plate-in" placeholder="10AA123" maxlength="16" autocomplete="off">
+          <div class="radios">
+            <label><input type="radio" name="g-dir" value="IN" checked><span data-t="g_in">Giriş</span></label>
+            <label><input type="radio" name="g-dir" value="OUT"><span data-t="g_out">Çıxış</span></label>
+          </div>
+          <button class="btn" id="g-check"><i class="bi bi-search"></i> <span data-t="g_check">Yoxla</span></button>
+          <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+            <button class="btn ghost" id="g-emergency"><i class="bi bi-exclamation-triangle"></i> <span data-t="g_emergency">Təcili aç</span></button>
+          </div>
+        </div>
+        <div class="card">
+          <h3 data-t="g_result">Nəticə</h3>
+          <div class="result" id="g-result"><div class="res-hint" data-t="g_result_hint">Nömrəni daxil edib «Yoxla» düyməsini basın</div></div>
+        </div>
+      </div>
+      </div><!-- /.kpp-main -->
+
+      <aside class="kpp-side">
+        <div class="side-head"><i class="bi bi-envelope"></i> <span data-t="g_tab_requests">Sorğular</span><span class="side-count" id="reqBadge">0</span></div>
+        <div class="list" id="req-list"></div>
+      </aside>
+     </div><!-- /.kpp-layout -->
+    </section>
+
+    <!-- VEHICLES -->
+    <section class="pane" data-pane="vehicles">
+      <div class="toolbar">
+        <input id="v-search" data-t-ph="g_vehicles_search" placeholder="Nömrə axtar...">
+        <button class="btn sm" id="v-search-btn" data-t="g_search">Axtar</button>
+        <button class="btn ghost sm" id="v-add-toggle"><i class="bi bi-plus"></i> <span data-t="g_add_guest">Qonaq</span></button>
+      </div>
+      <div class="card" id="v-add-form" style="display:none;margin-bottom:14px">
+        <div class="row2">
+          <div><label class="fl" data-t="g_plate">Nömrə</label><input id="va-plate" maxlength="16"></div>
+          <div><label class="fl" data-t="g_label">Etiket</label><input id="va-label" maxlength="40"></div>
+        </div>
+        <div class="row2" style="margin-top:8px">
+          <div><label class="fl" data-t="g_from">Başlanğıc</label><input id="va-from" type="datetime-local"></div>
+          <div><label class="fl" data-t="g_to">Son</label><input id="va-to" type="datetime-local"></div>
+        </div>
+        <button class="btn sm" id="va-save" style="margin-top:10px" data-t="g_create">Yarat</button>
+        <span class="err" id="va-err"></span>
+      </div>
+      <div class="list" id="v-list"></div>
+    </section>
+
+    <!-- JOURNAL -->
+    <section class="pane" data-pane="journal">
+      <div class="toolbar">
+        <select id="j-dir"><option value="" data-t="g_all">Hamısı</option><option value="IN" data-t="g_in">Giriş</option><option value="OUT" data-t="g_out">Çıxış</option></select>
+        <input id="j-plate" data-t-ph="g_vehicles_search" placeholder="Nömrə axtar...">
+        <button class="btn sm" id="j-refresh"><i class="bi bi-arrow-clockwise"></i></button>
+      </div>
+      <div class="list" id="j-list"></div>
+    </section>
+  </div>
+
+<script src="/js/config.js"></script>
+<script>
+(function(){
+  var API = (window.API_BASE || '');
+  // ---- tiny i18n (self-contained) ----
+  var DICT = {
+    az:{g_sub:"Mühafizə · KPP",g_tab_gate:"KPP",g_tab_requests:"Sorğular",g_tab_vehicles:"Avtomobillər",g_tab_journal:"Jurnal",
+      g_gate_title:"Şlaqbaumdakı avtomobil",g_plate:"Nömrə",g_in:"Giriş",g_out:"Çıxış",g_check:"Yoxla",g_emergency:"Təcili aç",
+      g_result:"Nəticə",g_result_hint:"Nömrəni daxil edib «Yoxla» düyməsini basın",g_open:"Şlaqbaumu aç",g_deny:"İmtina",
+      g_allowed:"İCAZƏ VAR",g_unknown:"BAZADA YOXDUR",g_blacklist_alert:"QARA SİYAHI — AÇMA",g_resident:"Sakin",g_label:"Etiket",
+      g_guest_title:"Qonaq girişini rəsmiləşdir",g_visitor:"Qonağın adı/soyadı",g_to_whom:"Kimə gəlib",g_purpose:"Məqsəd",g_open_record:"Aç və qeyd et",
+      g_stats_in:"Giriş",g_stats_out:"Çıxış",g_stats_guests:"Qonaq",g_stats_denied:"İmtina",g_today:"Bu gün",
+      g_requests_empty:"Aktiv sorğu yoxdur",g_handle:"Aç",g_reject:"İmtina",g_vehicles_search:"Nömrə axtar...",g_search:"Axtar",
+      g_add_guest:"Qonaq",g_label2:"Etiket",g_from:"Başlanğıc",g_to:"Son",g_create:"Yarat",g_blacklist:"Qara siyahı",g_unblock:"Blokdan çıxar",
+      g_active:"aktiv",g_blacklisted:"bloklanıb",g_guest:"qonaq",g_all:"Hamısı",g_no_events:"Qeyd yoxdur",g_emergency_reason:"Təcili açma səbəbi:",
+      g_purpose_guest:"qonaq",g_purpose_delivery:"çatdırılma",g_purpose_taxi:"taksi",g_purpose_courier:"kuryer",g_purpose_technician:"texnik",g_purpose_other:"digər",g_purpose_other_ph:"Növü daxil edin",g_opened:"açıldı",
+      g_doc_id:"Şəxsiyyət / ID",g_doc_id_ph:"AA1234567",g_mark_exit:"Çıxışı qeyd et",g_time_in:"Giriş",g_time_out:"Çıxış",g_exited:"çıxdı",g_save_record:"Qeyd et",g_inside:"ərazidə",
+      g_feed_title:"Şlaqbaumda avtomobil",g_no_plate:"nömrə yoxdur",g_search_resident:"Sakini axtar",
+      vt_car:"avtomobil",vt_motorcycle:"motosiklet",vt_bus:"avtobus",vt_truck:"yük maşını",g_no_frame:"kadr yoxdur",
+      dec_AUTO_OPEN:"avto-açıldı",dec_MANUAL_OPEN:"əl ilə açıldı",dec_DENIED:"imtina",dec_BLACKLIST_ALERT:"qara siyahı",
+      g_live_cam:"Canlı kamera",g_live:"CANLI",g_cam_off:"Kamera axını yoxdur — rp-anpr işə salın"},
+    en:{g_sub:"Security · Gate",g_tab_gate:"Gate",g_tab_requests:"Requests",g_tab_vehicles:"Vehicles",g_tab_journal:"Journal",
+      g_gate_title:"Car at the barrier",g_plate:"Plate",g_in:"In",g_out:"Out",g_check:"Check",g_emergency:"Emergency open",
+      g_result:"Result",g_result_hint:"Enter a plate and press Check",g_open:"Open barrier",g_deny:"Deny",
+      g_allowed:"ALLOWED",g_unknown:"NOT IN DB",g_blacklist_alert:"BLACKLIST — DO NOT OPEN",g_resident:"Resident",g_label:"Label",
+      g_guest_title:"Register guest entry",g_visitor:"Visitor name",g_to_whom:"Visiting",g_purpose:"Purpose",g_open_record:"Open & record",
+      g_stats_in:"In",g_stats_out:"Out",g_stats_guests:"Guests",g_stats_denied:"Denied",g_today:"Today",
+      g_requests_empty:"No active requests",g_handle:"Open",g_reject:"Reject",g_vehicles_search:"Search plate...",g_search:"Search",
+      g_add_guest:"Guest",g_label2:"Label",g_from:"From",g_to:"To",g_create:"Create",g_blacklist:"Blacklist",g_unblock:"Unblock",
+      g_active:"active",g_blacklisted:"blocked",g_guest:"guest",g_all:"All",g_no_events:"No records",g_emergency_reason:"Emergency open reason:",
+      g_purpose_guest:"guest",g_purpose_delivery:"delivery",g_purpose_taxi:"taxi",g_purpose_courier:"courier",g_purpose_technician:"technician",g_purpose_other:"other",g_purpose_other_ph:"Enter type",g_opened:"opened",
+      g_doc_id:"ID / document",g_doc_id_ph:"AA1234567",g_mark_exit:"Mark exit",g_time_in:"Entry",g_time_out:"Exit",g_exited:"exited",g_save_record:"Record",g_inside:"on site",
+      g_feed_title:"Car at the barrier",g_no_plate:"no plate",g_search_resident:"Search resident",
+      vt_car:"car",vt_motorcycle:"motorcycle",vt_bus:"bus",vt_truck:"truck",g_no_frame:"no frame",
+      dec_AUTO_OPEN:"auto-open",dec_MANUAL_OPEN:"manual open",dec_DENIED:"denied",dec_BLACKLIST_ALERT:"blacklist",
+      g_live_cam:"Live camera",g_live:"LIVE",g_cam_off:"No camera stream — start rp-anpr"},
+    ru:{g_sub:"Охрана · КПП",g_tab_gate:"КПП",g_tab_requests:"Заявки",g_tab_vehicles:"Авто",g_tab_journal:"Журнал",
+      g_gate_title:"Машина у шлагбаума",g_plate:"Номер",g_in:"Въезд",g_out:"Выезд",g_check:"Проверить",g_emergency:"Экстренно открыть",
+      g_result:"Результат",g_result_hint:"Введите номер и нажмите «Проверить»",g_open:"Открыть шлагбаум",g_deny:"Отказать",
+      g_allowed:"РАЗРЕШЕНО",g_unknown:"НЕТ В БАЗЕ",g_blacklist_alert:"ЧЁРНЫЙ СПИСОК — НЕ ОТКРЫВАТЬ",g_resident:"Резидент",g_label:"Метка",
+      g_guest_title:"Оформить въезд гостя",g_visitor:"ФИО гостя",g_to_whom:"К кому приехал",g_purpose:"Цель",g_open_record:"Открыть и записать",
+      g_stats_in:"Въезды",g_stats_out:"Выезды",g_stats_guests:"Гости",g_stats_denied:"Отказы",g_today:"Сегодня",
+      g_requests_empty:"Активных заявок нет",g_handle:"Открыть",g_reject:"Отклонить",g_vehicles_search:"Поиск номера...",g_search:"Найти",
+      g_add_guest:"Гость",g_label2:"Метка",g_from:"С",g_to:"До",g_create:"Создать",g_blacklist:"Чёрный список",g_unblock:"Снять блок",
+      g_active:"активен",g_blacklisted:"заблокирован",g_guest:"гость",g_all:"Все",g_no_events:"Записей нет",g_emergency_reason:"Причина экстренного открытия:",
+      g_purpose_guest:"гость",g_purpose_delivery:"доставка",g_purpose_taxi:"такси",g_purpose_courier:"курьер",g_purpose_technician:"техник",g_purpose_other:"другое",g_purpose_other_ph:"Укажите тип",g_opened:"открыто",
+      g_doc_id:"Удостоверение / ID",g_doc_id_ph:"AA1234567",g_mark_exit:"Отметить выезд",g_time_in:"Въезд",g_time_out:"Выезд",g_exited:"выехал",g_save_record:"Записать",g_inside:"на территории",
+      g_feed_title:"Авто у шлагбаума",g_no_plate:"номера нет",g_search_resident:"Поиск резидента",
+      vt_car:"авто",vt_motorcycle:"мотоцикл",vt_bus:"автобус",vt_truck:"грузовик",g_no_frame:"нет кадра",
+      dec_AUTO_OPEN:"авто-открытие",dec_MANUAL_OPEN:"вручную",dec_DENIED:"отказ",dec_BLACKLIST_ALERT:"чёрный список",
+      g_live_cam:"Камера вживую",g_live:"ЭФИР",g_cam_off:"Нет потока — запустите rp-anpr"}
+  };
+  var lang = localStorage.getItem('language'); if(!DICT[lang]) lang='az';
+  function T(k){ return (DICT[lang] && DICT[lang][k]) || (DICT.az[k]) || k; }
+  function applyLang(){
+    document.querySelectorAll('[data-t]').forEach(function(el){ el.textContent = T(el.getAttribute('data-t')); });
+    document.querySelectorAll('[data-t-ph]').forEach(function(el){ el.placeholder = T(el.getAttribute('data-t-ph')); });
+    document.querySelectorAll('#langSeg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-lang')===lang); });
+    document.documentElement.lang = lang;
+  }
+  document.querySelectorAll('#langSeg button').forEach(function(b){
+    b.addEventListener('click', function(){ lang=b.getAttribute('data-lang'); localStorage.setItem('language',lang); applyLang(); renderAll(); });
+  });
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function pchip(p, lg){
+    var raw = String(p==null?'':p).toUpperCase();
+    var mm = /^(\d{2})([A-Z]{1,2})(\d{3})$/.exec(raw);
+    var num = mm ? (mm[1]+'-'+mm[2]+'-'+mm[3]) : raw;
+    return '<span class="pchip'+(lg?' lg':'')+'"><span class="pband"><span class="pflag"></span>'+
+           '<span class="paz">AZ</span></span><span class="pnum">'+esc(num)+'</span></span>';
+  }
+  function api(path, opts){ opts=opts||{}; opts.credentials='include'; opts.headers=Object.assign({'Content-Type':'application/json'},opts.headers||{}); return fetch(API+path, opts); }
+  function fmt(s){ if(!s) return ''; var d=new Date(s); if(isNaN(d)) return s; return d.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+  function vtype(v){ var k={car:'vt_car',motorcycle:'vt_motorcycle',bus:'vt_bus',truck:'vt_truck'}[v]; return k?T(k):(v||''); }
+  // ---- visitor-type select (with free-text "other") ----
+  var PURPOSES=['guest','delivery','taxi','courier','technician','other'];
+  function purposeOptions(){ return PURPOSES.map(function(k){return '<option value="'+k+'">'+esc(T('g_purpose_'+k))+'</option>';}).join(''); }
+  function purposeLabel(p){ if(!p) return ''; return PURPOSES.indexOf(p)>=0 ? T('g_purpose_'+p) : p; }
+  // bind a purpose <select> to its sibling free-text input (shown only for "other")
+  function bindPurpose(sel, other){
+    if(!sel||!other) return;
+    function sync(){ other.style.display = sel.value==='other'?'block':'none'; }
+    sel.addEventListener('change', function(){ sync(); if(sel.value==='other') other.focus(); });
+    sync();
+  }
+  function readPurpose(sel, other){ if(!sel) return null; return sel.value==='other' ? (other&&other.value.trim()||'other') : sel.value; }
+  // visitor fields block (driver name + ID + to-whom + type) — `p` is a unique class prefix
+  function visitorFields(p){
+    return '<div class="fld"><label class="fl">'+esc(T('g_visitor'))+'</label><input class="'+p+'-visitor" maxlength="200"></div>'+
+      '<div class="fld"><label class="fl">'+esc(T('g_doc_id'))+'</label><input class="'+p+'-doc" maxlength="40" placeholder="'+esc(T('g_doc_id_ph'))+'" autocomplete="off"></div>'+
+      '<div class="fld"><label class="fl">'+esc(T('g_to_whom'))+'</label><input class="'+p+'-resident" autocomplete="off" placeholder="'+esc(T('g_search_resident'))+'"><div class="picker-list '+p+'-picker"></div></div>'+
+      '<div class="fld"><label class="fl">'+esc(T('g_purpose'))+'</label><select class="'+p+'-purpose">'+purposeOptions()+'</select>'+
+        '<input class="'+p+'-purpose-other" style="display:none;margin-top:8px" maxlength="40" placeholder="'+esc(T('g_purpose_other_ph'))+'"></div>';
+  }
+  // wire pickers + purpose for a visitorFields block; returns a reader
+  function bindVisitor(root, p){
+    var chosen={resident_id:null};
+    setupPicker(root.querySelector('.'+p+'-resident'), root.querySelector('.'+p+'-picker'), chosen);
+    var sel=root.querySelector('.'+p+'-purpose'), oth=root.querySelector('.'+p+'-purpose-other');
+    bindPurpose(sel, oth);
+    return function(){ return {
+      resident_id: chosen.resident_id,
+      visitor_name: (root.querySelector('.'+p+'-visitor').value.trim())||null,
+      visitor_doc_id: (root.querySelector('.'+p+'-doc').value.trim())||null,
+      purpose: readPurpose(sel, oth)
+    }; };
+  }
+
+  // ---- auth guard ----
+  api('/api/auth/check').then(function(r){ return r.ok?r.json():null; }).then(function(d){
+    if(!d || !d.authenticated || ['GUARD','ADMIN','ROOT'].indexOf(d.role)<0){ window.location.replace('/'); return; }
+    document.getElementById('guardName').textContent = d.full_name || d.username || 'Guard';
+    boot();
+  }).catch(function(){ window.location.replace('/'); });
+
+  // ---- tabs ----
+  document.querySelectorAll('.tab').forEach(function(tb){
+    tb.addEventListener('click', function(){
+      document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('on', t===tb); });
+      var name = tb.getAttribute('data-tab');
+      document.querySelectorAll('.pane').forEach(function(p){ p.classList.toggle('on', p.getAttribute('data-pane')===name); });
+      if(name==='requests') loadRequests();
+      if(name==='vehicles') loadVehicles();
+      if(name==='journal') loadJournal();
+    });
+  });
+
+  // ---- GATE: check / open / deny ----
+  var resultBox = document.getElementById('g-result');
+  function dir(){ return (document.querySelector('input[name="g-dir"]:checked')||{}).value||'IN'; }
+  function renderResult(d){
+    var plate = d.plate;
+    if(d.result==='BLACKLIST'){
+      resultBox.innerHTML = '<div class="res-banner res-bad"><div class="big"><i class="bi bi-exclamation-octagon-fill"></i> '+pchip(plate,1)+'</div><div class="who">'+esc(T('g_blacklist_alert'))+'</div></div>';
+      return;
+    }
+    if(d.result==='ALLOW'){
+      var who = d.resident_name ? (esc(T('g_resident'))+': '+esc(d.resident_name)+(d.house?(' · '+esc(d.house)):'')) : '';
+      resultBox.innerHTML = '<div class="res-banner res-ok"><div class="big"><i class="bi bi-check-circle-fill"></i> '+pchip(plate,1)+'</div><div class="who">'+who+(d.label?(' · '+esc(d.label)):'')+'</div></div>'+
+        '<button class="btn" id="r-open"><i class="bi bi-unlock"></i> '+esc(T('g_open'))+'</button>';
+      document.getElementById('r-open').addEventListener('click', function(){ doOpen({plate:plate, resident_id:d.resident_id||null}); });
+      return;
+    }
+    // UNKNOWN -> guest form
+    resultBox.innerHTML =
+      '<div class="res-banner res-warn"><div class="big"><i class="bi bi-question-circle-fill"></i> '+pchip(plate,1)+'</div><div class="who">'+esc(T('g_unknown'))+'</div></div>'+
+      visitorFields('r')+
+      '<div class="row2"><button class="btn" id="r-open2"><i class="bi bi-unlock"></i> '+esc(T('g_open_record'))+'</button>'+
+        '<button class="btn danger" id="r-deny"><i class="bi bi-x-lg"></i> '+esc(T('g_deny'))+'</button></div>';
+    var readV = bindVisitor(resultBox, 'r');
+    document.getElementById('r-open2').addEventListener('click', function(){
+      doOpen(Object.assign({plate:plate}, readV()));
+    });
+    document.getElementById('r-deny').addEventListener('click', function(){
+      api('/api/access/deny',{method:'POST',body:JSON.stringify(Object.assign({plate:plate,direction:dir()}, readV()))})
+        .then(function(){ resultBox.innerHTML='<div class="res-hint">'+esc(T('g_result_hint'))+'</div>'; document.getElementById('g-plate').value=''; loadStats(); });
+    });
+  }
+  function doCheck(){
+    var plate=document.getElementById('g-plate').value.trim(); if(!plate) return;
+    api('/api/access/check',{method:'POST',body:JSON.stringify({plate:plate,direction:dir()})})
+      .then(function(r){ return r.json(); }).then(renderResult);
+  }
+  function doOpen(extra){
+    var body=Object.assign({direction:dir(),source:'MANUAL'}, extra||{});
+    api('/api/access/open',{method:'POST',body:JSON.stringify(body)}).then(function(r){
+      if(r.status===409){ alert(T('g_blacklist_alert')); return; }
+      return r.json();
+    }).then(function(){ resultBox.innerHTML='<div class="res-banner res-ok"><div class="big"><i class="bi bi-check-circle-fill"></i> '+esc(T('g_opened'))+'</div></div>'; document.getElementById('g-plate').value=''; loadStats(); });
+  }
+  document.getElementById('g-check').addEventListener('click', doCheck);
+  document.getElementById('g-plate').addEventListener('keydown', function(e){ if(e.key==='Enter') doCheck(); });
+  document.getElementById('g-emergency').addEventListener('click', function(){
+    var reason = prompt(T('g_emergency_reason')); if(reason===null) return;
+    doOpen({purpose: reason || 'emergency'});
+  });
+
+  // ---- resident picker (autofill house) ----
+  function setupPicker(input, listEl, chosen){
+    var tmr;
+    input.addEventListener('input', function(){
+      chosen.resident_id=null;
+      clearTimeout(tmr); var q=input.value.trim();
+      if(q.length<1){ listEl.style.display='none'; return; }
+      tmr=setTimeout(function(){
+        api('/api/access/residents/search?q='+encodeURIComponent(q)).then(function(r){return r.json();}).then(function(rows){
+          if(!rows.length){ listEl.style.display='none'; return; }
+          listEl.innerHTML = rows.map(function(x){ return '<div data-id="'+x.resident_id+'" data-h="'+esc(x.house)+'"><i class="bi bi-house-door"></i> <b>'+esc(x.house)+'</b></div>'; }).join('');
+          listEl.style.display='block';
+          listEl.querySelectorAll('div').forEach(function(opt){
+            opt.addEventListener('click', function(){ chosen.resident_id=parseInt(opt.getAttribute('data-id')); input.value=opt.textContent.trim(); listEl.style.display='none'; });
+          });
+        });
+      },250);
+    });
+  }
+
+  // ---- stats ----
+  function loadStats(){
+    api('/api/access/events').then(function(r){return r.json();}).then(function(ev){
+      var today=new Date().toISOString().slice(0,10);
+      var s={IN:0,OUT:0,guests:0,denied:0};
+      ev.forEach(function(e){ if((e.created_at||'').slice(0,10)!==today) return;
+        if(e.decision==='DENIED'){ s.denied++; return; }
+        if(e.direction==='IN') s.IN++; else s.OUT++;
+        if(e.visitor_name) s.guests++; });
+      document.getElementById('stats').innerHTML =
+        stat(s.IN,'g_stats_in','ok')+stat(s.OUT,'g_stats_out','info')+stat(s.guests,'g_stats_guests','warn')+stat(s.denied,'g_stats_denied','bad');
+    });
+  }
+  function stat(n,k,cls){ return '<div class="stat '+(cls||'')+'"><div class="n">'+n+'</div><div class="l">'+esc(T('g_today'))+' · '+esc(T(k))+'</div></div>'; }
+
+  // ---- KPP attention badge = pending requests + pending camera events ----
+  var pendReq=0, pendGate=0;
+  function updateKppBadge(){
+    var n=pendReq+pendGate, b=document.getElementById('gateBadge');
+    b.style.display=n?'inline-flex':'none'; b.textContent=n;
+  }
+
+  // ---- requests (always-visible rail on the KPP screen) ----
+  function loadRequests(){
+    api('/api/access/requests?status=PENDING').then(function(r){return r.json();}).then(function(list){
+      pendReq=list.length; updateKppBadge();
+      var badge=document.getElementById('reqBadge');
+      badge.style.display = list.length? 'inline-flex':'none'; badge.textContent=list.length;
+      var box=document.getElementById('req-list');
+      if(!list.length){ box.innerHTML='<div class="empty">'+esc(T('g_requests_empty'))+'</div>'; return; }
+      box.innerHTML = list.map(function(q){
+        var d = q.direction==='OUT'? T('g_out'):T('g_in');
+        return '<div class="req-card">'+
+          '<div class="rc-head">'+pchip(q.plate)+' <span class="pill pill-warn">'+esc(d)+'</span></div>'+
+          '<div class="meta">'+esc(q.requester_name||'')+(q.house?(' · '+esc(q.house)):'')+(q.note?(' · '+esc(q.note)):'')+' · '+esc(fmt(q.created_at))+'</div>'+
+          '<div class="rc-acts"><button class="btn sm" data-h="'+q.id+'"><i class="bi bi-unlock"></i> '+esc(T('g_handle'))+'</button>'+
+          '<button class="btn danger sm" data-r="'+q.id+'"><i class="bi bi-x-lg"></i> '+esc(T('g_reject'))+'</button></div></div>';
+      }).join('');
+      box.querySelectorAll('[data-h]').forEach(function(b){ b.addEventListener('click', function(){ api('/api/access/requests/'+b.getAttribute('data-h')+'/handle',{method:'POST'}).then(function(){ loadRequests(); loadStats(); }); }); });
+      box.querySelectorAll('[data-r]').forEach(function(b){ b.addEventListener('click', function(){ api('/api/access/requests/'+b.getAttribute('data-r')+'/reject',{method:'POST'}).then(loadRequests); }); });
+    });
+  }
+
+  // ---- vehicles registry ----
+  function vehPill(v){
+    if(v.status==='BLACKLIST') return '<span class="pill pill-bad">'+esc(T('g_blacklisted'))+'</span>';
+    if(v.type==='GUEST') return '<span class="pill pill-warn">'+esc(T('g_guest'))+'</span>';
+    return '<span class="pill pill-ok">'+esc(T('g_active'))+'</span>';
+  }
+  function loadVehicles(){
+    var q=document.getElementById('v-search').value.trim();
+    api('/api/access/vehicles'+(q?('?q='+encodeURIComponent(q)):'')).then(function(r){return r.json();}).then(function(list){
+      var box=document.getElementById('v-list');
+      if(!list.length){ box.innerHTML='<div class="empty">—</div>'; return; }
+      box.innerHTML = list.map(function(v){
+        var act = v.status==='BLACKLIST'
+          ? '<button class="btn ghost sm" data-act="ACTIVE" data-id="'+v.id+'"><i class="bi bi-unlock"></i> '+esc(T('g_unblock'))+'</button>'
+          : '<button class="btn danger sm" data-act="BLACKLIST" data-id="'+v.id+'"><i class="bi bi-slash-circle"></i> '+esc(T('g_blacklist'))+'</button>';
+        return '<div class="item"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+pchip(v.plate)+' '+vehPill(v)+
+          '<div class="meta">'+esc(v.label||'')+(v.house?(' · '+esc(v.house)):'')+'</div></div>'+act+'</div>';
+      }).join('');
+      box.querySelectorAll('[data-act]').forEach(function(b){ b.addEventListener('click', function(){
+        api('/api/access/vehicles/'+b.getAttribute('data-id')+'/status',{method:'POST',body:JSON.stringify({status:b.getAttribute('data-act')})}).then(loadVehicles);
+      }); });
+    });
+  }
+  document.getElementById('v-search-btn').addEventListener('click', loadVehicles);
+  document.getElementById('v-search').addEventListener('keydown', function(e){ if(e.key==='Enter') loadVehicles(); });
+  document.getElementById('v-add-toggle').addEventListener('click', function(){ var f=document.getElementById('v-add-form'); f.style.display = f.style.display==='none'?'block':'none'; });
+  document.getElementById('va-save').addEventListener('click', function(){
+    var err=document.getElementById('va-err'); err.textContent='';
+    var body={plate:document.getElementById('va-plate').value.trim(), type:'GUEST', label:document.getElementById('va-label').value.trim()||null,
+      valid_from:document.getElementById('va-from').value||null, valid_to:document.getElementById('va-to').value||null};
+    api('/api/access/vehicles',{method:'POST',body:JSON.stringify(body)}).then(function(r){ if(!r.ok) return r.json().then(function(d){throw new Error(d.detail||'Error');});
+      document.getElementById('v-add-form').style.display='none'; document.getElementById('va-plate').value=''; document.getElementById('va-label').value=''; loadVehicles(); })
+      .catch(function(ex){ err.textContent=ex.message; });
+  });
+
+  // ---- journal ----
+  function decPill(dec){
+    var m={AUTO_OPEN:'pill-ok',MANUAL_OPEN:'pill-ok',DENIED:'pill-bad',BLACKLIST_ALERT:'pill-bad'};
+    return '<span class="pill '+(m[dec]||'pill-gray')+'">'+esc(T('dec_'+dec))+'</span>';
+  }
+  function loadJournal(){
+    var d=document.getElementById('j-dir').value, q=document.getElementById('j-plate').value.trim();
+    var qs=[]; if(d) qs.push('direction='+d); if(q) qs.push('plate='+encodeURIComponent(q));
+    api('/api/access/events'+(qs.length?('?'+qs.join('&')):'')).then(function(r){return r.json();}).then(function(list){
+      var box=document.getElementById('j-list');
+      if(!list.length){ box.innerHTML='<div class="empty">'+esc(T('g_no_events'))+'</div>'; return; }
+      box.innerHTML = list.map(function(e){
+        var who = e.visitor_name ? esc(e.visitor_name) : '';
+        var doc = e.visitor_doc_id ? esc(e.visitor_doc_id) : '';
+        var pur = purposeLabel(e.purpose);
+        var parts=[];
+        parts.push('<i class="bi bi-box-arrow-in-right"></i> '+esc(fmt(e.created_at)));
+        if(e.exit_at) parts.push('<i class="bi bi-box-arrow-right"></i> '+esc(fmt(e.exit_at)));
+        if(e.house) parts.push(esc(e.house));
+        if(who) parts.push('<i class="bi bi-person"></i> '+who);
+        if(doc) parts.push('<i class="bi bi-card-text"></i> '+doc);
+        if(pur) parts.push('<i class="bi bi-tag"></i> '+esc(pur));
+        // IN entries always carry an exit button: active until the car leaves, then
+        // disabled (the exit camera fills the time automatically — see _autoclose_exit).
+        var isExitable = (e.direction==='IN' && e.decision!=='DENIED');
+        var right = '';
+        if(isExitable){
+          right = e.exit_at
+            ? '<button class="btn sm is-done" disabled><i class="bi bi-check2-circle"></i> '+esc(T('g_exited'))+'</button>'
+            : '<button class="btn ghost sm" data-exit="'+e.id+'"><i class="bi bi-box-arrow-right"></i> '+esc(T('g_mark_exit'))+'</button>';
+        }
+        return '<div class="item"><div><span style="display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap">'+pchip(e.plate)+' <span class="pill pill-gray">'+esc(e.direction==='OUT'?T('g_out'):T('g_in'))+'</span> '+decPill(e.decision)+
+          '<div class="meta">'+parts.join(' · ')+'</div></div>'+right+'</div>';
+      }).join('');
+      box.querySelectorAll('[data-exit]').forEach(function(b){ b.addEventListener('click', function(){
+        api('/api/access/events/'+b.getAttribute('data-exit')+'/exit',{method:'POST',body:JSON.stringify({})})
+          .then(function(){ loadJournal(); loadStats(); });
+      }); });
+    });
+  }
+  document.getElementById('j-refresh').addEventListener('click', loadJournal);
+  document.getElementById('j-dir').addEventListener('change', loadJournal);
+  document.getElementById('j-plate').addEventListener('keydown', function(e){ if(e.key==='Enter') loadJournal(); });
+
+  // ---- logout ----
+  document.getElementById('logoutBtn').addEventListener('click', function(){
+    api('/api/auth/logout',{method:'POST'}).catch(function(){}).then(function(){ try{localStorage.clear();sessionStorage.clear();}catch(_){} window.location.replace('/'); });
+  });
+
+  // ---- live gate feed (camera detections) ----
+  function gatePill(g){
+    if(g.hint==='BLACKLIST') return '<span class="pill pill-bad">'+esc(T('g_blacklist_alert'))+'</span>';
+    if(g.hint==='NO_PLATE')  return '<span class="pill pill-warn">'+esc(T('g_no_plate'))+'</span>';
+    return '<span class="pill pill-warn">'+esc(T('g_unknown'))+'</span>';
+  }
+  // build ONE detection card as a DOM node with its handlers bound
+  function buildGateCard(g){
+    var wrap=document.createElement('div');
+    wrap.className='gate-card'+(g.hint==='BLACKLIST'?' bl':'');
+    wrap.setAttribute('data-ge', g.id);
+    var dir=g.direction==='OUT'?T('g_out'):T('g_in');
+    var snap=g.snapshot_url?'<img class="gate-snap" src="'+API+esc(g.snapshot_url)+'">':'<div class="gate-snap empty"><i class="bi bi-camera-video-off"></i><span>'+esc(T('g_no_frame'))+'</span></div>';
+    var plateTxt=g.plate?esc(g.plate):esc(T('g_no_plate'));
+    wrap.innerHTML = snap+
+      '<div class="gate-info"><div class="gate-head">'+(g.plate?pchip(g.plate):'<span class="plate">'+plateTxt+'</span>')+' '+gatePill(g)+
+      ' <span class="meta">'+esc(dir)+' · '+esc(fmt(g.created_at))+(g.vehicle_type?(' · '+esc(vtype(g.vehicle_type))):'')+'</span></div>'+
+      '<div class="gate-form">'+
+        '<div class="gate-vfields">'+visitorFields('ge')+'</div>'+
+        '<div class="gate-actions">'+
+          '<button class="btn sm ge-open"><i class="bi bi-unlock"></i> '+esc(T('g_open_record'))+'</button>'+
+          '<button class="btn danger sm ge-deny"><i class="bi bi-x-lg"></i> '+esc(T('g_deny'))+'</button>'+
+        '</div>'+
+      '</div></div>';
+    var id=String(g.id);
+    var readV=bindVisitor(wrap, 'ge');
+    wrap.querySelector('.ge-open').addEventListener('click', function(){
+      api('/api/access/gate-events/'+id+'/resolve',{method:'POST',body:JSON.stringify(Object.assign({action:'open'}, readV()))})
+        .then(function(){ loadGateEvents(); loadStats(); });
+    });
+    wrap.querySelector('.ge-deny').addEventListener('click', function(){
+      api('/api/access/gate-events/'+id+'/resolve',{method:'POST',body:JSON.stringify(Object.assign({action:'deny'}, readV()))})
+        .then(function(){ loadGateEvents(); loadStats(); });
+    });
+    return wrap;
+  }
+  // INCREMENTAL refresh: add new cards, remove resolved ones, NEVER rebuild an
+  // existing card — otherwise the 4s poll would wipe whatever the guard is typing.
+  function loadGateEvents(){
+    api('/api/access/gate-events?status=PENDING').then(function(r){return r.json();}).then(function(list){
+      pendGate=list.length; updateKppBadge();
+      var box=document.getElementById('gate-feed');
+      var ids={}; list.forEach(function(g){ ids[String(g.id)]=1; });
+      box.querySelectorAll('.gate-card').forEach(function(card){
+        if(!ids[card.getAttribute('data-ge')]) card.remove();   // resolved → drop
+      });
+      var title=box.querySelector('.gate-feed-title');
+      if(!list.length){ if(title) title.remove(); return; }
+      if(!title){ title=document.createElement('div'); title.className='gate-feed-title'; box.insertBefore(title, box.firstChild); }
+      title.textContent=T('g_feed_title')+' ('+list.length+')';
+      // insert only genuinely-new detections (reversed so newest ends up on top)
+      list.slice().reverse().forEach(function(g){
+        if(box.querySelector('.gate-card[data-ge="'+g.id+'"]')) return; // already there — leave its form intact
+        title.parentNode.insertBefore(buildGateCard(g), title.nextSibling);
+      });
+    }).catch(function(){});
+  }
+
+  function renderAll(){ var gf=document.getElementById('gate-feed'); if(gf) gf.innerHTML=''; loadStats(); loadRequests(); loadGateEvents(); var active=document.querySelector('.pane.on').getAttribute('data-pane'); if(active==='vehicles')loadVehicles(); if(active==='journal')loadJournal(); }
+  function initLiveCam(){
+    var img=document.getElementById('live-cam'), off=document.getElementById('lc-off');
+    if(!img) return;
+    var url=(window.CAM_STREAM_URL || (API+'/guard/cam-stream'));
+    function show(){ off.style.display='none'; img.style.display='block'; }
+    function hide(){ off.style.display='block'; img.style.display='none'; }
+    img.onload=show;                       // fires per MJPEG frame in Chromium
+    img.onerror=hide;
+    img.style.display='block';             // optimistic — stream is usually up
+    img.src=url+'?t='+Date.now();
+    // Reconcile every 4s: a live MJPEG keeps naturalWidth>0; 0 means dead → retry.
+    setInterval(function(){
+      if(img.naturalWidth>0){ show(); }
+      else { hide(); img.src=url+'?t='+Date.now(); }
+    }, 4000);
+  }
+  function boot(){
+    applyLang();
+    initLiveCam();
+    loadStats(); loadRequests(); loadGateEvents();
+    setInterval(loadRequests, 5000);   // live request badge
+    setInterval(loadGateEvents, 4000); // live camera feed
+    // keep the journal live so an exit-camera detection flips the button to "exited" on its own
+    setInterval(function(){ var a=document.querySelector('.pane.on'); if(a && a.getAttribute('data-pane')==='journal') loadJournal(); }, 5000);
+  }
+
+  // ---- topbar clock ----
+  (function(){
+    var t=document.getElementById('gClockTime'), d=document.getElementById('gClockDate');
+    if(!t) return;
+    function pad(x){return String(x).padStart(2,'0');}
+    function tick(){
+      var n=new Date();
+      t.textContent=pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());
+      d.textContent=pad(n.getDate())+'.'+pad(n.getMonth()+1)+'.'+n.getFullYear();
+    }
+    tick(); setInterval(tick,1000);
+  })();
+})();
+</script>
+</body>
+</html>

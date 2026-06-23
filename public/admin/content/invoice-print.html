@@ -98,7 +98,7 @@
                 }
             }
 
-            console.log('📄 Print page - invoice ID:', invoiceId);
+            console.log('Print page - invoice ID:', invoiceId);
 
             function resetPrintPlaceholders() {
                 const set = (id, value) => {
@@ -150,7 +150,7 @@
                         // ignore: fallback to resident_user_full_name
                     }
 
-                    console.log('📄 API response for print:', {
+                    console.log('API response for print:', {
                         amount_total: data.amount_total,
                         paid_amount: data.paid_amount,
                         remaining_amount: data.remaining_amount,
@@ -285,7 +285,7 @@
                 const dateEl = document.getElementById('invoiceDate');
                 if (dateEl) dateEl.textContent = dueDateDisplay;
 
-                console.log('📄 Print invoice data:', {
+                console.log('Print invoice data:', {
                     total: invoice.total,
                     paidAmount: invoice.paidAmount,
                     remainingAmount: invoice.remainingAmount,

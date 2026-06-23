@@ -1,4 +1,4 @@
-// 🔥 LOGIN PAGE JAVASCRIPT - Backend Integration 🔥
+//  LOGIN PAGE JAVASCRIPT - Backend Integration 
 
 document.addEventListener('DOMContentLoaded', function() {
     const API_BASE = window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BASE || 'http://localhost:8000');
@@ -79,15 +79,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const data = await response.json();
             
-            // Save user data to localStorage
+            // Save user data to localStorage (display/UI only — NOT auth).
             localStorage.setItem('authToken', 'authenticated');
             localStorage.setItem('userRole', data.role);
             localStorage.setItem('username', data.username);
-            if (data.session_token) {
-                localStorage.setItem('sessionToken', data.session_token);
-            } else {
-                localStorage.removeItem('sessionToken');
-            }
+            // audit F-06: never persist the session token in localStorage. Auth is
+            // carried by the first-party HttpOnly cookie (same-origin proxy).
+            localStorage.removeItem('sessionToken');
 
             try {
                 const lang = (window.i18n && window.i18n.currentLanguage)
@@ -112,6 +110,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.role === 'RESIDENT') {
                     // Redirect to user panel for residents
                     window.location.href = '/user/dashboard.html';
+                } else if (data.role === 'GUARD') {
+                    // Охрана КПП — отдельная панель
+                    window.location.href = '/guard/dashboard.html';
                 } else if (data.role === 'SALES') {
                     // SALES видит только раздел «Продажи» — сразу туда
                     window.location.href = '/admin/#/sales';
@@ -143,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// 🎨 PARTICLES EFFECT
+//  PARTICLES EFFECT
 function initParticles() {
     const canvas = document.getElementById('particles');
     if (!canvas) return;
@@ -228,7 +229,7 @@ function initParticles() {
     });
 }
 
-// 💫 RIPPLE EFFECT
+//  RIPPLE EFFECT
 function addRippleEffect() {
     document.querySelectorAll('.login-btn').forEach(element => {
         element.addEventListener('click', function(e) {
@@ -250,7 +251,7 @@ function addRippleEffect() {
     });
 }
 
-// ✨ INPUT ANIMATIONS
+//  INPUT ANIMATIONS
 function addInputAnimations() {
     const inputs = document.querySelectorAll('.form-control');
     
@@ -278,7 +279,7 @@ function addInputAnimations() {
     });
 }
 
-// 🎊 SUCCESS CELEBRATION
+//  SUCCESS CELEBRATION
 function celebrateSuccess() {
     const colors = ['#667eea', '#f093fb', '#fa709a', '#11998e', '#4facfe', '#fee140'];
     const confettiCount = 50;
@@ -331,7 +332,7 @@ function createConfetti(color) {
     animate();
 }
 
-// 🔄 SHAKE ANIMATION
+//  SHAKE ANIMATION
 function shakeElement(element) {
     element.style.animation = 'none';
     setTimeout(() => {
@@ -350,7 +351,7 @@ shakeStyle.textContent = `
 `;
 document.head.appendChild(shakeStyle);
 
-// 👁️ PASSWORD TOGGLE
+//  PASSWORD TOGGLE
 function togglePassword() {
     const passwordInput = document.getElementById('password');
     const toggleIcon = document.getElementById('toggleIcon');
@@ -373,7 +374,7 @@ function togglePassword() {
 // Make it global
 window.togglePassword = togglePassword;
 
-// 🌊 MOUSE MOVE EFFECT
+//  MOUSE MOVE EFFECT
 document.addEventListener('mousemove', (e) => {
     const loginBox = document.querySelector('.login-box');
     if (!loginBox) return;
@@ -399,7 +400,7 @@ document.addEventListener('mouseleave', () => {
     }
 });
 
-// ⌨️ KEYBOARD SHORTCUTS
+// ⌨ KEYBOARD SHORTCUTS
 document.addEventListener('keydown', (e) => {
     // Ctrl + Enter to submit
     if (e.ctrlKey && e.key === 'Enter') {
@@ -407,4 +408,4 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-console.log('🔥 Login page загружена с backend интеграцией! 🔥');
+console.log(' Login page загружена с backend интеграцией! ');

@@ -1,38 +1,124 @@
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
-const cors = require('cors');
+const http = require('http');
+const https = require('https');
+const { URL } = require('url');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const API_BASE = (process.env.API_BASE || 'http://localhost:8000').replace(/\/+$/, '');
+let API_HOSTNAME = 'localhost';
+let API_URL = null;
+try { API_URL = new URL(API_BASE); API_HOSTNAME = API_URL.hostname; } catch (_) {}
+
+// Local ANPR camera MJPEG service (rp-anpr). Proxied same-origin so the guard
+// dashboard <img> avoids cross-origin CSP / Private-Network-Access blocks.
+let CAM_URL = null;
+try { CAM_URL = new URL(process.env.CAM_STREAM_URL || 'http://127.0.0.1:8088'); } catch (_) {}
+
+// Role sets for server-side page guards (audit F-05).
+const STAFF_ROLES = ['ROOT', 'ADMIN', 'OPERATOR', 'SALES'];
+const RESIDENT_ROLES = ['RESIDENT'];
+const GUARD_PAGE_ROLES = ['GUARD', 'ADMIN', 'ROOT'];
+
+// Content-Security-Policy (audit F-16): defense-in-depth. Whitelists only the
+// CDNs/fonts the SPA actually loads. 'unsafe-inline'/'unsafe-eval' are kept
+// because existing pages rely on inline scripts/handlers — tightening that is a
+// separate refactor. connect-src must include the backend API origin.
+const CSP = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
+    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com",
+    "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
+    `img-src 'self' data: blob: https://api.qrserver.com ${API_BASE}`,
+    `connect-src 'self' ${API_BASE}`,
+    "frame-ancestors 'self'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "object-src 'none'",
+].join('; ');
 
 // Security: do not advertise framework (reduces fingerprinting surface).
 app.disable('x-powered-by');
 
-// Standard hardening headers applied to every response.
-// Avoids clickjacking, MIME-sniffing, and aggressive referrer leakage.
+// Standard hardening headers applied to every response (audit F-16).
+// Avoids clickjacking, MIME-sniffing, referrer leakage; adds CSP + HSTS.
 //
-// NOTE: Server-side auth gating is intentionally NOT applied here. The
-// backend session cookie is bound to the backend domain (cross-site,
-// SameSite=None) and the frontend is served from a different Railway host,
-// so the Node process here has no access to that cookie at all and cannot
-// validate the user. Authentication is enforced where it actually matters:
-//   1) every backend /api/* route validates the session cookie via
-//      Depends(get_current_user) — no data leaks without a valid session;
-//   2) every protected HTML page runs an early-blocking checkSession()
-//      that hits ${API_BASE}/api/auth/check with credentials and redirects
-//      to / before any sensitive content is shown.
+// Server-side page authorization IS now applied below via pageGuard() — see the
+// guard block before the static mounts. (A previous report claimed these
+// guards existed; the code had lost them — audit F-05.)
 app.use((req, res, next) => {
     res.setHeader('X-Frame-Options', 'SAMEORIGIN');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    res.setHeader('Content-Security-Policy', CSP);
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     next();
 });
 
-app.use(cors());
+// --- Same-origin API reverse proxy (audit F-05/F-06/F-07/F-11) -------------
+// The browser now talks ONLY to this origin; we stream /api and /uploads to the
+// backend. This makes the backend session cookie first-party (HttpOnly,
+// SameSite=Lax) so: server-side guards work in prod too, no bearer token in
+// localStorage, no cross-site CORS, and CSRF is blocked by SameSite=Lax.
+// IMPORTANT: registered BEFORE the body parsers so the raw request body
+// (including multipart photo/avatar uploads) streams through untouched.
+function apiProxy(req, res) {
+    if (!API_URL) { res.status(502).json({ detail: 'API base not configured' }); return; }
+    const client = API_URL.protocol === 'https:' ? https : http;
+    const options = {
+        protocol: API_URL.protocol,
+        hostname: API_URL.hostname,
+        port: API_URL.port || (API_URL.protocol === 'https:' ? 443 : 80),
+        method: req.method,
+        path: req.originalUrl,
+        headers: { ...req.headers, host: API_URL.host },
+    };
+    const pReq = client.request(options, (pRes) => {
+        res.writeHead(pRes.statusCode || 502, pRes.headers);
+        pRes.pipe(res);
+    });
+    pReq.on('error', () => { if (!res.headersSent) res.status(502).json({ detail: 'Upstream unavailable' }); });
+    req.pipe(pReq);
+}
+
+app.use('/api', apiProxy);
+app.use('/uploads', apiProxy);
+app.get('/healthz', apiProxy);
+
+// Same-origin MJPEG proxy for the guard live camera (rp-anpr → :8088).
+// Session-gated: the live КПП feed must not be watchable anonymously.
+// (pageGuard is a hoisted function declaration, so it is usable here.)
+app.get('/guard/cam-stream', pageGuard(GUARD_PAGE_ROLES), (req, res) => {
+    if (!CAM_URL) { res.status(502).end(); return; }
+    const pReq = http.request({
+        hostname: CAM_URL.hostname,
+        port: CAM_URL.port || 8088,
+        path: '/stream',
+        method: 'GET',
+    }, (pRes) => {
+        res.writeHead(pRes.statusCode || 502, {
+            'Content-Type': pRes.headers['content-type'] || 'multipart/x-mixed-replace',
+            'Cache-Control': 'no-cache, private',
+            'Connection': 'close',
+        });
+        pRes.pipe(res);
+    });
+    pReq.on('error', () => { if (!res.headersSent) res.status(502).end(); else res.end(); });
+    req.on('close', () => pReq.destroy());
+    pReq.end();
+});
+// Top-level backend auth routes used by the panels' logout (and the backend's
+// GET /login redirect). Needed since the same-origin client uses API_BASE=''
+// so window.location.href = `${API_BASE}/logout` resolves to this origin.
+app.get('/logout', apiProxy);
+app.get('/login', apiProxy);
+
+// cors() removed: the browser talks same-origin to this server (API is proxied),
+// and the backend keeps its own CORS config for any direct callers.
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -45,7 +131,9 @@ app.get('/js/config.js', (req, res) => {
     res.send(`
 (function initAppConfig() {
     const userConfig = window.APP_CONFIG || {};
-    const configuredBase = userConfig.API_BASE || ${JSON.stringify(API_BASE)};
+    // audit F-05/F-06/F-07/F-11: same-origin. The browser calls /api/* on THIS
+    // host and Express proxies to the backend, so the base is empty (relative).
+    const configuredBase = userConfig.API_BASE || "";
     const normalizedBase = String(configuredBase).replace(/\\/+$/, "");
 
     window.APP_CONFIG = {
@@ -60,51 +148,112 @@ app.get('/js/config.js', (req, res) => {
         return window.APP_CONFIG.API_BASE;
     };
 
-    // Incognito-safe auth fallback:
-    // when third-party cookies are blocked, attach bearer session token
-    // to backend API requests.
-    if (!window.__rpFetchPatched && typeof window.fetch === "function") {
-        const originalFetch = window.fetch.bind(window);
-        const backendBase = normalizedBase;
+    // audit F-17: global HTML-escape helper for safe innerHTML interpolation of
+    // API/user-controlled data (resident names, appeals, comments, etc.).
+    window.escapeHtml = function escapeHtml(value) {
+        if (value === null || value === undefined) return "";
+        const div = document.createElement("div");
+        div.textContent = String(value);
+        return div.innerHTML;
+    };
 
-        window.fetch = function patchedFetch(input, init) {
-            try {
-                const reqUrl = typeof input === "string" ? input : (input && input.url) || "";
-                const isBackendCall =
-                    reqUrl.startsWith(backendBase) ||
-                    reqUrl.startsWith("/api/");
+    // audit F-06: no bearer token in localStorage anymore. With the same-origin
+    // proxy the backend session cookie is first-party (HttpOnly), so a same-origin
+    // fetch() sends it automatically — the previous fetch monkey-patch is gone.
 
-                if (!isBackendCall) {
-                    return originalFetch(input, init);
-                }
+    // Unified API access: a dead session must land on the login page, not leave
+    // half-broken pages silently ignoring 401s.
+    function onLoginPage() {
+        const p = window.location.pathname;
+        return p === "/" || p.endsWith("/index.html") || p.includes("qr-password-setup");
+    }
+    function handleUnauthorized(url) {
+        // login/auth-check calls legitimately return 401 — never loop on them
+        if (onLoginPage()) return;
+        if (/\\/login|\\/api\\/auth\\//.test(url)) return;
+        window.location.href = "/";
+    }
 
-                const token = localStorage.getItem("sessionToken");
-                if (!token) {
-                    return originalFetch(input, init);
-                }
+    // Preferred helper for new code.
+    window.apiFetch = async function apiFetch(input, init) {
+        const resp = await fetch(input, { credentials: "include", ...(init || {}) });
+        if (resp.status === 401) {
+            handleUnauthorized(typeof input === "string" ? input : (input && input.url) || "");
+        }
+        return resp;
+    };
 
-                const nextInit = { ...(init || {}) };
-                const headers = new Headers(
-                    (init && init.headers) ||
-                    ((typeof Request !== "undefined" && input instanceof Request) ? input.headers : undefined)
-                );
-                if (!headers.has("Authorization")) {
-                    headers.set("Authorization", "Bearer " + token);
-                }
-                nextInit.headers = headers;
-                return originalFetch(input, nextInit);
-            } catch (_e) {
-                return originalFetch(input, init);
-            }
+    // Safety net for the existing bare fetch() calls all over the codebase:
+    // any same-origin /api/* response with 401 sends the user to login.
+    if (!window.__rp401Patched && typeof window.fetch === "function") {
+        window.__rp401Patched = true;
+        const origFetch = window.fetch.bind(window);
+        window.fetch = function (input, init) {
+            const url = typeof input === "string" ? input : (input && input.url) || "";
+            const isApi = url.startsWith("/api/") ||
+                url.startsWith(normalizedBase + "/api/");
+            const p = origFetch(input, init);
+            if (!isApi) return p;
+            return p.then((resp) => {
+                if (resp.status === 401) handleUnauthorized(url);
+                return resp;
+            });
         };
-        window.__rpFetchPatched = true;
     }
 })();
 `);
 });
 
+// --- Server-side page guards (audit F-05) ---------------------------------
+// For each protected page, forward the caller's session (cookie / bearer) to
+// the backend /api/auth/check and enforce the role BEFORE serving any HTML; on
+// failure 302 -> login. Registered before the static mounts so static cannot
+// leak a protected HTML file (also index:false below).
+//
+// PAGE_GUARD_MODE: 'on' | 'off' | 'auto' (default 'auto'). 'auto' enforces only
+// when the frontend and backend share the same hostname (single-origin / local).
+// In a split-domain deploy the browser never sends the backend session cookie to
+// this Node host, so a guard here could not see the user and would loop; the full
+// cross-site fix is to serve the API same-origin (planned Stage C).
+function pageGuard(allowedRoles) {
+    return async function guard(req, res, next) {
+        // Never gate static assets (css/js/images/fonts) — they are not sensitive,
+        // and pages reused across roles (e.g. the resident invoice view pulls
+        // /admin/content_css/invoice-view.css) must keep loading. Only HTML page
+        // navigations are gated. (Fixes a CSS MIME error: a gated .css was 302'd to
+        // the login HTML.)
+        if (/\.(css|js|mjs|png|jpe?g|svg|webp|gif|ico|woff2?|ttf|eot|map|json|txt)$/i.test(req.path)) {
+            return next();
+        }
+        const mode = (process.env.PAGE_GUARD_MODE || 'auto').toLowerCase();
+        const enforce = mode === 'on' || (mode === 'auto' && req.hostname === API_HOSTNAME);
+        if (!enforce) return next();
+        try {
+            const r = await fetch(`${API_BASE}/api/auth/check`, {
+                headers: {
+                    cookie: req.headers.cookie || '',
+                    authorization: req.headers.authorization || '',
+                },
+            });
+            if (!r.ok) return res.redirect(302, '/');
+            const data = await r.json().catch(() => null);
+            if (!data || data.authenticated !== true || !allowedRoles.includes(data.role)) {
+                return res.redirect(302, '/');
+            }
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+            return next();
+        } catch (_e) {
+            return res.redirect(302, '/');
+        }
+    };
+}
+
+app.use('/admin', pageGuard(STAFF_ROLES));
+app.use('/user', pageGuard(RESIDENT_ROLES));
+app.use('/guard', pageGuard(GUARD_PAGE_ROLES));
+
 // Static files
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 app.use('/css', express.static(path.join(__dirname, 'public/css')));
 app.use('/js', express.static(path.join(__dirname, 'public/js')));
 app.use('/assets', express.static(path.join(__dirname, 'public/assets')));
@@ -133,12 +282,12 @@ app.get('/user', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'user', 'dashboard.html'));
 });
 
-app.get('/maintenance', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'maintenance', 'dashboard.html'));
-});
+// NOTE: /maintenance and /accountant routes removed — public/maintenance/ and
+// public/accountant/ do not exist (neither locally nor in prod), the sendFile
+// always crashed with ENOENT.
 
-app.get('/accountant', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'accountant', 'dashboard.html'));
+app.get('/guard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'guard', 'dashboard.html'));
 });
 
 // QR Password Setup Page
@@ -146,7 +295,7 @@ app.get('/qr-password-setup', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'qr-password-setup.html'));
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`RoyalPark Frontend Server running on port ${PORT}`);
     console.log(`Access the application at: http://localhost:${PORT}`);
     console.log(`API_BASE configured as: ${API_BASE}`);

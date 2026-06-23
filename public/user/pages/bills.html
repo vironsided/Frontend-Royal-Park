@@ -1,4 +1,61 @@
 <section id="bills" class="user-bills-section">
+    <style>
+    /* ── Hesablarım: бренд Royal Park ────────────────────────────────── */
+    .user-bills-section{--bl-olive:#7e8c59;--bl-olive-deep:#626d45;--bl-sage:#b1ba88;
+      --bl-line:rgba(177,186,136,.35)}
+
+    body.user-app .user-bills-card{border:1px solid var(--bl-line) !important;
+      border-radius:20px !important;box-shadow:0 10px 30px -18px rgba(86,86,92,.25) !important}
+    body.user-app .user-bills-header h2{font-family:var(--font-display,'Spectral',serif) !important;
+      color:#3f3f45 !important}
+
+    /* серую плиту — в белую таблицу с разделителями */
+    body.user-app .user-bills-table-wrapper{background:#fff !important;border:1px solid var(--bl-line) !important;
+      border-radius:16px !important;overflow:hidden}
+    body.user-app .user-bills-table{background:transparent !important;border-collapse:collapse !important}
+    body.user-app .user-bills-table thead th{
+      background:#ebede7 !important;color:#56565c !important;
+      font-family:var(--font-ui,inherit);font-size:11px !important;font-weight:700 !important;
+      text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--bl-line) !important}
+    body.user-app .user-bills-table tbody tr{background:#fff !important;
+      border-bottom:1px solid rgba(177,186,136,.18) !important;
+      transition:background .15s}
+    body.user-app .user-bills-table tbody tr:hover{background:#f7f8f1 !important}
+    body.user-app .user-bills-table tbody tr:last-child{border-bottom:0 !important}
+
+    /* статусы — единые пилюли с точкой */
+    body.user-app .user-bill-status{display:inline-flex;align-items:center;gap:6px;
+      font-size:10.5px !important;font-weight:700 !important;text-transform:uppercase;
+      letter-spacing:.05em;border-radius:999px !important;padding:5px 12px !important;
+      font-family:var(--font-ui,inherit);white-space:nowrap;background:#ededeb;color:#85857c}
+    body.user-app .user-bill-status::before{content:"";width:6px;height:6px;border-radius:50%;
+      background:currentColor;flex-shrink:0}
+    body.user-app .user-bill-status.paid{background:#e7efe0 !important;color:#4f6a37 !important}
+    body.user-app .user-bill-status.partial{background:#fdf2d8 !important;color:#9a7b1d !important}
+    body.user-app .user-bill-status.issued{background:#e9edf2 !important;color:#5b6c80 !important}
+    body.user-app .user-bill-status.draft{background:#ededeb !important;color:#85857c !important}
+    body.user-app .user-bill-status.overpaid{background:#e3eef0 !important;color:#3e707c !important}
+    body.user-app .user-bill-status.canceled{background:#f7e3e0 !important;color:#9c4a3c !important}
+
+    /* сумма: красная только если есть долг, зелёная когда оплачено */
+    body.user-app .user-bills-table tbody tr:has(.user-bill-status.paid) .user-bill-amount{
+      color:#4f6a37 !important}
+
+    /* кнопки действий */
+    body.user-app .user-bill-open-btn{
+      background:linear-gradient(135deg,var(--bl-olive),var(--bl-olive-deep)) !important;
+      color:#fff !important;border:0 !important;border-radius:10px !important;
+      padding:7px 16px !important;font-weight:600 !important;font-size:13px !important;
+      box-shadow:0 4px 10px -4px rgba(98,109,69,.5) !important;cursor:pointer;
+      transition:transform .15s !important}
+    body.user-app .user-bill-open-btn:hover{transform:translateY(-1px)}
+    body.user-app .user-bill-pdf-btn{
+      background:transparent !important;border:1.5px solid rgba(126,140,89,.45) !important;
+      color:var(--bl-olive-deep) !important;border-radius:10px !important;
+      padding:6px 14px !important;font-weight:600 !important;font-size:13px !important;
+      cursor:pointer;transition:all .2s !important}
+    body.user-app .user-bill-pdf-btn:hover{background:rgba(177,186,136,.14) !important}
+    </style>
     <div class="user-bills-card">
         <div class="user-bills-header">
             <h2 data-i18n="user_bills_title">Мои счета</h2>
@@ -265,7 +322,11 @@
                     ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
                      'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'][inv.period_month - 1];
                 let periodText = `${monthName} ${inv.period_year}`;
-                if (inv.period_dates && inv.period_dates.from && inv.period_dates.to) {
+                if (inv.period_year <= 1901) {
+                    // Opening-debt invoices intentionally live in 1900-01..-12
+                    // so FIFO pays them first — show a human label, not the year
+                    periodText = window.i18n?.translate?.('invoice_opening_debt', lang) || 'Начальный долг';
+                } else if (inv.period_dates && inv.period_dates.from && inv.period_dates.to) {
                     periodText = inv.period_dates.from === inv.period_dates.to
                         ? inv.period_dates.to
                         : `${inv.period_dates.from} - ${inv.period_dates.to}`;

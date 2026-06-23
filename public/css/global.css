@@ -79,7 +79,7 @@
     --milky-text-secondary: var(--charcoal-muted);
 }
 
-/* 🌓 DARK MODE */
+/*  DARK MODE */
 [data-theme="dark"] {
     /* Dark Background Colors */
     --bg-primary: #1a1d23;
@@ -101,7 +101,7 @@
     --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.6);
 }
 
-/* 🌍 LANGUAGE SELECTOR — glass pill + soft motion (Royal Park: sage / olive accent) */
+/*  LANGUAGE SELECTOR — glass pill + soft motion (Royal Park: sage / olive accent) */
 .language-selector {
     position: relative !important;
     top: auto !important;

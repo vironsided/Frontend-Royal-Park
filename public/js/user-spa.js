@@ -57,6 +57,12 @@
                     bodyClass: '',
                     parentNav: 'news'
                 },
+                access: {
+                    type: 'remote',
+                    path: '/user/pages/access.html',
+                    bodyClass: '',
+                    parentNav: 'access'
+                },
                 profile: {
                     type: 'placeholder',
                     parentNav: 'profile'
@@ -145,6 +151,14 @@
                         { text: 'Новости', key: 'user_nav_user_news' }
                     ]
                 },
+                access: {
+                    title: 'Пропуск авто',
+                    titleKey: 'user_nav_access',
+                    breadcrumb: [
+                        { text: 'Главная', icon: 'bi-house-door', key: 'home', route: 'dashboard' },
+                        { text: 'Пропуск авто', key: 'user_nav_access' }
+                    ]
+                },
                 profile: {
                     title: 'Профиль',
                     titleKey: 'nav_profile',
@@ -159,6 +173,11 @@
             this.currentRoute = null;
             this.isLoading = false;
             this.loadedStyleUrls = new Set();
+
+            // Routes temporarily disabled — visible in the sidebar but inactive.
+            // To RE-ENABLE a section, remove its route here AND remove the
+            // `nav-item--soon` class/badge from the matching nav item in user/dashboard.html.
+            this.disabledRoutes = new Set(['access']);
         }
 
         init() {
@@ -326,9 +345,15 @@
                 link.addEventListener('click', (e) => {
                     const dataRoute = link.getAttribute('data-user-route');
                     const href = link.getAttribute('href');
-                    
+
                     let route = dataRoute || this.extractRouteFromHref(href);
-                    
+
+                    // Disabled section: visible but inactive — no navigation, stay put.
+                    if (link.classList.contains('nav-item--soon') || (route && this.disabledRoutes.has(route))) {
+                        e.preventDefault();
+                        return;
+                    }
+
                     if (route && this.routes[route]) {
                         e.preventDefault();
                         this.navigate(route, true);
@@ -351,6 +376,9 @@
                 if (!target) return;
                 event.preventDefault();
                 const route = target.getAttribute('data-user-route-target');
+
+                // Disabled section — ignore any action targets that point to it.
+                if (this.disabledRoutes.has(route)) return;
                 
                 // If navigating to resident detail or bills, store resident ID
                 if (route === 'resident' || route === 'bills') {
@@ -418,6 +446,14 @@
         navigate(route, updateHistory = true) {
             // Если роут не существует, используем dashboard
             if (!route) {
+                route = 'dashboard';
+            }
+
+            // Disabled section reached via deep link / reload / back-forward / breadcrumb
+            // → silently fall back to dashboard (rewrite so menu/title/URL stay consistent).
+            if (this.disabledRoutes.has(route)) {
+                // Strip the stale #<route> from the address bar so it doesn't linger.
+                try { history.replaceState({ route: 'dashboard' }, '', window.location.pathname); } catch (_) { /* ignore */ }
                 route = 'dashboard';
             }
 

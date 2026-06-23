@@ -1,0 +1,151 @@
+<link rel="stylesheet" href="/admin/content_css/access.css?v=1">
+
+<div class="content-wrapper">
+    <div class="card">
+        <div class="card-body">
+            <div class="access-toolbar">
+                <div class="fld">
+                    <label data-i18n="access_date">Дата</label>
+                    <input type="date" id="acc-date">
+                </div>
+                <button class="btn btn-primary" id="acc-open">
+                    <i class="bi bi-calendar-check"></i> <span data-i18n="access_open">Открыть</span>
+                </button>
+                <div class="fld">
+                    <label data-i18n="access_th_plate">Номер</label>
+                    <input type="text" id="acc-plate" placeholder="Поиск номера...">
+                </div>
+                <div class="spacer"></div>
+                <button class="btn btn-outline-secondary" id="acc-refresh" title="Обновить">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+            </div>
+
+            <div class="stats-grid" id="acc-stats"></div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top:18px">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 data-i18n="access_title">Журнал доступа (КПП)</h3>
+        </div>
+        <div class="card-body">
+            <div id="acc-table"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var API = (window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BASE || 'http://localhost:8000'));
+    function t(k) { try { return (window.i18n && window.i18n.t) ? window.i18n.t(k) : k; } catch (e) { return k; } }
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function pad(n) { return n < 10 ? ('0' + n) : ('' + n); }
+    function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+    function fmtTime(s) { if (!s) return ''; var d = new Date(s); if (isNaN(d)) return s; return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+
+    var PURP = ['guest', 'delivery', 'taxi', 'courier', 'technician'];
+    function purposeLabel(p) { if (!p) return ''; return PURP.indexOf(p) >= 0 ? t('access_purpose_' + p) : p; }
+
+    // status under which a vehicle entered, derived from the matched vehicle + decision
+    function statusBadge(e) {
+        if (e.decision === 'DENIED') return '<span class="acc-badge acc-denied">' + esc(t('access_status_denied')) + '</span>';
+        if (e.decision === 'BLACKLIST_ALERT' || e.vehicle_status === 'BLACKLIST')
+            return '<span class="acc-badge acc-blacklist">' + esc(t('access_status_blacklist')) + '</span>';
+        if (e.vehicle_type === 'RESIDENT') return '<span class="acc-badge acc-resident">' + esc(t('access_status_resident')) + '</span>';
+        if (e.vehicle_type === 'GUEST' || e.visitor_name) return '<span class="acc-badge acc-guest">' + esc(t('access_status_guest')) + '</span>';
+        return '<span class="acc-badge acc-unknown">' + esc(t('access_status_unknown')) + '</span>';
+    }
+    function srcLabel(s) {
+        return s === 'CAMERA' ? t('access_src_camera') : s === 'REQUEST' ? t('access_src_request') : t('access_src_manual');
+    }
+
+    var dateEl = document.getElementById('acc-date');
+    var plateEl = document.getElementById('acc-plate');
+    var statsEl = document.getElementById('acc-stats');
+    var tableEl = document.getElementById('acc-table');
+    if (!dateEl) return;
+    if (plateEl) plateEl.placeholder = t('access_search_plate');
+    if (!dateEl.value) dateEl.value = todayStr();
+
+    function statCard(cls, icon, value, labelKey) {
+        return '<div class="stat-card ' + cls + '">' +
+            '<div class="stat-icon" style="display:grid;place-items:center"><i class="bi bi-' + icon + '" style="font-size:26px;color:#fff"></i></div>' +
+            '<div class="stat-details"><div class="stat-value">' + value + '</div>' +
+            '<div class="stat-label">' + esc(t(labelKey)) + '</div></div></div>';
+    }
+    function renderStats(s) {
+        statsEl.innerHTML =
+            statCard('solid-blue', 'box-arrow-in-right', s.entries || 0, 'access_stat_entries') +
+            statCard('solid-green', 'box-arrow-right', s.exits || 0, 'access_stat_exits') +
+            statCard('solid-orange', 'people', s.guests || 0, 'access_stat_guests') +
+            statCard('solid-red', 'x-octagon', s.denied || 0, 'access_stat_denied');
+    }
+
+    function renderTable(list) {
+        if (!list || !list.length) {
+            tableEl.innerHTML = '<div class="access-empty"><i class="bi bi-inbox" style="font-size:30px;display:block;margin-bottom:8px;opacity:.5"></i>' + esc(t('access_empty')) + '</div>';
+            return;
+        }
+        var head = '<thead><tr>' +
+            '<th>' + esc(t('access_th_plate')) + '</th>' +
+            '<th>' + esc(t('access_th_dir')) + '</th>' +
+            '<th>' + esc(t('access_th_status')) + '</th>' +
+            '<th>' + esc(t('access_th_in')) + '</th>' +
+            '<th>' + esc(t('access_th_out')) + '</th>' +
+            '<th>' + esc(t('access_th_whom')) + '</th>' +
+            '<th>' + esc(t('access_th_driver')) + '</th>' +
+            '<th>' + esc(t('access_th_doc')) + '</th>' +
+            '<th>' + esc(t('access_th_purpose')) + '</th>' +
+            '<th>' + esc(t('access_th_source')) + '</th>' +
+            '</tr></thead>';
+        var rows = list.map(function (e) {
+            var dir = e.direction === 'OUT'
+                ? '<span class="acc-badge acc-out"><i class="bi bi-box-arrow-right"></i> ' + esc(t('access_dir_out')) + '</span>'
+                : '<span class="acc-badge acc-in"><i class="bi bi-box-arrow-in-right"></i> ' + esc(t('access_dir_in')) + '</span>';
+            var out = e.exit_at ? esc(fmtTime(e.exit_at))
+                : (e.direction === 'IN' && e.decision !== 'DENIED' ? '<span class="access-muted">' + esc(t('access_inside')) + '</span>' : '<span class="access-muted">—</span>');
+            var pur = purposeLabel(e.purpose);
+            return '<tr>' +
+                '<td class="access-plate">' + esc(e.plate) + '</td>' +
+                '<td>' + dir + '</td>' +
+                '<td>' + statusBadge(e) + '</td>' +
+                '<td>' + esc(fmtTime(e.created_at)) + '</td>' +
+                '<td>' + out + '</td>' +
+                '<td>' + (e.house ? esc(e.house) : '<span class="access-muted">—</span>') + '</td>' +
+                '<td>' + (e.visitor_name ? esc(e.visitor_name) : '<span class="access-muted">—</span>') + '</td>' +
+                '<td>' + (e.visitor_doc_id ? esc(e.visitor_doc_id) : '<span class="access-muted">—</span>') + '</td>' +
+                '<td>' + (pur ? esc(pur) : '<span class="access-muted">—</span>') + '</td>' +
+                '<td class="acc-src">' + esc(srcLabel(e.source)) + '</td>' +
+                '</tr>';
+        }).join('');
+        tableEl.innerHTML = '<div class="access-table-wrap"><table class="access-table">' + head + '<tbody>' + rows + '</tbody></table></div>';
+    }
+
+    function load() {
+        var date = dateEl.value || todayStr();
+        var plate = (plateEl && plateEl.value.trim()) || '';
+        statsEl.innerHTML = '';
+        tableEl.innerHTML = '<div class="access-empty"><i class="bi bi-hourglass-split"></i></div>';
+
+        fetch(API + '/api/access/stats?date=' + encodeURIComponent(date), { credentials: 'include' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (s) { renderStats(s || {}); })
+            .catch(function () { renderStats({}); });
+
+        var url = API + '/api/access/events?date=' + encodeURIComponent(date) + '&limit=2000';
+        if (plate) url += '&plate=' + encodeURIComponent(plate);
+        fetch(url, { credentials: 'include' })
+            .then(function (r) { return r.ok ? r.json() : []; })
+            .then(renderTable)
+            .catch(function () { tableEl.innerHTML = '<div class="access-empty">—</div>'; });
+    }
+
+    document.getElementById('acc-open').addEventListener('click', load);
+    document.getElementById('acc-refresh').addEventListener('click', load);
+    dateEl.addEventListener('change', load);
+    if (plateEl) plateEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') load(); });
+
+    load();
+})();
+</script>

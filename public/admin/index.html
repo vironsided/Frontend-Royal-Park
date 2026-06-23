@@ -249,6 +249,7 @@
         html[data-user-role="OPERATOR"] a.nav-item[data-route="/sales"],
         html[data-user-role="OPERATOR"] a.nav-item[data-route="/appeals2"],
         html[data-user-role="OPERATOR"] a.nav-item[data-route="/news"],
+        html[data-user-role="OPERATOR"] a.nav-item[data-route="/access"],
         html[data-user-role="OPERATOR"] a.nav-item[data-route="/logs"] {
             display: none !important;
         }
@@ -333,6 +334,47 @@
         /* В платежах админ не должен видеть кнопку «Принять платёж». */
         html[data-user-role="ADMIN"] #spa-content button.btn-accept-payment {
             display: none !important;
+        }
+
+        /* ----------------------------------------------------------- */
+        /*  Temporarily disabled nav section (visible but inactive)     */
+        /*  Currently used for КПП / Доступ until the feature ships.    */
+        /*  RE-ENABLE: delete this block + the `nav-item--soon` class   */
+        /*  and `.nav-soon-badge` in the markup + remove the route from */
+        /*  `this.disabledRoutes` in /js/spa-router.js.                 */
+        /* ----------------------------------------------------------- */
+        .nav-item--soon {
+            cursor: not-allowed !important;
+        }
+        .nav-item--soon .nav-icon,
+        .nav-item--soon .nav-text {
+            opacity: 0.5;
+        }
+        .nav-item--soon:hover {
+            background: transparent !important;
+            transform: none !important;
+        }
+        .nav-item--soon .nav-soon-badge {
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.1rem 0.45rem;
+            border-radius: 999px;
+            font-size: 0.62rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            color: #c3cad8;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            white-space: nowrap;
+        }
+        .nav-item--soon .nav-soon-badge i {
+            font-size: 0.68rem;
+        }
+        .sidebar.collapsed .nav-soon-badge {
+            display: none;
         }
     </style>
 </head>
@@ -524,6 +566,14 @@
                         </span>
                         <span class="nav-text">Настройки</span>
                     </a> -->
+                        <!-- TEMP: КПП / Доступ disabled (under construction) — visible but inactive.
+                             To RE-ENABLE: remove `nav-item--soon` + the `.nav-soon-badge` span below,
+                             and remove '/access' from `this.disabledRoutes` in /js/spa-router.js -->
+                        <a href="/access" class="nav-item nav-item--soon" data-route="/access" aria-disabled="true">
+                            <span class="nav-icon"><i class="bi bi-shield-check"></i></span>
+                            <span class="nav-text" data-i18n="nav_access">КПП / Доступ</span>
+                            <span class="nav-soon-badge"><i class="bi bi-hourglass-split"></i><span data-i18n="nav_soon">Скоро</span></span>
+                        </a>
                         <a href="/news" class="nav-item" data-route="/news">
                             <span class="nav-icon"><i class="bi bi-newspaper"></i></span>
                             <span class="nav-text" data-i18n="nav_news">Новости</span>
@@ -764,9 +814,6 @@
     <!-- Notifications System -->
     <script src="/js/notifications.js"></script>
 
-    <!-- Test Data (mock data for SPA pages) -->
-    <script src="/js/test-data.js"></script>
-
     <!-- Sidebar Toggle (для совместимости со старыми страницами) -->
     <script src="/js/sidebar-toggle.js"></script>
 
@@ -961,10 +1008,6 @@
             let toggleSidebarBtn = document.getElementById('toggleSidebar');
             const sidebar = document.getElementById('sidebar') || document.querySelector('.sidebar');
 
-            console.log('=== SIDEBAR DEBUG ===');
-            console.log('Toggle button found:', !!toggleSidebarBtn);
-            console.log('Sidebar found:', !!sidebar);
-
             if (toggleSidebarBtn && sidebar) {
                 // Remove any existing event listeners by cloning the button
                 const newToggleBtn = toggleSidebarBtn.cloneNode(true);
@@ -1101,31 +1144,8 @@
                     }
                 });
 
-                // Debug: log current state
-                console.log('Sidebar initialized successfully');
-                console.log('Initial collapsed state:', sidebar.classList.contains('collapsed'));
-                console.log('Initial width:', sidebar.offsetWidth);
-
-                // Add global function for debugging
-                window.debugSidebar = function () {
-                    console.log('=== SIDEBAR DEBUG INFO ===');
-                    console.log('Has collapsed class:', sidebar.classList.contains('collapsed'));
-                    console.log('Current width:', sidebar.offsetWidth);
-                    console.log('Computed width:', window.getComputedStyle(sidebar).width);
-                    console.log('localStorage value:', localStorage.getItem('sidebarCollapsed'));
-                    console.log('All classes:', Array.from(sidebar.classList));
-                };
-
-                window.resetSidebar = function () {
-                    localStorage.removeItem('sidebarCollapsed');
-                    sidebar.classList.remove('collapsed');
-                    console.log('✅ Sidebar reset! Reload the page.');
-                };
-
-                console.log('💡 Type debugSidebar() to see current state');
-                console.log('💡 Type resetSidebar() to reset and reload');
             } else {
-                console.error('❌ ERROR: Sidebar or toggle button not found!');
+                console.error('Sidebar or toggle button not found');
                 if (!toggleSidebarBtn) {
                     console.error('Toggle button element is missing!');
                 }

@@ -1975,3 +1975,222 @@ html[data-theme="dark"] body.user-app .admin-container::before {
         min-width: 32px !important;
     }
 }
+
+/* ── Native popups в sakin portalı — СВЕТЛЫЕ ─────────────────────────────
+   Панель жителя живёт под html[data-theme="dark"] (бренд-хук), но визуально
+   она светлая. Общие правила dark-theme.css дают тёмный color-scheme и
+   тёмные <option> — возвращаем светлую схему для body.user-app.
+   ВАЖНО: на color/background у <option> НЕ ставить !important (Windows
+   Chromium тогда рисует системный светлый popup с белым текстом). */
+html[data-theme="dark"] body.user-app {
+    color-scheme: light;
+}
+
+[data-theme="dark"] body.user-app select option,
+[data-theme="dark"] body.user-app .form-select option {
+    background-color: #ffffff;
+    color: #3a3a40;
+}
+
+[data-theme="dark"] body.user-app select option:checked,
+[data-theme="dark"] body.user-app .form-select option:checked {
+    background-color: #ebede7;
+    color: #3a3a40;
+}
+
+[data-theme="dark"] body.user-app input[type="datetime-local"],
+[data-theme="dark"] body.user-app input[type="time"],
+[data-theme="dark"] body.user-app input[type="date"],
+[data-theme="dark"] body.user-app input[type="month"] {
+    color-scheme: light !important;
+}
+
+/* ── Переключатель языков: единый сегмент-контрол (как вкладки Avto keçid) ──
+   Раньше: трек был белым-на-белом (невидим), а на неактивных кнопках лежала
+   тёмная inset-тень из dark-темы — кнопки выглядели отдельными «пузырями». */
+html[data-theme] body.user-app .language-selector,
+body.user-app .language-selector {
+    background: #ebede7 !important;
+    border: 1px solid rgba(177, 186, 136, 0.35) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+    border-radius: 999px !important;
+    padding: 4px !important;
+    gap: 2px !important;
+}
+
+html[data-theme] body.user-app .language-btn,
+body.user-app .language-btn {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 999px !important;
+    min-width: 44px !important;
+    height: 30px !important;
+    padding: 0 14px !important;
+    transform: none !important;
+}
+html[data-theme] body.user-app .language-btn .lang-code,
+body.user-app .language-btn .lang-code {
+    color: #85857c !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    text-shadow: none !important;
+}
+html[data-theme] body.user-app .language-btn:hover:not(.active),
+body.user-app .language-btn:hover:not(.active) {
+    background: rgba(177, 186, 136, 0.18) !important;
+    box-shadow: none !important;
+}
+html[data-theme] body.user-app .language-btn:hover:not(.active) .lang-code {
+    color: #626d45 !important;
+}
+html[data-theme] body.user-app .language-btn.active,
+body.user-app .language-btn.active {
+    background: linear-gradient(135deg, #7e8c59, #626d45) !important;
+    box-shadow: 0 3px 10px rgba(98, 109, 69, 0.35) !important;
+}
+html[data-theme] body.user-app .language-btn.active .lang-code,
+body.user-app .language-btn.active .lang-code {
+    color: #fff !important;
+}
+html[data-theme] body.user-app .language-btn.active::after,
+body.user-app .language-btn.active::after {
+    display: none !important;
+}
+
+/* ── Dashboard: статы, последние счета, быстрые действия, новости — бренд ──
+   Пастельные заливки и неоновые пилюли → белые карточки, цвет категории
+   только в плитке-иконке и тонкой полоске слева. Остальной дашборд не тронут. */
+
+/* 1) Stat cards */
+body.user-app .dashboard-content .stat-card{
+    background:#fff !important;border:1px solid rgba(177,186,136,.35) !important;
+    border-radius:18px !important;box-shadow:0 8px 22px -16px rgba(86,86,92,.28) !important;
+    position:relative;overflow:hidden}
+body.user-app .dashboard-content .stat-card::before{content:"";position:absolute;
+    inset:0 auto 0 0;width:4px;background:var(--sc,#b1ba88)}
+body.user-app .dashboard-content .stat-card.solid-purple{--sc:#7a7fb0}
+body.user-app .dashboard-content .stat-card.solid-yellow{--sc:#d9a93f}
+body.user-app .dashboard-content .stat-card.solid-blue{--sc:#5b8ca3}
+body.user-app .dashboard-content .stat-card.solid-red{--sc:#b06a60}
+body.user-app .dashboard-content .stat-icon{
+    background:color-mix(in srgb, var(--sc,#b1ba88) 14%, #fff) !important;
+    border:1px solid color-mix(in srgb, var(--sc,#b1ba88) 28%, #fff) !important;
+    color:var(--sc,#b1ba88) !important;border-radius:14px !important;box-shadow:none !important}
+body.user-app .dashboard-content .stat-icon i{color:var(--sc,#b1ba88) !important}
+body.user-app .dashboard-content .stat-value{color:#3f3f45 !important}
+body.user-app .dashboard-content .stat-label{color:#85857c !important}
+
+/* 2) Son hesablar: иконки и статусы */
+body.user-app .dashboard-content .bill-item{
+    background:#fff !important;border:1px solid rgba(177,186,136,.28) !important;
+    border-radius:14px !important;box-shadow:none !important}
+body.user-app .dashboard-content .bill-item:hover{
+    border-color:rgba(177,186,136,.5) !important;
+    box-shadow:0 10px 22px -16px rgba(86,86,92,.35) !important}
+body.user-app .dashboard-content .bill-icon{
+    border-radius:12px !important;box-shadow:none !important;
+    background:color-mix(in srgb, var(--bc,#9aa972) 14%, #fff) !important;
+    color:var(--bc,#9aa972) !important;
+    border:1px solid color-mix(in srgb, var(--bc,#9aa972) 28%, #fff) !important}
+body.user-app .dashboard-content .bill-icon i{color:var(--bc,#9aa972) !important}
+body.user-app .dashboard-content .bill-icon.bill-pending{--bc:#b06a60}
+body.user-app .dashboard-content .bill-icon.bill-partial{--bc:#d9a93f}
+body.user-app .dashboard-content .bill-icon.bill-paid{--bc:#7e8c59}
+
+body.user-app .dashboard-content .bills-list .badge{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:10px !important;font-weight:700 !important;text-transform:uppercase;
+    letter-spacing:.05em;border-radius:999px !important;padding:5px 11px !important;
+    box-shadow:none !important;background-image:none !important}
+body.user-app .dashboard-content .bills-list .badge::before{content:"";width:6px;height:6px;
+    border-radius:50%;background:currentColor;flex-shrink:0}
+body.user-app .dashboard-content .bills-list .badge-warning{
+    background:#f7e3e0 !important;color:#9c4a3c !important}
+body.user-app .dashboard-content .bills-list .badge-info{
+    background:#fdf2d8 !important;color:#9a7b1d !important}
+body.user-app .dashboard-content .bills-list .badge-success{
+    background:#e7efe0 !important;color:#4f6a37 !important}
+
+/* 3) Sürətli əməliyyatlar */
+body.user-app .dashboard-content .action-button{
+    background:#fff !important;border:1px solid rgba(177,186,136,.35) !important;
+    border-radius:14px !important;box-shadow:none !important;position:relative;overflow:hidden;
+    transition:transform .18s, box-shadow .18s, border-color .18s !important}
+body.user-app .dashboard-content .action-button::before{content:"";position:absolute;
+    inset:0 auto 0 0;width:4px;background:var(--ac,#b1ba88)}
+body.user-app .dashboard-content .action-button:hover{transform:translateY(-2px);
+    border-color:rgba(177,186,136,.55) !important;
+    box-shadow:0 12px 24px -16px rgba(86,86,92,.4) !important}
+body.user-app .dashboard-content .action-button.action-primary{--ac:#7a7fb0}
+body.user-app .dashboard-content .action-button.action-success{--ac:#7e8c59}
+body.user-app .dashboard-content .action-button.action-warning{--ac:#d9a93f}
+body.user-app .dashboard-content .action-button.action-info{--ac:#5b8ca3}
+body.user-app .dashboard-content .action-button > i:first-child{
+    width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;
+    border-radius:12px;flex-shrink:0;font-size:19px;
+    background:color-mix(in srgb, var(--ac,#b1ba88) 14%, #fff) !important;
+    border:1px solid color-mix(in srgb, var(--ac,#b1ba88) 28%, #fff);
+    color:var(--ac,#b1ba88) !important;box-shadow:none !important}
+body.user-app .dashboard-content .action-button .action-title{color:#3f3f45 !important}
+body.user-app .dashboard-content .action-button .action-subtitle{color:#85857c !important}
+body.user-app .dashboard-content .action-button > i.bi-arrow-right{
+    color:#c9cdb6 !important;transition:transform .2s, color .2s}
+body.user-app .dashboard-content .action-button:hover > i.bi-arrow-right{
+    transform:translateX(3px);color:#7e8c59 !important}
+
+/* 4) Xəbərlər və elanlar (виджет дашборда) — как страница Xəbərlər */
+body.user-app .dashboard-content .news-grid .news-item[class*='news-item--']{
+    background:#fff !important;border:1px solid rgba(177,186,136,.35) !important;
+    border-radius:16px !important;box-shadow:none !important;position:relative;overflow:hidden}
+body.user-app .dashboard-content .news-grid .news-item::before{content:"";position:absolute;
+    inset:0 auto 0 0;width:4px;
+    background:linear-gradient(180deg, color-mix(in srgb, var(--cat,#9aa972) 75%, #fff), var(--cat,#9aa972))}
+body.user-app .dashboard-content .news-grid .news-item:hover{
+    border-color:rgba(177,186,136,.55) !important;
+    box-shadow:0 12px 24px -16px rgba(86,86,92,.4) !important}
+body.user-app .dashboard-content .news-grid .news-icon{
+    background:color-mix(in srgb, var(--cat,#9aa972) 14%, #fff) !important;
+    border:1px solid color-mix(in srgb, var(--cat,#9aa972) 28%, #fff) !important;
+    color:var(--cat,#9aa972) !important;border-radius:12px !important;box-shadow:none !important}
+body.user-app .dashboard-content .news-grid .news-icon i{color:var(--cat,#9aa972) !important}
+
+/* добивка: перекрываем более специфичные пастельные правила выше */
+[data-theme="dark"] body.user-app .dashboard-content .stat-card.solid-purple .stat-icon,
+[data-theme="dark"] body.user-app .dashboard-content .stat-card.solid-yellow .stat-icon,
+[data-theme="dark"] body.user-app .dashboard-content .stat-card.solid-blue .stat-icon,
+[data-theme="dark"] body.user-app .dashboard-content .stat-card.solid-red .stat-icon{
+    background:color-mix(in srgb, var(--sc,#b1ba88) 14%, #fff) !important;
+    border:1px solid color-mix(in srgb, var(--sc,#b1ba88) 28%, #fff) !important;
+    color:var(--sc,#b1ba88) !important;box-shadow:none !important}
+[data-theme="dark"] body.user-app .dashboard-content .stat-card .stat-icon i{
+    color:var(--sc,#b1ba88) !important}
+
+[data-theme="dark"] body.user-app .dashboard-content .action-button.action-primary,
+[data-theme="dark"] body.user-app .dashboard-content .action-button.action-success,
+[data-theme="dark"] body.user-app .dashboard-content .action-button.action-warning,
+[data-theme="dark"] body.user-app .dashboard-content .action-button.action-info{
+    background:#fff !important;border:1px solid rgba(177,186,136,.35) !important;
+    box-shadow:none !important}
+[data-theme="dark"] body.user-app .dashboard-content .action-button:hover{
+    border-color:rgba(177,186,136,.55) !important;
+    box-shadow:0 12px 24px -16px rgba(86,86,92,.4) !important}
+[data-theme="dark"] body.user-app .dashboard-content .action-button > i:first-child{
+    background:color-mix(in srgb, var(--ac,#b1ba88) 14%, #fff) !important;
+    border:1px solid color-mix(in srgb, var(--ac,#b1ba88) 28%, #fff) !important;
+    color:var(--ac,#b1ba88) !important;box-shadow:none !important}
+
+/* иконки быстрых действий: глушим градиентный ::after-оверлей, тонируем плитку */
+[data-theme="dark"] body.user-app .dashboard-content .action-button > i:first-child::after{
+    display:none !important}
+[data-theme="dark"] body.user-app .dashboard-content .action-button.action-primary > i:first-child{
+    background-color:#ecedf5 !important;border:1px solid #d4d7e8 !important;color:#7a7fb0 !important}
+[data-theme="dark"] body.user-app .dashboard-content .action-button.action-success > i:first-child{
+    background-color:#edf2e6 !important;border:1px solid #d6e0c8 !important;color:#7e8c59 !important}
+[data-theme="dark"] body.user-app .dashboard-content .action-button.action-warning > i:first-child{
+    background-color:#f9f1de !important;border:1px solid #ecd9ad !important;color:#c08a2d !important}
+[data-theme="dark"] body.user-app .dashboard-content .action-button.action-info > i:first-child{
+    background-color:#ebecf4 !important;border:1px solid #d2d5e8 !important;color:#5c649a !important}

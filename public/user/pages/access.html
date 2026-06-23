@@ -1,0 +1,382 @@
+<section class="access-section">
+  <style>
+    .access-section{max-width:980px;--acc-olive:#7e8c59;--acc-olive-deep:#626d45;--acc-sage:#b1ba88;
+      --acc-pale:#ebede7;--acc-ink:#56565c;--acc-ink-soft:#85857c;--acc-line:rgba(177,186,136,.35)}
+
+    /* ── segmented tabs ──────────────────────────────────────────── */
+    .access-tabs{display:inline-flex;gap:4px;background:var(--acc-pale);border:1px solid var(--acc-line);
+      border-radius:999px;padding:5px;margin-bottom:26px;flex-wrap:wrap}
+    .access-tab{display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;border-radius:999px;
+      padding:10px 20px;font-size:14px;font-weight:600;color:var(--acc-ink-soft);cursor:pointer;
+      transition:all .25s cubic-bezier(.4,0,.2,1);font-family:var(--font-ui,inherit)}
+    .access-tab i{font-size:15px;opacity:.75}
+    .access-tab:hover{color:var(--acc-olive-deep)}
+    .access-tab.active{background:linear-gradient(135deg,var(--acc-olive),var(--acc-olive-deep));color:#fff;
+      box-shadow:0 3px 10px rgba(98,109,69,.35)}
+    .access-tab.active i{opacity:1}
+    .access-pane[hidden]{display:none}
+    .access-pane{animation:accPane .35s ease both}
+    @keyframes accPane{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+    /* ── form card ───────────────────────────────────────────────── */
+    .access-card{position:relative;background:#fff;border:1px solid var(--acc-line);border-radius:20px;
+      padding:24px 26px 20px;margin-bottom:22px;overflow:hidden;
+      box-shadow:0 10px 30px -18px rgba(86,86,92,.25)}
+    .access-card::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;
+      background:linear-gradient(180deg,var(--acc-sage),var(--acc-olive));border-radius:4px 0 0 4px}
+    .access-card-head{display:flex;align-items:baseline;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+    .access-card-title{font-family:var(--font-display,'Spectral',serif);font-size:21px;font-weight:600;
+      color:var(--acc-ink);letter-spacing:.01em;margin:0}
+    .access-card-sub{font-size:13px;color:var(--acc-ink-soft)}
+    .access-form{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+    .access-form .fld{display:flex;flex-direction:column;gap:6px}
+    .access-form label{font-size:11px;color:var(--acc-ink-soft);font-weight:700;letter-spacing:.09em;
+      text-transform:uppercase;font-family:var(--font-ui,inherit)}
+    .access-form input,.access-form select{height:44px;border:1.5px solid #e2e3da;border-radius:12px;
+      padding:0 14px;font-size:14.5px;background:#fcfcf9;min-width:150px;color:#3a3a40;
+      -webkit-text-fill-color:#3a3a40;transition:border-color .2s, box-shadow .2s}
+    .access-form input::placeholder{color:#b3b3ab;-webkit-text-fill-color:#b3b3ab}
+    .access-form input:focus{outline:none;border-color:var(--acc-sage);
+      box-shadow:0 0 0 4px rgba(177,186,136,.22);background:#fff}
+    .access-btn{height:44px;display:inline-flex;align-items:center;gap:9px;border:0;border-radius:12px;
+      padding:0 22px;font-size:14px;font-weight:600;color:#fff;cursor:pointer;font-family:var(--font-ui,inherit);
+      background:linear-gradient(135deg,var(--acc-olive),var(--acc-olive-deep));
+      box-shadow:0 6px 16px -6px rgba(98,109,69,.5);transition:transform .18s, box-shadow .18s}
+    .access-btn:hover{transform:translateY(-1px);box-shadow:0 9px 20px -6px rgba(98,109,69,.55)}
+    .access-btn:active{transform:translateY(0)}
+    .access-limit{font-size:13px;color:var(--acc-ink-soft);margin:12px 2px 0;display:flex;align-items:center;gap:7px}
+    .access-limit i{color:var(--acc-sage)}
+    .access-err{color:#9c4a3c;font-size:13px;margin:8px 2px 0;min-height:16px}
+
+    /* ── direction segmented toggle ─────────────────────────────── */
+    .dir-toggle{display:inline-flex;background:var(--acc-pale);border:1px solid var(--acc-line);
+      border-radius:12px;padding:4px;height:44px;box-sizing:border-box}
+    .dir-toggle input{position:absolute;opacity:0;pointer-events:none}
+    .dir-toggle label{display:inline-flex;align-items:center;gap:7px;padding:0 16px;border-radius:9px;
+      font-size:13.5px;font-weight:600;color:var(--acc-ink-soft);cursor:pointer;transition:all .2s}
+    .dir-toggle label i{font-size:14px}
+    .dir-toggle input:checked + label{background:#fff;color:var(--acc-olive-deep);
+      box-shadow:0 2px 8px rgba(86,86,92,.14)}
+
+    /* ── list rows ──────────────────────────────────────────────── */
+    .access-list{display:flex;flex-direction:column;gap:12px}
+    .access-row{display:flex;align-items:center;justify-content:space-between;gap:14px;background:#fff;
+      border:1px solid var(--acc-line);border-radius:16px;padding:14px 18px;
+      animation:rowIn .5s cubic-bezier(.2,.7,.3,1) both;animation-delay:calc(var(--i,0)*60ms);
+      transition:transform .2s, box-shadow .2s}
+    .access-row:hover{transform:translateY(-2px);box-shadow:0 12px 26px -16px rgba(86,86,92,.35)}
+    @keyframes rowIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+    .access-row .main{display:flex;align-items:center;gap:16px;min-width:0}
+    .access-row .info{display:flex;flex-direction:column;gap:3px;min-width:0}
+    .access-row .label{font-size:14.5px;font-weight:600;color:var(--acc-ink);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .access-row .meta{font-size:12.5px;color:var(--acc-ink-soft);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .access-row .meta i{font-size:12px;color:var(--acc-sage)}
+    .access-row .side{display:flex;align-items:center;gap:12px;flex-shrink:0}
+
+    /* license plate chip — real AZ plate: white field, flag + black AZ at left */
+    .plate-chip{display:inline-flex;align-items:stretch;border:2px solid #1c1f26;border-radius:8px;
+      overflow:hidden;background:#fff;box-shadow:0 2px 6px rgba(28,31,38,.18);flex-shrink:0}
+    .plate-chip .band{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.5px;
+      background:#fff;padding:4px 6px;border-right:1.5px solid #1c1f26}
+    .plate-chip .flag{width:17px;height:11px;border-radius:2px;border:.5px solid rgba(28,31,38,.25);
+      background:
+        radial-gradient(circle 1.4px at 56% 50%, #e8112d 0 1.4px, transparent 1.6px),
+        radial-gradient(circle 2.1px at 50% 50%, #fff 0 2.1px, transparent 2.3px),
+        linear-gradient(180deg,#0098c3 0 33.4%, #e8112d 33.4% 66.7%, #00ae65 66.7% 100%)}
+    .plate-chip .az{font-size:8.5px;font-weight:800;color:#1c1f26;letter-spacing:.06em;line-height:1;
+      font-family:Arial Narrow,Arial,sans-serif}
+    .plate-chip .num{display:flex;align-items:center;padding:5px 12px;
+      font-family:'Arial Narrow',Arial,sans-serif;font-size:17px;font-weight:700;font-stretch:condensed;
+      letter-spacing:.06em;color:#1c1f26}
+
+    /* status pills */
+    .access-pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;border-radius:999px;
+      padding:5px 12px;text-transform:uppercase;letter-spacing:.05em;font-family:var(--font-ui,inherit);white-space:nowrap}
+    .access-pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+    .pill-ok{background:#e7efe0;color:#4f6a37}
+    .pill-warn{background:#fdf2d8;color:#9a7b1d}
+    .pill-gray{background:#ededeb;color:#85857c}
+    .pill-bad{background:#f7e3e0;color:#9c4a3c}
+
+    /* guest period "ticket" */
+    .period-chip{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#9a7b1d;
+      background:#fdf2d8;border:1px dashed rgba(154,123,29,.4);border-radius:10px;padding:5px 11px;white-space:nowrap}
+    .period-chip.expired{color:#85857c;background:#ededeb;border-color:#d4d4cf;text-decoration:line-through}
+    .period-chip i{font-size:12px}
+
+    .access-del{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:0;
+      border-radius:10px;background:transparent;color:#b9938c;cursor:pointer;font-size:15px;
+      transition:background .2s, color .2s}
+    .access-del:hover{background:#f7e3e0;color:#9c4a3c}
+
+    /* empty state */
+    .access-empty{display:flex;flex-direction:column;align-items:center;gap:12px;padding:42px 16px;
+      color:var(--acc-ink-soft);font-size:14px;text-align:center;background:#fff;
+      border:1.5px dashed var(--acc-line);border-radius:18px}
+    .access-empty .orb{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      background:radial-gradient(circle at 35% 30%, #f2f4ea, var(--acc-pale));border:1px solid var(--acc-line)}
+    .access-empty .orb i{font-size:24px;color:var(--acc-sage)}
+
+    @media (max-width:640px){
+      .access-form{flex-direction:column;align-items:stretch}
+      .access-form .fld, .access-form input{min-width:0;width:100%}
+      .access-row{flex-direction:column;align-items:flex-start}
+      .access-row .side{width:100%;justify-content:space-between}
+    }
+  </style>
+
+  <div class="access-tabs" role="tablist">
+    <button class="access-tab active" data-tab="vehicles" role="tab"><i class="bi bi-car-front-fill"></i><span data-i18n="access_tab_vehicles">Мои авто</span></button>
+    <button class="access-tab" data-tab="guests" role="tab"><i class="bi bi-person-badge"></i><span data-i18n="access_tab_guests">Гостевые пропуска</span></button>
+    <button class="access-tab" data-tab="requests" role="tab"><i class="bi bi-shield-check"></i><span data-i18n="access_tab_requests">Заявки охране</span></button>
+  </div>
+
+  <!-- Tab: my vehicles -->
+  <div class="access-pane" data-pane="vehicles">
+    <div class="access-card">
+      <div class="access-card-head">
+        <h3 class="access-card-title" data-i18n="access_tab_vehicles">Мои авто</h3>
+        <span class="access-card-sub" data-i18n="access_desc_vehicles">шлагбаум открывается для них автоматически</span>
+      </div>
+      <form class="access-form" id="acc-veh-form">
+        <div class="fld">
+          <label data-i18n="access_plate">Номер</label>
+          <input id="acc-veh-plate" placeholder="10AA123" maxlength="16" required>
+        </div>
+        <div class="fld">
+          <label data-i18n="access_label">Метка</label>
+          <input id="acc-veh-label" placeholder="BMW" maxlength="40">
+        </div>
+        <button class="access-btn" type="submit"><i class="bi bi-plus-lg"></i><span data-i18n="access_add">Добавить</span></button>
+      </form>
+      <div class="access-err" id="acc-veh-err"></div>
+      <div class="access-limit"><i class="bi bi-car-front"></i><span id="acc-veh-limit"></span></div>
+    </div>
+    <div class="access-list" id="acc-veh-list"></div>
+  </div>
+
+  <!-- Tab: guest passes -->
+  <div class="access-pane" data-pane="guests" hidden>
+    <div class="access-card">
+      <div class="access-card-head">
+        <h3 class="access-card-title" data-i18n="access_tab_guests">Гостевые пропуска</h3>
+        <span class="access-card-sub" data-i18n="access_desc_guests">временный въезд для гостей и мастеров</span>
+      </div>
+      <form class="access-form" id="acc-guest-form">
+        <div class="fld">
+          <label data-i18n="access_plate">Номер</label>
+          <input id="acc-guest-plate" placeholder="50XY999" maxlength="16" required>
+        </div>
+        <div class="fld">
+          <label data-i18n="access_label">Метка</label>
+          <input id="acc-guest-label" placeholder="сантехник" maxlength="40">
+        </div>
+        <div class="fld">
+          <label data-i18n="access_from">С</label>
+          <input id="acc-guest-from" type="datetime-local" required>
+        </div>
+        <div class="fld">
+          <label data-i18n="access_to">До</label>
+          <input id="acc-guest-to" type="datetime-local" required>
+        </div>
+        <button class="access-btn" type="submit"><i class="bi bi-ticket-perforated"></i><span data-i18n="access_create">Создать</span></button>
+      </form>
+      <div class="access-err" id="acc-guest-err"></div>
+    </div>
+    <div class="access-list" id="acc-guest-list"></div>
+  </div>
+
+  <!-- Tab: requests to guards -->
+  <div class="access-pane" data-pane="requests" hidden>
+    <div class="access-card">
+      <div class="access-card-head">
+        <h3 class="access-card-title" data-i18n="access_tab_requests">Заявки охране</h3>
+        <span class="access-card-sub" data-i18n="access_desc_requests">попросите КПП впустить или выпустить машину</span>
+      </div>
+      <form class="access-form" id="acc-req-form">
+        <div class="fld">
+          <label data-i18n="access_plate">Номер</label>
+          <input id="acc-req-plate" placeholder="50XY999" maxlength="16" required>
+        </div>
+        <div class="fld">
+          <label data-i18n="access_direction">Направление</label>
+          <div class="dir-toggle">
+            <input type="radio" name="acc-req-dir" value="IN" id="acc-dir-in" checked>
+            <label for="acc-dir-in"><i class="bi bi-box-arrow-in-right"></i><span data-i18n="access_dir_in">Впустить</span></label>
+            <input type="radio" name="acc-req-dir" value="OUT" id="acc-dir-out">
+            <label for="acc-dir-out"><i class="bi bi-box-arrow-right"></i><span data-i18n="access_dir_out">Выпустить</span></label>
+          </div>
+        </div>
+        <div class="fld" style="flex:1;min-width:200px">
+          <label data-i18n="access_note">Комментарий</label>
+          <input id="acc-req-note" placeholder="чёрный Mercedes, у въезда" maxlength="200" style="width:100%">
+        </div>
+        <button class="access-btn" type="submit"><i class="bi bi-send"></i><span data-i18n="access_send">Отправить охране</span></button>
+      </form>
+      <div class="access-err" id="acc-req-err"></div>
+    </div>
+    <div class="access-list" id="acc-req-list"></div>
+  </div>
+</section>
+
+<script>
+(function(){
+  var API = (window.API_BASE || '');
+  function t(k, d){
+    try {
+      var i = window.i18n;
+      var v = (i && typeof i.translate === 'function') ? i.translate(k, i.currentLanguage) : null;
+      return (v && v !== k) ? v : d;
+    } catch(e){ return d; }
+  }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function api(path, opts){
+    opts = opts || {}; opts.credentials = 'include';
+    opts.headers = Object.assign({'Content-Type':'application/json'}, opts.headers || {});
+    return fetch(API + path, opts);
+  }
+  function fmtDate(s){ if(!s) return ''; var d = new Date(s); if(isNaN(d)) return s;
+    return d.toLocaleString('ru-RU', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+  function plateChip(p){
+    // standard AZ plates render as 00-HH-000; anything else is shown as-is
+    var raw = String(p == null ? '' : p).toUpperCase();
+    var m = /^(\d{2})([A-Z]{1,2})(\d{3})$/.exec(raw);
+    var num = m ? (m[1] + '-' + m[2] + '-' + m[3]) : raw;
+    return '<span class="plate-chip"><span class="band"><span class="flag"></span>' +
+           '<span class="az">AZ</span></span><span class="num">'+esc(num)+'</span></span>';
+  }
+  function emptyState(icon, text){
+    return '<div class="access-empty"><div class="orb"><i class="bi '+icon+'"></i></div><div>'+esc(text)+'</div></div>';
+  }
+
+  // ---- tabs ----
+  var root = document.querySelector('.access-section');
+  root.querySelectorAll('.access-tab').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      root.querySelectorAll('.access-tab').forEach(function(b){ b.classList.toggle('active', b === btn); });
+      var tab = btn.getAttribute('data-tab');
+      root.querySelectorAll('.access-pane').forEach(function(p){ p.hidden = (p.getAttribute('data-pane') !== tab); });
+    });
+  });
+
+  // ---- my vehicles ----
+  function renderVehicles(list){
+    var box = document.getElementById('acc-veh-list');
+    if(!list.length){ box.innerHTML = emptyState('bi-car-front', t('access_no_vehicles','Авто пока нет.')); return; }
+    box.innerHTML = list.map(function(v, i){
+      return '<div class="access-row" style="--i:'+i+'"><div class="main">'+plateChip(v.plate)+
+        '<div class="info">'+
+        (v.label ? '<span class="label">'+esc(v.label)+'</span>' : '')+
+        (v.house ? '<span class="meta"><i class="bi bi-house-door"></i>'+esc(v.house)+'</span>' : '')+
+        '</div></div>'+
+        '<div class="side">'+
+        '<span class="access-pill pill-ok">'+esc(t('access_active','активен'))+'</span>'+
+        '<button class="access-del" data-del-veh="'+v.id+'" title="'+esc(t('access_delete','Удалить'))+'"><i class="bi bi-trash"></i></button></div></div>';
+    }).join('');
+    box.querySelectorAll('[data-del-veh]').forEach(function(b){
+      b.addEventListener('click', function(){
+        api('/api/access/my/vehicles/'+b.getAttribute('data-del-veh'), {method:'DELETE'}).then(loadVehicles);
+      });
+    });
+  }
+  function loadVehicles(){
+    api('/api/access/my/vehicles').then(function(r){ return r.json(); }).then(function(list){
+      renderVehicles(list);
+      document.getElementById('acc-veh-limit').textContent = t('access_limit_label','Авто') + ': ' + list.length;
+    }).catch(function(){});
+  }
+  document.getElementById('acc-veh-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var err = document.getElementById('acc-veh-err'); err.textContent = '';
+    var plate = document.getElementById('acc-veh-plate').value.trim();
+    var label = document.getElementById('acc-veh-label').value.trim();
+    api('/api/access/my/vehicles', {method:'POST', body: JSON.stringify({plate:plate, label:label||null})})
+      .then(function(r){ if(!r.ok) return r.json().then(function(d){ throw new Error(d.detail||'Ошибка'); });
+        document.getElementById('acc-veh-plate').value=''; document.getElementById('acc-veh-label').value=''; loadVehicles(); })
+      .catch(function(ex){ err.textContent = ex.message; });
+  });
+
+  // ---- guest passes ----
+  function renderGuests(list){
+    var box = document.getElementById('acc-guest-list');
+    if(!list.length){ box.innerHTML = emptyState('bi-person-badge', t('access_no_guests','Гостевых пропусков пока нет.')); return; }
+    var now = Date.now();
+    box.innerHTML = list.map(function(v, i){
+      var to = v.valid_to ? new Date(v.valid_to).getTime() : 0;
+      var expired = to && to < now;
+      var chip = expired
+        ? '<span class="period-chip expired"><i class="bi bi-clock-history"></i>'+esc(t('access_expired','истёк'))+'</span>'
+        : '<span class="period-chip"><i class="bi bi-clock"></i>'+esc(fmtDate(v.valid_from))+' – '+esc(fmtDate(v.valid_to))+'</span>';
+      return '<div class="access-row" style="--i:'+i+'"><div class="main">'+plateChip(v.plate)+
+        '<div class="info">'+
+        (v.label ? '<span class="label">'+esc(v.label)+'</span>' : '')+
+        '</div></div>'+
+        '<div class="side">'+chip+
+        '<button class="access-del" data-del-guest="'+v.id+'" title="'+esc(t('access_delete','Удалить'))+'"><i class="bi bi-trash"></i></button></div></div>';
+    }).join('');
+    box.querySelectorAll('[data-del-guest]').forEach(function(b){
+      b.addEventListener('click', function(){
+        api('/api/access/my/guest-passes/'+b.getAttribute('data-del-guest'), {method:'DELETE'}).then(loadGuests);
+      });
+    });
+  }
+  function loadGuests(){
+    api('/api/access/my/guest-passes').then(function(r){ return r.json(); }).then(renderGuests).catch(function(){});
+  }
+  document.getElementById('acc-guest-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var err = document.getElementById('acc-guest-err'); err.textContent = '';
+    var body = {
+      plate: document.getElementById('acc-guest-plate').value.trim(),
+      label: document.getElementById('acc-guest-label').value.trim() || null,
+      valid_from: document.getElementById('acc-guest-from').value,
+      valid_to: document.getElementById('acc-guest-to').value
+    };
+    if(!body.valid_from || !body.valid_to){ err.textContent = t('access_need_window','Укажите период действия'); return; }
+    api('/api/access/my/guest-passes', {method:'POST', body: JSON.stringify(body)})
+      .then(function(r){ if(!r.ok) return r.json().then(function(d){ throw new Error(d.detail||'Ошибка'); });
+        document.getElementById('acc-guest-form').reset(); loadGuests(); })
+      .catch(function(ex){ err.textContent = ex.message; });
+  });
+
+  // ---- requests ----
+  function reqPill(status){
+    if(status==='HANDLED') return '<span class="access-pill pill-ok">'+esc(t('access_req_handled','выполнено'))+'</span>';
+    if(status==='REJECTED') return '<span class="access-pill pill-bad">'+esc(t('access_req_rejected','отклонено'))+'</span>';
+    return '<span class="access-pill pill-warn">'+esc(t('access_req_pending','ожидает'))+'</span>';
+  }
+  function renderRequests(list){
+    var box = document.getElementById('acc-req-list');
+    if(!list.length){ box.innerHTML = emptyState('bi-shield-check', t('access_no_requests','Заявок пока нет.')); return; }
+    box.innerHTML = list.map(function(rq, i){
+      var isOut = rq.direction==='OUT';
+      var dir = isOut ? t('access_dir_out','Выпустить') : t('access_dir_in','Впустить');
+      var dirIcon = isOut ? 'bi-box-arrow-right' : 'bi-box-arrow-in-right';
+      return '<div class="access-row" style="--i:'+i+'"><div class="main">'+plateChip(rq.plate)+
+        '<div class="info">'+
+        '<span class="label"><i class="bi '+dirIcon+'" style="color:var(--acc-olive);margin-right:5px"></i>'+esc(dir)+'</span>'+
+        '<span class="meta">'+(rq.note?esc(rq.note)+' · ':'')+'<i class="bi bi-clock"></i>'+esc(fmtDate(rq.created_at))+'</span>'+
+        '</div></div>'+
+        '<div class="side">'+reqPill(rq.status)+'</div></div>';
+    }).join('');
+  }
+  function loadRequests(){
+    api('/api/access/my/requests').then(function(r){ return r.json(); }).then(renderRequests).catch(function(){});
+  }
+  document.getElementById('acc-req-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var err = document.getElementById('acc-req-err'); err.textContent = '';
+    var dir = (root.querySelector('input[name="acc-req-dir"]:checked')||{}).value || 'IN';
+    var body = { plate: document.getElementById('acc-req-plate').value.trim(), direction: dir,
+                 note: document.getElementById('acc-req-note').value.trim() || null };
+    api('/api/access/my/requests', {method:'POST', body: JSON.stringify(body)})
+      .then(function(r){ if(!r.ok) return r.json().then(function(d){ throw new Error(d.detail||'Ошибка'); });
+        document.getElementById('acc-req-plate').value=''; document.getElementById('acc-req-note').value=''; loadRequests(); })
+      .catch(function(ex){ err.textContent = ex.message; });
+  });
+
+  loadVehicles(); loadGuests(); loadRequests();
+})();
+</script>

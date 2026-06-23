@@ -1,4 +1,60 @@
 <section class="user-bills-section user-payment-page">
+    <style>
+    /* ── Hesabları ödəmək: бренд Royal Park ──────────────────────────── */
+    .user-payment-page{--pay-olive:#7e8c59;--pay-olive-deep:#626d45;--pay-sage:#b1ba88;
+      --pay-line:rgba(177,186,136,.35)}
+
+    /* инструкция сверху — карточка с корешком */
+    body.user-app .payment-howto-block{position:relative;overflow:hidden;
+      border:1px solid var(--pay-line) !important;border-radius:20px !important;
+      box-shadow:0 10px 30px -18px rgba(86,86,92,.25) !important}
+    body.user-app .payment-howto-block::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;
+      background:linear-gradient(180deg,var(--pay-sage),var(--pay-olive))}
+    body.user-app .payment-section-title{font-family:var(--font-display,'Spectral',serif) !important;
+      color:#3f3f45 !important}
+
+    /* кнопки оплаты: вместо синего bootstrap-градиента — бренд */
+    body.user-app .user-payment-page .default-pay-button,
+    body.user-app .user-payment-page .payment-card-form .pay-button,
+    body.user-app .pay-button{
+      background:linear-gradient(135deg,var(--pay-olive),var(--pay-olive-deep)) !important;
+      border:0 !important;border-radius:12px !important;font-weight:600 !important;
+      box-shadow:0 6px 16px -6px rgba(98,109,69,.5) !important;
+      transition:transform .18s, box-shadow .18s !important}
+    body.user-app .user-payment-page .default-pay-button:hover,
+    body.user-app .user-payment-page .payment-card-form .pay-button:hover,
+    body.user-app .pay-button:hover{transform:translateY(-1px);
+      background:linear-gradient(135deg,var(--pay-olive),var(--pay-olive-deep)) !important;
+      box-shadow:0 9px 20px -6px rgba(98,109,69,.55) !important}
+    body.user-app .pay-button:disabled{opacity:.55;transform:none}
+    /* Apple/Google Pay — фирменный тёмный кошелёк */
+    body.user-app .wallet-pay-button{
+      background:linear-gradient(135deg,#3f3f45,#23262e) !important;
+      box-shadow:0 6px 16px -6px rgba(35,38,46,.55) !important}
+    /* кошелёк: тёмный, специфичность как у user-theme */
+    body.user-app .user-payment-page .wallet-pay-button{
+      background:linear-gradient(135deg,#3f3f45,#23262e) !important;
+      box-shadow:0 6px 16px -6px rgba(35,38,46,.55) !important}
+    /* «Avansı artır» — спокойный ghost */
+    body.user-app .user-payment-page .payment-secondary-btn,
+    body.user-app .payment-secondary-btn{
+      background:transparent !important;border:1.5px solid rgba(126,140,89,.45) !important;
+      color:var(--pay-olive-deep) !important;box-shadow:none !important}
+    body.user-app .payment-secondary-btn:hover{
+      background:rgba(177,186,136,.14) !important;transform:none}
+    body.user-app .payment-secondary-btn--cancel{
+      border-color:rgba(156,74,60,.4) !important;color:#9c4a3c !important}
+
+    /* виртуальную карту резидента (.resident-pass-card) НЕ трогаем — оригинал */
+
+    /* оригинальный логотип Royal Park (olive на прозрачном) вместо синей плитки */
+    body.user-app .user-payment-page .order-logo{
+      background:#fff !important;padding:5px !important;overflow:hidden;
+      border-radius:12px !important;border:1px solid var(--pay-line);
+      box-shadow:0 4px 12px -6px rgba(86,86,92,.35)}
+    body.user-app .user-payment-page .order-logo-img{
+      width:100%;height:100%;object-fit:contain;display:block}
+    </style>
     <div class="payment-page-inner">
     <aside class="payment-howto-block" aria-labelledby="payment-howto-heading">
         <h3 class="payment-section-title payment-howto-title" id="payment-howto-heading" data-i18n="payment_howto_title">Описание: как оплатить по счёту</h3>
@@ -74,7 +130,7 @@
             <div class="order-summary">
                 <div class="order-header">
                     <div class="order-logo">
-                        <i class="bi bi-building"></i>
+                        <img src="/images/branding/royal-park-logo-olive.png" alt="Royal Park" class="order-logo-img">
                     </div>
                     <div class="order-info">
                         <div class="order-title">RoyalPark Residence</div>
@@ -250,7 +306,7 @@ function _renderSavedCardEl(card, idx) {
             <div class="card-bottom">
                 <div class="info-group">
                     <label data-i18n="payment_card_holder_name">SAVED CARD</label>
-                    <div class="value">${card.is_default ? '★ Default' : ''}</div>
+                    <div class="value">${card.is_default ? '<i class="bi bi-star-fill"></i> Default' : ''}</div>
                 </div>
                 <div class="info-group align-right">
                     <label data-i18n="payment_expiry_date">EXPIRY DATE</label>

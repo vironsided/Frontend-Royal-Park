@@ -74,44 +74,87 @@
     gap: 1.5rem;
 }
 
+/* Карточка новости — спокойная редакционная подача в бренде Royal Park:
+   белая карточка, цвет категории живёт только в плитке-иконке и тонкой
+   полоске слева, а не в заливке всей карточки. */
 .news-item {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 1.25rem;
-    padding: 1.5rem;
+    --cat: #9aa972;
+    position: relative;
+    background: #fff;
+    border: 1px solid rgba(177, 186, 136, 0.35);
+    border-radius: 18px;
+    padding: 1.15rem 1.35rem 1.15rem 1.5rem;
     align-items: center;
     display: flex;
-    gap: 1.25rem;
-    transition: all 0.3s ease;
+    gap: 1.15rem;
+    transition: transform .2s, box-shadow .2s, border-color .2s;
     cursor: pointer;
+    overflow: hidden;
+    animation: newsIn .5s cubic-bezier(.2,.7,.3,1) both;
+    animation-delay: calc(var(--i, 0) * 55ms);
+}
+@keyframes newsIn { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
+
+.news-item::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--cat) 75%, #fff), var(--cat));
 }
 
 .news-item:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    border-color: rgba(177, 186, 136, 0.45);
+    box-shadow: 0 14px 30px -18px rgba(86, 86, 92, 0.4);
+    border-color: rgba(177, 186, 136, 0.55);
 }
 
-/* Тёмный фон убран: страница только в sakin portalı (body.user-app), токены — молочные */
+/* Перебиваем пастельные заливки из user-theme.css (те же селекторы + позже в каскаде) */
+[data-theme="dark"] body.user-app #spa-content .news-item[class*='news-item--'],
+[data-theme="dark"] body.user-app .dashboard-content .news-item[class*='news-item--'],
+[data-theme="dark"] body.user-app #userSpaContent .news-item[class*='news-item--'] {
+    background: #fff !important;
+    border-color: rgba(177, 186, 136, 0.35) !important;
+    box-shadow: 0 8px 22px -16px rgba(86, 86, 92, 0.28) !important;
+}
+[data-theme="dark"] body.user-app #spa-content .news-item[class*='news-item--']:hover,
+[data-theme="dark"] body.user-app .dashboard-content .news-item[class*='news-item--']:hover,
+[data-theme="dark"] body.user-app #userSpaContent .news-item[class*='news-item--']:hover {
+    border-color: rgba(177, 186, 136, 0.55) !important;
+    box-shadow: 0 14px 30px -18px rgba(86, 86, 92, 0.4) !important;
+}
 
 .news-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    font-size: 28px;
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    font-size: 22px;
+    color: var(--cat);
+    background: color-mix(in srgb, var(--cat) 14%, #fff);
+    border: 1px solid color-mix(in srgb, var(--cat) 28%, #fff);
+    box-shadow: none;
+}
+
+/* старые темы красят .news-icon i в свои цвета — возвращаем цвет категории */
+[data-theme="dark"] body.user-app #userSpaContent .news-icon,
+[data-theme="dark"] body.user-app #userSpaContent .news-icon i {
+    color: var(--cat) !important;
+    background-color: transparent !important;
+}
+[data-theme="dark"] body.user-app #userSpaContent .news-item .news-icon {
+    background: color-mix(in srgb, var(--cat) 14%, #fff) !important;
 }
 
 .news-content {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.4rem;
+    min-width: 0;
 }
 
 .news-header {
@@ -121,23 +164,56 @@
     gap: 1rem;
 }
 
+.news-title-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; flex-wrap: wrap }
+
 .news-title {
-    font-size: 1.25rem;
+    font-family: var(--font-display, 'Spectral', serif);
+    font-size: 1.18rem;
     font-weight: 600;
-    color: var(--text-primary);
+    letter-spacing: .01em;
+    color: #3f3f45;
     margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.news-date {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
+.news-pill-important {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #9a6b1d;
+    background: #fdf2d8;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-family: var(--font-ui, inherit);
     white-space: nowrap;
 }
+.news-pill-important i { font-size: 10px }
+
+.news-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #85857c;
+    background: #f3f4ec;
+    border-radius: 999px;
+    padding: 4px 11px;
+    white-space: nowrap;
+    font-family: var(--font-ui, inherit);
+    flex-shrink: 0;
+}
+.news-date i { font-size: 11px; color: #b1ba88 }
 
 .news-text {
     font-size: 0.95rem;
     line-height: 1.6;
-    color: var(--text-secondary);
+    color: #7c7c83;
     margin: 0;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -147,16 +223,39 @@
     text-overflow: ellipsis;
 }
 
+.news-chevron {
+    flex-shrink: 0;
+    color: #c9cdb6;
+    font-size: 18px;
+    transition: transform .2s, color .2s;
+}
+.news-item:hover .news-chevron { transform: translateX(3px); color: #7e8c59 }
+
 .news-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
     text-align: center;
-    padding: 4rem 2rem;
-    color: var(--text-secondary);
+    padding: 3.5rem 2rem;
+    color: #85857c;
+    background: #fff;
+    border: 1.5px dashed rgba(177, 186, 136, 0.4);
+    border-radius: 18px;
 }
 
 .news-empty i {
-    font-size: 4rem;
-    opacity: 0.3;
-    margin-bottom: 1rem;
+    font-size: 1.6rem;
+    color: #b1ba88;
+    width: 58px;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #f2f4ea, #ebede7);
+    border: 1px solid rgba(177, 186, 136, 0.35);
+    margin-bottom: 0;
 }
 
 /* Pagination (mirrors admin news) */
@@ -365,23 +464,27 @@ html[data-theme="dark"] body.user-app .user-news-modal-header {
 }
 
 .user-news-modal-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
+    --cat: #9aa972;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
-    color: #fff;
+    font-size: 23px;
+    color: var(--cat);
+    background: color-mix(in srgb, var(--cat) 14%, #fff);
+    border: 1px solid color-mix(in srgb, var(--cat) 28%, #fff);
     flex-shrink: 0;
 }
 
 .user-news-modal-header h3 {
     flex: 1;
     margin: 0;
-    font-size: 1.5rem;
+    font-family: var(--font-display, 'Spectral', serif);
+    font-size: 1.45rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: #3f3f45;
 }
 
 .user-news-modal-title-block {
@@ -680,30 +783,39 @@ html[data-theme="dark"] body.user-app .user-news-modal-date {
                 typeof window.resolveUserNewsIconColor === 'function'
                     ? window.resolveUserNewsIconColor(news.icon, news.icon_color)
                     : news.icon_color || '#c5cd9f';
-            const iconShadow = `0 4px 15px ${iconColor}66`;
             const modClass =
                 typeof window.newsItemModifierClass === 'function'
                     ? window.newsItemModifierClass(news.icon)
                     : 'news-item--info';
+            const importantLabel = (window.i18n && typeof window.i18n.translate === 'function'
+                && window.i18n.translate('user_news_important', lang) !== 'user_news_important')
+                ? window.i18n.translate('user_news_important', lang) : 'Важно';
+            const importantPill = (news.priority && news.priority > 0)
+                ? `<span class="news-pill-important"><i class="bi bi-pin-angle-fill"></i>${escapeHtml(importantLabel)}</span>`
+                : '';
 
             // Сохраняем данные для быстрой перерисовки при смене языка
             return `
-                <div class="news-item ${modClass}" 
+                <div class="news-item ${modClass}" style="--cat: ${iconColor}; --i: ${pageItems.indexOf(news)}"
                      onclick="window.openNewsDetail(${news.id})"
                      data-news-id="${news.id}"
                      data-published-at="${news.published_at}"
                      data-title='${JSON.stringify(title)}'
                      data-content='${JSON.stringify(content)}'>
-                    <div class="news-icon" style="background-color: ${iconColor} !important; box-shadow: ${iconShadow} !important;">
+                    <div class="news-icon">
                         <i class="bi ${iconMap[news.icon] || 'bi-info-circle-fill'}"></i>
                     </div>
                     <div class="news-content">
                         <div class="news-header">
-                            <h3 class="news-title">${escapeHtml(titleText)}</h3>
-                            <span class="news-date">${publishedDate}</span>
+                            <div class="news-title-wrap">
+                                <h3 class="news-title">${escapeHtml(titleText)}</h3>
+                                ${importantPill}
+                            </div>
+                            <span class="news-date"><i class="bi bi-calendar3"></i>${publishedDate}</span>
                         </div>
                         <p class="news-text">${escapeHtml(contentText)}</p>
                     </div>
+                    <i class="bi bi-chevron-right news-chevron"></i>
                 </div>
             `;
         }).join('');
@@ -817,10 +929,11 @@ html[data-theme="dark"] body.user-app .user-news-modal-date {
             modalDate.textContent = publishedDate;
             
             if (modalIcon) {
-                modalIcon.style.background =
+                const catColor =
                     typeof window.resolveUserNewsIconColor === 'function'
                         ? window.resolveUserNewsIconColor(news.icon, news.icon_color)
                         : news.icon_color || '#c5cd9f';
+                modalIcon.style.setProperty('--cat', catColor);
                 modalIcon.innerHTML = `<i class="bi ${iconMap[news.icon] || 'bi-info-circle-fill'}"></i>`;
             }
             

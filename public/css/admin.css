@@ -1746,7 +1746,7 @@ html, body {
     }
 }
 
-/* 🌓 DARK MODE STYLES */
+/*  DARK MODE STYLES */
 
 /* Убираем белую полосу сверху в тёмной теме */
 [data-theme="dark"] body,
@@ -1773,7 +1773,7 @@ html, body {
     border-right-color: #3a3f4a;
 }
 
-/* 🧱 Единый цвет шапки сайдбара как у всего nav-menu (и в светлой, и в тёмной теме) */
+/*  Единый цвет шапки сайдбара как у всего nav-menu (и в светлой, и в тёмной теме) */
 .admin-container .sidebar-header {
     background: transparent !important;
     border-bottom: none !important;

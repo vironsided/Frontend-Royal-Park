@@ -344,11 +344,13 @@
             tableBody.innerHTML = items.map(notif => {
                 const status = statusStyles[notif.status] || statusStyles.UNREAD;
                 const statusText = t(status.textKey, status.textKey === 'user_appeal_status_read' ? 'Прочитано' : 'Не прочитано');
-                const block = notif.block_name || '—';
-                const home = notif.unit_number || '—';
-                const resident = notif.user_full_name || '—';
-                const phone = notif.user_phone || '—';
-                const email = notif.user_email || '—';
+                // audit F-17: escape resident-controlled fields before innerHTML.
+                const esc = (v) => (window.escapeHtml ? window.escapeHtml(v) : v);
+                const block = esc(notif.block_name || '—');
+                const home = esc(notif.unit_number || '—');
+                const resident = esc(notif.user_full_name || '—');
+                const phone = esc(notif.user_phone || '—');
+                const email = esc(notif.user_email || '—');
                 const wfLine = notif.appeal_workflow
                     ? `<div class="appeals-workflow-subtitle">${workflowLabel(notif.appeal_workflow)}</div>`
                     : '';

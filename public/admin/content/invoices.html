@@ -661,7 +661,7 @@
             
             updateFilterDropdowns();
             updateExportDropdowns();
-            console.log('✅ loadInvoices completed successfully');
+            console.log('loadInvoices completed successfully');
             
         } catch (error) {
             console.error('Error loading invoices:', error);
@@ -1996,11 +1996,11 @@
                     return;
                 }
                 
-                console.error('❌ invoicesTable tbody not found after all retries!');
+                console.error('invoicesTable tbody not found after all retries!');
                 // Попробуем создать tbody, если его нет
                 const table = document.querySelector('.table.table-hover');
                 if (table) {
-                    console.log('⚠️ Creating tbody element manually...');
+                    console.log('Creating tbody element manually...');
                     const newTbody = document.createElement('tbody');
                     newTbody.id = 'invoicesTable';
                     table.appendChild(newTbody);
@@ -2015,20 +2015,20 @@
         (async () => {
             const tbody = await findTbodyWithRetry();
             if (!tbody) {
-                console.error('❌ Could not find or create invoicesTable tbody!');
+                console.error('Could not find or create invoicesTable tbody!');
                 return;
             }
             
-            console.log('✅ tbody found, rendering', invoices.length, 'invoices');
+            console.log('tbody found, rendering', invoices.length, 'invoices');
             
             // Data is already paginated from API, so just render it directly
             const pageInvoices = invoices;
             
             if (pageInvoices.length === 0) {
-                console.log('⚠️ No invoices to render, showing empty message');
+                console.log('No invoices to render, showing empty message');
                 tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">' + t('payments_no_data_for_filters', 'Нет данных по текущим фильтрам') + '</td></tr>';
             } else {
-                console.log('📝 Rendering', pageInvoices.length, 'invoice rows');
+                console.log('Rendering', pageInvoices.length, 'invoice rows');
                 tbody.innerHTML = pageInvoices.map(i => {
                 const invoiceNumber = i.invoiceNumber || i.number || `INV-${String(i.id).padStart(4, '0')}`;
                 const resident = i.residentCode || i.residentInfo || '—';
@@ -2415,23 +2415,23 @@
             // Convert date from DD.MM.YYYY to YYYY-MM-DD if needed
             let formattedDueDate = null;
             if (dueDate) {
-                console.log('📅 Original dueDate:', dueDate, 'type:', typeof dueDate);
+                console.log('Original dueDate:', dueDate, 'type:', typeof dueDate);
                 // Check if date is in DD.MM.YYYY format
                 if (dueDate.includes('.')) {
                     const parts = dueDate.split('.');
                     if (parts.length === 3) {
                         formattedDueDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-                        console.log('📅 Converted from DD.MM.YYYY to YYYY-MM-DD:', formattedDueDate);
+                        console.log('Converted from DD.MM.YYYY to YYYY-MM-DD:', formattedDueDate);
                     } else {
                         formattedDueDate = dueDate;
                     }
                 } else {
                     // If it's already in YYYY-MM-DD format (from date input), use as is
                     formattedDueDate = dueDate;
-                    console.log('📅 Using date as is (YYYY-MM-DD):', formattedDueDate);
+                    console.log('Using date as is (YYYY-MM-DD):', formattedDueDate);
                 }
             } else {
-                console.log('⚠️ No due date provided');
+                console.log('No due date provided');
             }
             
             const payload = {
@@ -2440,7 +2440,7 @@
                 due_date: formattedDueDate
             };
             
-            console.log('📤 Sending bulk issue request:', JSON.stringify(payload, null, 2));
+            console.log('Sending bulk issue request:', JSON.stringify(payload, null, 2));
             
             let url = `${API_BASE}/api/invoices/bulk-issue`;
             let response = await fetch(url, {
@@ -2472,7 +2472,7 @@
             }
             
             const data = await response.json();
-            console.log('📥 Bulk issue response:', JSON.stringify(data, null, 2));
+            console.log('Bulk issue response:', JSON.stringify(data, null, 2));
             
             if (typeof showSuccess === 'function') {
                 showSuccess(data.message || `Счета по блоку успешно выставлены! Выставлено: ${data.count}`);
@@ -2517,23 +2517,23 @@
             // Convert date from DD.MM.YYYY to YYYY-MM-DD if needed
             let formattedDueDate = null;
             if (dueDate) {
-                console.log('📅 Original dueDate:', dueDate, 'type:', typeof dueDate);
+                console.log('Original dueDate:', dueDate, 'type:', typeof dueDate);
                 // Check if date is in DD.MM.YYYY format
                 if (dueDate.includes('.')) {
                     const parts = dueDate.split('.');
                     if (parts.length === 3) {
                         formattedDueDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-                        console.log('📅 Converted from DD.MM.YYYY to YYYY-MM-DD:', formattedDueDate);
+                        console.log('Converted from DD.MM.YYYY to YYYY-MM-DD:', formattedDueDate);
                     } else {
                         formattedDueDate = dueDate;
                     }
                 } else {
                     // If it's already in YYYY-MM-DD format (from date input), use as is
                     formattedDueDate = dueDate;
-                    console.log('📅 Using date as is (YYYY-MM-DD):', formattedDueDate);
+                    console.log('Using date as is (YYYY-MM-DD):', formattedDueDate);
                 }
             } else {
-                console.log('⚠️ No due date provided');
+                console.log('No due date provided');
             }
             
             const payload = {

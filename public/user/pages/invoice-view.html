@@ -1,4 +1,7 @@
 <link rel="stylesheet" href="/admin/content_css/invoice-view.css">
+
+
+<div class="content-wrapper invoice-view-page">
 <style>
     .invoice-selection-summary {
         margin-top: 12px;
@@ -33,11 +36,88 @@
     tr.category-locked td {
         background: rgba(100, 116, 139, 0.08);
     }
-</style>
 
-<div class="content-wrapper invoice-view-page">
+    /* ── Hesabın görüntülənməsi: бренд Royal Park ─────────────────── */
+    .invoice-view-page{--inv-olive:#7e8c59;--inv-olive-deep:#626d45;--inv-sage:#b1ba88;
+      --inv-line:rgba(177,186,136,.35)}
+
+    /* заголовки секций — сериф */
+    body.user-app .invoice-view-page .user-section-heading{
+      font-family:var(--font-display,'Spectral',serif) !important;color:#3f3f45 !important}
+
+    /* «Ödəmək» — бренд вместо синего */
+    body.user-app .invoice-view-page .invoice-pay-btn{
+      background:linear-gradient(135deg,var(--inv-olive),var(--inv-olive-deep)) !important;
+      border:0 !important;border-radius:12px !important;color:#fff !important;
+      font-weight:600 !important;box-shadow:0 6px 16px -6px rgba(98,109,69,.5) !important;
+      transition:transform .18s, box-shadow .18s !important}
+    body.user-app .invoice-view-page .invoice-pay-btn:hover{transform:translateY(-1px);
+      box-shadow:0 9px 20px -6px rgba(98,109,69,.55) !important}
+    body.user-app .invoice-view-page .invoice-pay-btn:disabled{opacity:.55;transform:none}
+    body.user-app .invoice-view-page .invoice-bottom-pay{
+      display:flex;justify-content:flex-end;margin-top:14px}
+
+    /* плашка «Seçilmiş xidmətlər» — олива вместо голубой */
+    body.user-app .invoice-view-page .invoice-selection-summary{
+      background:rgba(177,186,136,.14) !important;
+      border:1px solid rgba(177,186,136,.45) !important;
+      border-radius:12px !important;color:#56565c !important}
+    body.user-app .invoice-view-page .invoice-selection-summary.is-empty{
+      background:#f7f7f2 !important;border-color:rgba(177,186,136,.25) !important;
+      color:#85857c !important}
+
+    /* «К списку счетов» — читаемая кнопка-назад, а не бледная пилюля */
+    body.user-app .invoice-view-page .btn-back{
+      display:inline-flex !important;align-items:center;gap:8px;
+      background:#fff !important;border:1.5px solid rgba(126,140,89,.45) !important;
+      color:var(--inv-olive-deep) !important;border-radius:12px !important;
+      padding:9px 18px !important;font-weight:600 !important;font-size:14px !important;
+      cursor:pointer;box-shadow:0 2px 8px -4px rgba(86,86,92,.25) !important;
+      transition:all .2s !important}
+    body.user-app .invoice-view-page .btn-back i{font-size:15px;transition:transform .2s}
+    body.user-app .invoice-view-page .btn-back:hover{
+      background:linear-gradient(135deg,var(--inv-olive),var(--inv-olive-deep)) !important;
+      border-color:transparent !important;color:#fff !important}
+    body.user-app .invoice-view-page .btn-back:hover i{transform:translateX(-3px)}
+
+    /* PDF — ghost */
+    body.user-app .invoice-view-page .invoice-pdf-btn{
+      background:transparent !important;border:1.5px solid rgba(126,140,89,.45) !important;
+      color:var(--inv-olive-deep) !important;border-radius:12px !important;font-weight:600 !important;
+      box-shadow:none !important;transition:all .2s !important}
+    body.user-app .invoice-view-page .invoice-pdf-btn:hover{
+      background:rgba(177,186,136,.14) !important}
+
+    /* шапки таблиц: вместо голубовато-стальной — бледная олива */
+    body.user-app .invoice-view-page .line-items-table thead th,
+    body.user-app .invoice-view-page .line-items-table thead{
+      background:#ebede7 !important;color:#56565c !important;
+      border-color:var(--inv-line) !important}
+    body.user-app .invoice-view-page .line-items-table tfoot td,
+    body.user-app .invoice-view-page .line-items-table tfoot{
+      background:#f3f4ec !important;border-color:var(--inv-line) !important}
+
+    /* карточки-секции: фирменная обводка */
+    body.user-app .invoice-view-page .invoice-summary,
+    body.user-app .invoice-view-page .invoice-howto-block,
+    body.user-app .invoice-view-page .payments-section,
+    body.user-app .invoice-view-page .user-invoice-items{
+      border:1px solid var(--inv-line) !important;border-radius:18px !important;
+      box-shadow:0 10px 30px -18px rgba(86,86,92,.22) !important}
+
+    body.user-app .invoice-view-page .line-items-table .total-row td,
+    body.user-app .invoice-view-page .line-items-table .total-row{
+      background:#f3f4ec !important;border-color:var(--inv-line) !important}
+
+    /* инструкция — корешок */
+    body.user-app .invoice-view-page .invoice-howto-block{position:relative;overflow:hidden}
+    body.user-app .invoice-view-page .invoice-howto-block::before{content:"";position:absolute;
+      inset:0 auto 0 0;width:4px;
+      background:linear-gradient(180deg,var(--inv-sage),var(--inv-olive))}
+</style>
     <div class="invoice-header">
         <button class="btn-back" type="button" onclick="window.userSpaRouter ? window.userSpaRouter.navigate('bills', true) : history.back()">
+            <i class="bi bi-arrow-left"></i>
             <span data-i18n="user_invoice_back_to_list">К списку счетов</span>
         </button>
         <h1>
@@ -131,6 +211,12 @@
             </table>
         </div>
         <div id="selectedLinesPaySummary" class="invoice-selection-summary is-empty"></div>
+        <!-- Дубль кнопки оплаты: при длинном списке не нужно скроллить наверх -->
+        <div class="invoice-bottom-pay">
+            <button class="btn btn-primary invoice-pay-btn" type="button" id="payBtnBottom" data-i18n="user_invoice_pay_btn">
+                Оплатить
+            </button>
+        </div>
     </div>
 </div>
 
@@ -218,10 +304,10 @@
                 };
             }
 
-            // Update Pay button
-            const payBtn = document.getElementById('payBtn');
-            if (payBtn) {
-                payBtn.onclick = async () => {
+            // Update Pay buttons (верхняя и дубль под списком позиций)
+            const payButtons = [document.getElementById('payBtn'), document.getElementById('payBtnBottom')].filter(Boolean);
+            if (payButtons.length) {
+                const payHandler = async () => {
                     let selectedIds = getExpandedSelectedLineIds(invoice);
                     let amountToPay = getSelectedSelectedLinesAmount(invoice);
                     if (!selectedIds.length || amountToPay <= 0) {
@@ -310,15 +396,18 @@
                     }
                 };
                 const selectedAmount = getSelectedSelectedLinesAmount(invoice);
-                if (selectedAmount <= 0) {
-                    payBtn.disabled = true;
-                    payBtn.style.opacity = '0.6';
-                    payBtn.style.cursor = 'not-allowed';
-                } else {
-                    payBtn.disabled = false;
-                    payBtn.style.opacity = '';
-                    payBtn.style.cursor = '';
-                }
+                payButtons.forEach((btn) => {
+                    btn.onclick = payHandler;
+                    if (selectedAmount <= 0) {
+                        btn.disabled = true;
+                        btn.style.opacity = '0.6';
+                        btn.style.cursor = 'not-allowed';
+                    } else {
+                        btn.disabled = false;
+                        btn.style.opacity = '';
+                        btn.style.cursor = '';
+                    }
+                });
             }
             
             // Update summary
@@ -880,7 +969,7 @@
         }
 
         function refreshSelectionControls(invoice) {
-            const payBtn = document.getElementById('payBtn');
+            const payBtns = [document.getElementById('payBtn'), document.getElementById('payBtnBottom')].filter(Boolean);
             const selectedIds = getSelectedLineIds();
             const selectedAmount = getSelectedSelectedLinesAmount(invoice);
             const summaryEl = document.getElementById('selectedLinesPaySummary');
@@ -899,17 +988,17 @@
                         || 'Не выбрано ни одной услуги для оплаты';
                 }
             }
-            if (payBtn) {
+            payBtns.forEach((btn) => {
                 if (selectedAmount <= 0 || selectedIds.length === 0) {
-                    payBtn.disabled = true;
-                    payBtn.style.opacity = '0.6';
-                    payBtn.style.cursor = 'not-allowed';
+                    btn.disabled = true;
+                    btn.style.opacity = '0.6';
+                    btn.style.cursor = 'not-allowed';
                 } else {
-                    payBtn.disabled = false;
-                    payBtn.style.opacity = '';
-                    payBtn.style.cursor = '';
+                    btn.disabled = false;
+                    btn.style.opacity = '';
+                    btn.style.cursor = '';
                 }
-            }
+            });
             updateMasterCheckboxState();
         }
 

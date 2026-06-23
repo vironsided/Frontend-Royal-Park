@@ -486,6 +486,14 @@
             letter-spacing: 0.05em;
         }
 
+        .meter-serial {
+            font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 0.85rem;
+            letter-spacing: 0.03em;
+            color: var(--text-primary, #e4e6eb);
+            white-space: nowrap;
+        }
+
         .meter-input {
             width: 100%;
             padding: 8px 10px;

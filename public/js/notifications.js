@@ -17,10 +17,16 @@ function showNotification(message, type = 'success', duration = 3000) {
     toast.className = `toast toast-${type}`;
     
     const icon = getIcon(type);
-    
+    // message can carry API/user-controlled text — escape it (audit F-17)
+    const esc = window.escapeHtml || ((v) => {
+        const d = document.createElement('div');
+        d.textContent = String(v ?? '');
+        return d.innerHTML;
+    });
+
     toast.innerHTML = `
         <div class="toast-icon">${icon}</div>
-        <div class="toast-message">${message}</div>
+        <div class="toast-message">${esc(message)}</div>
         <button class="toast-close" onclick="closeToast(this)">
             <i class="bi bi-x"></i>
         </button>

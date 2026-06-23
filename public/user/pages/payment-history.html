@@ -1,4 +1,77 @@
 <section class="user-bills-section payment-history-page">
+    <style>
+    /* ── Ödəmə tarixçəsi: бренд Royal Park ───────────────────────────── */
+    .payment-history-page{--ph-olive:#7e8c59;--ph-olive-deep:#626d45;--ph-sage:#b1ba88;
+      --ph-line:rgba(177,186,136,.35)}
+
+    body.user-app .payment-history-page .user-bills-card{
+      border:1px solid var(--ph-line) !important;border-radius:20px !important;
+      box-shadow:0 10px 30px -18px rgba(86,86,92,.25) !important}
+    body.user-app .payment-history-page .user-bills-header h2{
+      font-family:var(--font-display,'Spectral',serif) !important;color:#3f3f45 !important}
+
+    /* сводка: три стат-чипа с цветовым акцентом */
+    body.user-app .payment-history-page .ph-summary-item{
+      background:#fff !important;border:1px solid var(--ph-line) !important;
+      border-radius:14px !important;position:relative;overflow:hidden;padding-left:16px !important}
+    body.user-app .payment-history-page .ph-summary-item::before{content:"";position:absolute;
+      inset:0 auto 0 0;width:4px;background:var(--ph-sage)}
+    body.user-app .payment-history-page .ph-summary-item:nth-child(1)::before{background:#7e8c59}
+    body.user-app .payment-history-page .ph-summary-item:nth-child(2)::before{background:#d9a93f}
+    body.user-app .payment-history-page .ph-summary-item:nth-child(3)::before{background:#b06a60}
+    body.user-app .payment-history-page .ph-summary-label{
+      font-size:11px !important;font-weight:700 !important;text-transform:uppercase;
+      letter-spacing:.07em;color:#85857c !important;font-family:var(--font-ui,inherit)}
+    body.user-app .payment-history-page .ph-summary-value{color:#3f3f45 !important;font-weight:700 !important}
+
+    /* фильтры */
+    body.user-app .payment-history-page .ph-filter input,
+    body.user-app .payment-history-page .ph-filter select{
+      border:1.5px solid #e2e3da !important;border-radius:12px !important;background:#fcfcf9 !important;
+      transition:border-color .2s, box-shadow .2s}
+    body.user-app .payment-history-page .ph-filter input:focus,
+    body.user-app .payment-history-page .ph-filter select:focus{outline:none !important;
+      border-color:var(--ph-sage) !important;box-shadow:0 0 0 4px rgba(177,186,136,.22) !important;
+      background:#fff !important}
+    body.user-app .payment-history-page .ph-btn-primary{
+      background:linear-gradient(135deg,var(--ph-olive),var(--ph-olive-deep)) !important;
+      color:#fff !important;border:0 !important;border-radius:10px !important;font-weight:600 !important;
+      box-shadow:0 4px 12px -4px rgba(98,109,69,.5) !important;transition:transform .15s !important}
+    body.user-app .payment-history-page .ph-btn-primary:hover{transform:translateY(-1px)}
+    body.user-app .payment-history-page .ph-btn-secondary{
+      background:transparent !important;border:1.5px solid rgba(126,140,89,.45) !important;
+      color:var(--ph-olive-deep) !important;border-radius:10px !important;font-weight:600 !important;
+      transition:all .2s !important}
+    body.user-app .payment-history-page .ph-btn-secondary:hover{background:rgba(177,186,136,.14) !important}
+
+    /* таблица: белая карточка, как на Hesablarım */
+    body.user-app .payment-history-page .ph-table-wrap,
+    body.user-app .payment-history-page .ph-table-wrapper{
+      background:#fff !important;border:1px solid var(--ph-line) !important;
+      border-radius:16px !important;overflow:hidden}
+    body.user-app .payment-history-page .ph-table{background:transparent !important;
+      border-collapse:collapse !important}
+    body.user-app .payment-history-page .ph-table thead th{
+      background:#ebede7 !important;color:#56565c !important;
+      font-family:var(--font-ui,inherit);font-size:11px !important;font-weight:700 !important;
+      text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--ph-line) !important}
+    body.user-app .payment-history-page .ph-row{background:#fff !important;
+      border-bottom:1px solid rgba(177,186,136,.18) !important;transition:background .15s}
+    body.user-app .payment-history-page .ph-row:hover{background:#f7f8f1 !important}
+
+    /* статусы — пилюли с точкой */
+    body.user-app .payment-history-page .ph-chip{display:inline-flex;align-items:center;gap:6px;
+      font-size:10.5px !important;font-weight:700 !important;text-transform:uppercase;
+      letter-spacing:.05em;border-radius:999px !important;padding:5px 12px !important;
+      font-family:var(--font-ui,inherit);white-space:nowrap;background:#ededeb;color:#85857c}
+    body.user-app .payment-history-page .ph-chip::before{content:"";width:6px;height:6px;
+      border-radius:50%;background:currentColor;flex-shrink:0}
+    body.user-app .payment-history-page .ph-status-confirmed{background:#e7efe0 !important;color:#4f6a37 !important}
+    body.user-app .payment-history-page .ph-status-initiated{background:#fdf2d8 !important;color:#9a7b1d !important}
+    body.user-app .payment-history-page .ph-status-declined,
+    body.user-app .payment-history-page .ph-status-signature-failed,
+    body.user-app .payment-history-page .ph-status-error{background:#f7e3e0 !important;color:#9c4a3c !important}
+    </style>
     <div class="user-bills-card">
         <div class="user-bills-header ph-header">
             <h2 data-i18n="user_payment_history_title">История платежей</h2>

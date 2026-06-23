@@ -1,4 +1,4 @@
-// 🚀 SPA Router for RoyalPark Admin Panel
+// SPA Router for RoyalPark Admin Panel
 // Single Page Application роутер
 
 class SPARouter {
@@ -22,8 +22,8 @@ class SPARouter {
             '/payments': '/admin/content/payments.html',
             '/payment-view': '/admin/content/payment-view.html',
             '/invoices': '/admin/content/invoices.html',
-            '/debts': '/admin/content/debts.html',
-            '/appeals': '/admin/content/appeals-table.html',
+            // appeals-table.html removed — old /appeals links land on the live appeals page
+            '/appeals': '/admin/content/appeals2.html',
             '/appeals2': '/admin/content/appeals2.html',
             '/invoice-view': '/admin/content/invoice-view.html',
             
@@ -33,16 +33,13 @@ class SPARouter {
             '/staff': '/admin/content/staff.html',
             
             // Система
+            '/access': '/admin/content/access.html',
             '/news': '/admin/content/news.html',
             '/settings': '/admin/content/settings.html',
             '/logs': '/admin/content/logs.html',
             '/backup': '/admin/content/backup.html',
-            
-            // Недвижимость
-            '/buildings': '/admin/content/buildings.html',
-            '/apartments': '/admin/content/apartments.html',
-            '/users': '/admin/content/users.html',
-            '/meters': '/admin/content/meters.html'
+
+            '/users': '/admin/content/users.html'
         };
         
         // Маппинг роутов к заголовкам и breadcrumbs
@@ -117,11 +114,6 @@ class SPARouter {
                 breadcrumb: ['Финансы', 'Счета'],
                 section: 'Финансы'
             },
-            '/debts': {
-                title: 'Обращения',
-                breadcrumb: ['Финансы', 'Обращения'],
-                section: 'Финансы'
-            },
             '/appeals': {
                 title: 'Обращения 11',
                 breadcrumb: ['Финансы', 'Обращения 11'],
@@ -156,6 +148,11 @@ class SPARouter {
             },
             
             // Система
+            '/access': {
+                title: 'Журнал доступа (КПП)',
+                breadcrumb: ['Система', 'КПП / Доступ'],
+                section: 'Система'
+            },
             '/news': {
                 title: 'Новости',
                 breadcrumb: ['Система', 'Новости'],
@@ -182,6 +179,11 @@ class SPARouter {
         this.currentRoute = null;
         this.isLoading = false;
         this.loadedStyleUrls = new Set();
+
+        // Routes temporarily disabled — visible in the sidebar but inactive.
+        // To RE-ENABLE a section, remove its route here AND remove the
+        // `nav-item--soon` class/badge from the matching nav item in admin/index.html.
+        this.disabledRoutes = new Set(['/access']);
     }
     
     normalizeRoute(route) {
@@ -249,10 +251,15 @@ class SPARouter {
         document.querySelectorAll('.nav-item').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                
+
                 // Используем data-route если есть, иначе href
                 const route = link.getAttribute('data-route') || link.getAttribute('href');
-                
+
+                // Disabled section: visible but inactive — no navigation, stay put.
+                if (link.classList.contains('nav-item--soon') || this.disabledRoutes.has(this.normalizeRoute(route))) {
+                    return;
+                }
+
                 this.navigate(route);
             });
         });
@@ -389,8 +396,17 @@ class SPARouter {
     
     async loadContent(route, updateHistory = true) {
         if (this.isLoading) return;
-        
+
         const baseRoute = this.normalizeRoute(route);
+
+        // Disabled section reached via deep link / reload / back-forward
+        // (hashchange & popstate call loadContent directly) → fall back to dashboard.
+        if (this.disabledRoutes.has(baseRoute)) {
+            // Strip the stale #<route> from the address bar so it doesn't linger.
+            try { history.replaceState({ route: '/dashboard' }, '', '#/dashboard'); } catch (_) { /* ignore */ }
+            return this.navigate('/dashboard');
+        }
+
         const contentPath = this.routes[baseRoute] || this.routes['/dashboard'];
         
         // Извлекаем параметры из hash, если они есть
@@ -591,8 +607,8 @@ class SPARouter {
         this.contentContainer.innerHTML = `
             <div class="error-state" style="padding: 40px; text-align: center;">
                 <div class="alert alert-danger">
-                    <h4>❌ Ошибка загрузки</h4>
-                    <p>${error.message}</p>
+                    <h4><i class="bi bi-x-circle"></i> Ошибка загрузки</h4>
+                    <p>${window.escapeHtml ? window.escapeHtml(error.message) : ''}</p>
                     <button class="btn btn-primary mt-3" onclick="location.reload()">
                         Перезагрузить страницу
                     </button>

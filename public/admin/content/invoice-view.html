@@ -181,7 +181,7 @@
         // 1. Try global variable (set by SPA loader)
         if (window.__currentInvoiceId) {
             invoiceId = window.__currentInvoiceId;
-            console.log('📋 Got invoice ID from window.__currentInvoiceId:', invoiceId);
+            console.log('Got invoice ID from window.__currentInvoiceId:', invoiceId);
         }
 
         // 2. Try URL query params
@@ -189,7 +189,7 @@
             const urlParams = new URLSearchParams(window.location.search);
             invoiceId = urlParams.get('id');
             if (invoiceId) {
-                console.log('📋 Got invoice ID from window.location.search:', invoiceId);
+                console.log('Got invoice ID from window.location.search:', invoiceId);
             }
         }
 
@@ -200,7 +200,7 @@
                 const hashParams = new URLSearchParams(hashParts[1]);
                 invoiceId = hashParams.get('id');
                 if (invoiceId) {
-                    console.log('📋 Got invoice ID from window.location.hash query:', invoiceId);
+                    console.log('Got invoice ID from window.location.hash query:', invoiceId);
                 }
             }
         }
@@ -213,7 +213,7 @@
             // Only use if it's a number
             if (lastPart && !isNaN(lastPart) && lastPart !== 'invoice-view') {
                 invoiceId = lastPart;
-                console.log('📋 Got invoice ID from hash path:', invoiceId);
+                console.log('Got invoice ID from hash path:', invoiceId);
             }
         }
 
@@ -231,11 +231,11 @@
             }
         }
 
-        console.log('📋 Final extracted invoice ID:', invoiceId);
+        console.log('Final extracted invoice ID:', invoiceId);
 
         // Load invoice data
         async function loadInvoice(id) {
-            console.log('🔍 loadInvoice called with id:', id, 'type:', typeof id);
+            console.log('loadInvoice called with id:', id, 'type:', typeof id);
 
             if (!id) {
                 console.error('No invoice ID provided');
@@ -257,7 +257,7 @@
 
             try {
                 let url = `${API_BASE}/api/invoices/${cleanId}`;
-                console.log('📤 Fetching invoice from:', url);
+                console.log('Fetching invoice from:', url);
                 let response = await fetch(url, { credentials: 'include' });
 
                 if (!response.ok) {
@@ -265,8 +265,8 @@
                 }
 
                 const data = await response.json();
-                console.log('📋 Invoice data received:', data);
-                console.log('💰 Payments in data:', data.payments);
+                console.log('Invoice data received:', data);
+                console.log('Payments in data:', data.payments);
 
                 // Transform API data to frontend format
                 const invoice = {
@@ -286,8 +286,8 @@
                 };
                 currentInvoiceData = invoice;
 
-                console.log('📋 Transformed invoice:', invoice);
-                console.log('💰 Payments in invoice:', invoice.payments);
+                console.log('Transformed invoice:', invoice);
+                console.log('Payments in invoice:', invoice.payments);
 
                 renderInvoice(invoice);
             } catch (error) {
@@ -619,7 +619,7 @@
             // Render payments table
             const paymentsTbody = document.getElementById('paymentsTableBody');
             if (paymentsTbody) {
-                console.log('💰 Rendering payments:', invoice.payments);
+                console.log('Rendering payments:', invoice.payments);
                 if (invoice.payments && invoice.payments.length > 0) {
                     paymentsTbody.innerHTML = invoice.payments.map(p => {
                         // Handle date - can be string or Date object
@@ -655,7 +655,7 @@
                 `;
                     }).join('');
                 } else {
-                    console.log('💰 No payments found');
+                    console.log('No payments found');
                     paymentsTbody.innerHTML = `<tr class="payments-empty-row"><td colspan="5">${t('invoice_payments_empty', 'Оплаты по этому счёту отсутствуют.')}</td></tr>`;
                 }
             }
@@ -714,10 +714,10 @@
                     notes: note || null
                 };
 
-                console.log('💾 Saving invoice:', { cleanId, payload });
+                console.log('Saving invoice:', { cleanId, payload });
 
                 let url = `${API_BASE}/api/invoices/${cleanId}`;
-                console.log('📤 PUT to:', url);
+                console.log('PUT to:', url);
                 let response = await fetch(url, {
                     method: 'PUT',
                     headers: {
@@ -727,11 +727,11 @@
                     credentials: 'include'
                 });
 
-                console.log('📥 Response status:', response.status, response.statusText);
+                console.log('Response status:', response.status, response.statusText);
 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ detail: response.statusText }));
-                    console.error('❌ Error response:', errorData);
+                    console.error('Error response:', errorData);
                     throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
                 }
 
@@ -996,10 +996,10 @@
                     comment: comment || null
                 };
 
-                console.log('🔄 Reissuing invoice:', { cleanId, payload });
+                console.log('Reissuing invoice:', { cleanId, payload });
 
                 let url = `${API_BASE}/api/invoices/${cleanId}/reissue`;
-                console.log('📤 POST to:', url);
+                console.log('POST to:', url);
                 let response = await fetch(url, {
                     method: 'POST',
                     headers: {
@@ -1009,11 +1009,11 @@
                     credentials: 'include'
                 });
 
-                console.log('📥 Response status:', response.status, response.statusText);
+                console.log('Response status:', response.status, response.statusText);
 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ detail: response.statusText }));
-                    console.error('❌ Error response:', errorData);
+                    console.error('Error response:', errorData);
                     throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
                 }
 
@@ -1102,7 +1102,7 @@
             if (invoiceId) {
                 loadInvoice(invoiceId);
             } else {
-                console.warn('⚠️ No invoice ID found, waiting for spa:contentLoaded event...');
+                console.warn('No invoice ID found, waiting for spa:contentLoaded event...');
             }
         }
 
@@ -1121,7 +1121,7 @@
             
             if (event.detail && event.detail.invoiceId) {
                 const eventId = event.detail.invoiceId;
-                console.log('📋 Got invoice ID from spa:contentLoaded event:', eventId);
+                console.log('Got invoice ID from spa:contentLoaded event:', eventId);
                 if (!invoiceId) {
                     invoiceId = eventId;
                     loadInvoice(invoiceId);

@@ -527,11 +527,24 @@ function updateDashboardUI(data) {
             card.classList.remove('resident-card-template');
             card.style.display = '';
             
-        // Update greeting (only show on first card)
+        // Update greeting (only show on first card). The template already has
+        // the [data-i18n] prefix + .resident-full-name spans — fill them via
+        // textContent (no innerHTML: the name is user-controlled data) and
+        // re-translate the prefix for the active language.
         const greetingEl = card.querySelector('.resident-greeting');
         if (greetingEl && index === 0) {
-            const displayName = data.user?.full_name || data.user?.username || (window.currentUserData?.full_name) || 'Пользователь';
-            greetingEl.innerHTML = `<span data-i18n="user_greeting_prefix">Здравствуйте,</span> ${displayName}`;
+            const displayName = data.user?.full_name || data.user?.username || (window.currentUserData?.full_name) || '';
+            const prefixEl = greetingEl.querySelector('[data-i18n="user_greeting_prefix"]');
+            if (prefixEl && window.i18n?.translate) {
+                prefixEl.textContent = window.i18n.translate('user_greeting_prefix', resolveUiLanguage()) || prefixEl.textContent;
+            }
+            let nameEl = greetingEl.querySelector('.resident-full-name');
+            if (!nameEl) {
+                nameEl = document.createElement('span');
+                nameEl.className = 'resident-full-name';
+                greetingEl.append(' ', nameEl);
+            }
+            nameEl.textContent = displayName;
         } else if (greetingEl) {
             greetingEl.style.display = 'none';
         }
@@ -754,8 +767,10 @@ async function loadInvoices(residentIds) {
         const allInvoices = [];
         
         for (const residentId of residentIds) {
+            // /api/invoices is staff-only (403 for residents) — use the
+            // resident-scoped endpoint, same {invoices:[...]} shape.
             const response = await fetch(
-                `${API_BASE_URL}/api/invoices?resident_id=${residentId}&per_page=10`,
+                `${API_BASE_URL}/api/resident/invoices?resident_id=${residentId}`,
                 {
                     method: 'GET',
                     credentials: 'include',
@@ -881,8 +896,11 @@ function createBillItem(invoice) {
     } else {
         monthName = (fallbackMonths[lang] || fallbackMonths['ru'])[invoice.period_month - 1];
     }
-    const periodText = `${monthName} ${invoice.period_year}`;
-    
+    // Opening-debt invoices intentionally live in 1900 (FIFO pays them first)
+    const periodText = invoice.period_year <= 1901
+        ? (window.i18n?.translate?.('invoice_opening_debt', lang) || 'Начальный долг')
+        : `${monthName} ${invoice.period_year}`;
+
     // Get invoice prefix (use "Счёт #" format)
     const invoicePrefixKey = window.i18n?.translate?.('user_invoice_title_prefix', lang) || 'Счёт:';
     const invoicePrefix = invoicePrefixKey.replace(':', ' #');
@@ -1249,10 +1267,10 @@ window.showAlert = function showAlert(message, title = 'Уведомление',
         overlay.className = 'user-modal-overlay';
         
         const iconMap = {
-            success: '✓',
-            error: '✕',
-            warning: '⚠',
-            info: 'ℹ'
+            success: '<i class="bi bi-check-lg"></i>',
+            error: '<i class="bi bi-x-lg"></i>',
+            warning: '<i class="bi bi-exclamation-triangle"></i>',
+            info: '<i class="bi bi-info-circle"></i>'
         };
         
         const colorMap = {
@@ -1714,12 +1732,11 @@ function renderDashboardNews(newsItems, lang) {
         };
         
         const iconColor = window.resolveUserNewsIconColor(news.icon, news.icon_color);
-        const iconShadow = `0 4px 15px ${iconColor}66`;
         const modClass = window.newsItemModifierClass(news.icon);
 
         return `
-            <div class="news-item ${modClass}" onclick="if(window.openDashboardNewsDetail){window.openDashboardNewsDetail(${news.id})}">
-                <div class="news-icon" style="background-color: ${iconColor} !important; box-shadow: ${iconShadow} !important;">
+            <div class="news-item ${modClass}" style="--cat: ${iconColor}" onclick="if(window.openDashboardNewsDetail){window.openDashboardNewsDetail(${news.id})}">
+                <div class="news-icon">
                     <i class="bi ${iconMap[news.icon] || 'bi-info-circle-fill'}"></i>
                 </div>
                 <div class="news-content">
