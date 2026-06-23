@@ -1343,39 +1343,39 @@
                 </style>
             </head>
             <body>
-                <h2>Отчет по платежам</h2>
-                <p>Сформировано: ${new Date().toLocaleString()}</p>
-                <p><strong>Фильтры:</strong> ${escapeHtml(summary.filtersText || '—')}</p>
-                <p><strong>Количество платежей:</strong> ${summary.totalPayments} | <strong>Сумма:</strong> ${summary.totalAmount}</p>
+                <h2>${t('payments_export_title', 'Отчет по платежам')}</h2>
+                <p>${t('payments_export_generated', 'Сформировано')}: ${new Date().toLocaleString()}</p>
+                <p><strong>${t('payments_export_filters', 'Фильтры')}:</strong> ${escapeHtml(summary.filtersText || '—')}</p>
+                <p><strong>${t('payments_export_count', 'Количество платежей')}:</strong> ${summary.totalPayments} | <strong>${t('payments_export_services_header_amount', 'Сумма')}:</strong> ${summary.totalAmount}</p>
                 <table style="margin-bottom: 16px;">
                     <thead>
                         <tr>
-                            <th>Услуга</th>
-                            <th>Кол-во платежей</th>
-                            <th>Сумма</th>
+                            <th>${t('payments_export_services_header_service', 'Услуга')}</th>
+                            <th>${t('payments_export_services_header_count', 'Кол-во платежей')}</th>
+                            <th>${t('payments_export_services_header_amount', 'Сумма')}</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${serviceSummaryRows || '<tr><td colspan="3">Нет данных</td></tr>'}
+                        ${serviceSummaryRows || ('<tr><td colspan="3">' + t('payments_export_services_no_data', 'Нет данных') + '</td></tr>')}
                     </tbody>
                 </table>
                 <table>
                     <thead>
                         <tr>
-                            <th>Дата</th>
-                            <th>Резидент</th>
-                            <th>Житель</th>
-                            <th>Сумма</th>
-                            <th>Метод</th>
-                            <th>Остаток</th>
-                            <th>Ссылка</th>
-                            <th>Invoice</th>
-                            <th>Услуги</th>
-                            <th>Сумма по услугам</th>
+                            <th>${t('payments_export_details_date', 'Дата')}</th>
+                            <th>${t('payments_export_details_resident', 'Резидент')}</th>
+                            <th>${t('payments_export_details_tenant', 'Житель')}</th>
+                            <th>${t('payments_export_details_amount', 'Сумма')}</th>
+                            <th>${t('payments_export_details_method', 'Метод')}</th>
+                            <th>${t('payments_export_details_leftover', 'Остаток')}</th>
+                            <th>${t('payments_export_details_reference', 'Ссылка')}</th>
+                            <th>${t('payments_export_details_invoice', 'Invoice')}</th>
+                            <th>${t('payments_export_filters_services', 'Услуги')}</th>
+                            <th>${t('payments_export_details_services_total', 'Сумма по услугам')}</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${tableRows || '<tr><td colspan="10">Нет данных для экспорта</td></tr>'}
+                        ${tableRows || ('<tr><td colspan="10">' + t('payments_export_details_no_data', 'Нет данных для экспорта') + '</td></tr>')}
                     </tbody>
                 </table>
             </body>

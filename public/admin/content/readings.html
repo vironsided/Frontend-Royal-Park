@@ -1407,7 +1407,7 @@
             bucket.rows.forEach((row) => {
                 const meterEntries = Array.isArray(row?.meters) ? row.meters : [];
                 const metersList = meterEntries
-                    .map((m) => `${m.type}: ${Number(m.consumption || 0).toFixed(3)} ${m.unit || ''} (${Number(m.total || 0).toFixed(2)} ₼)`)
+                    .map((m) => `${localizeDetailMeterType(m.type)}: ${Number(m.consumption || 0).toFixed(3)} ${localizeDetailUnit(m.unit || '')} (${Number(m.total || 0).toFixed(2)} ₼)`)
                     .filter(Boolean);
                 const calculatedTotal = meterEntries.reduce((acc, m) => acc + Number(m?.total || 0), 0);
                 const fallbackTotal = Number(row?.total_amount || 0);

@@ -899,18 +899,18 @@
 
         if (isStable) {
             if (text.includes('электр') || text.includes('electric')) {
-                return { key: 'STABLE_ELECTRIC', label: 'Стабильный тариф (Электричество)' };
+                return { key: 'STABLE_ELECTRIC', label: t('invoices_export_stable_tariff_electricity', 'Стабильный тариф (Электричество)') };
             }
             if (text.includes('газ')) {
-                return { key: 'STABLE_GAS', label: 'Стабильный тариф (Газ)' };
+                return { key: 'STABLE_GAS', label: t('invoices_export_stable_tariff_gas', 'Стабильный тариф (Газ)') };
             }
             if (text.includes('вод')) {
-                return { key: 'STABLE_WATER', label: 'Стабильный тариф (Вода)' };
+                return { key: 'STABLE_WATER', label: t('invoices_export_stable_tariff_water', 'Стабильный тариф (Вода)') };
             }
             if (text.includes('канализ')) {
-                return { key: 'STABLE_SEWERAGE', label: 'Стабильный тариф (Канализация)' };
+                return { key: 'STABLE_SEWERAGE', label: t('invoices_export_stable_tariff_sewerage', 'Стабильный тариф (Канализация)') };
             }
-            return { key: 'STABLE_OTHER', label: description || 'Стабильный тариф' };
+            return { key: 'STABLE_OTHER', label: t('invoices_export_stable_tariff', 'Стабильный тариф') };
         }
 
         const type = detectInvoiceLineMeterType(line);
@@ -1184,7 +1184,7 @@
                 if (safeValue <= 0.0001) {
                     return `${label}: 0.00 ₼`;
                 }
-                return `${label.toLowerCase()} ${safeValue.toFixed(2)} ₼`;
+                return `${label}: ${safeValue.toFixed(2)} ₼`;
             });
 
             const serviceTariffMetrics = {};
