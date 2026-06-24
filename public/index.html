@@ -86,6 +86,12 @@
   .field input:focus~label,.field input:not(:placeholder-shown)~label,
   .field input:-webkit-autofill~label,.field input:autofill~label{top:8px;left:45px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--olive-700)}
   .field input::placeholder{color:transparent}
+  /* Скрываем нативную «глазку»/крестик браузера (Edge ::-ms-reveal/::-ms-clear,
+     WebKit auto-fill кнопки) — иначе рядом с нашим #pwToggle видно ВТОРОЙ глаз. */
+  .field input::-ms-reveal,
+  .field input::-ms-clear{display:none}
+  .field input::-webkit-credentials-auto-fill-button,
+  .field input::-webkit-strong-password-auto-fill-button{visibility:hidden;display:none!important;pointer-events:none;margin:0;width:0}
   /* Autofill: render exactly like manual input — no vertical shift, no yellow box.
      Chrome paints autofilled fields with its own !important styles (crbug 41457553:
      "Autofill inputs change size on preview"), which re-lays-out the text. We pin the
