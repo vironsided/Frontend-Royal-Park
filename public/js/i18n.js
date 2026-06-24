@@ -1455,6 +1455,11 @@ const translations = {
         user_resident_table_comment: "Комментарий",
         user_resident_table_empty: "Записей пока нет",
         user_resident_no_meters: "Нет счётчиков",
+        user_resident_tariff_prefix: "Тариф:",
+        user_resident_unit_kwh: "кВт·ч",
+        user_resident_unit_m3: "м³",
+        user_resident_unit_month: "мес.",
+        user_resident_comment_auto_water: "Авто (от воды)",
 
         // User appeals extra
         user_appeals_hint: "Максимум 2000 символов.",
@@ -2965,6 +2970,11 @@ const translations = {
         user_resident_table_comment: "Şərh",
         user_resident_table_empty: "Hələ ki, qeyd yoxdur",
         user_resident_no_meters: "Sayğaclar yoxdur",
+        user_resident_tariff_prefix: "Tarif:",
+        user_resident_unit_kwh: "kVt·saat",
+        user_resident_unit_m3: "m³",
+        user_resident_unit_month: "ay",
+        user_resident_comment_auto_water: "Avtomatik (sudan)",
 
         // User appeals extra
         user_appeals_hint: "Maksimum 2000 simvol.",
@@ -4474,6 +4484,11 @@ const translations = {
         user_resident_table_comment: "Comment",
         user_resident_table_empty: "No records yet",
         user_resident_no_meters: "No meters",
+        user_resident_tariff_prefix: "Tariff:",
+        user_resident_unit_kwh: "kWh",
+        user_resident_unit_m3: "m³",
+        user_resident_unit_month: "mo.",
+        user_resident_comment_auto_water: "Auto (from water)",
 
         // User appeals extra
         user_appeals_hint: "Maximum 2000 characters.",

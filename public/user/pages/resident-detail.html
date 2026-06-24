@@ -58,7 +58,64 @@
 <script>
     (function() {
         'use strict';
-        
+
+        // --- Локализация таблицы счётчиков ----------------------------------
+        // Бэкенд (/api/resident/detail) всегда отдаёт display_type/unit/часть
+        // комментариев по-русски. Поэтому подписи строим по enum-коду meter.type
+        // через i18n-ключи, а не по русскому тексту с сервера.
+        const METER_TYPE_LABEL_KEY = {
+            ELECTRIC: 'user_resident_meter_electricity',
+            GAS: 'user_resident_meter_gas',
+            WATER: 'user_resident_meter_water',
+            SEWERAGE: 'meter_sewerage',
+            SERVICE: 'tariffs_purpose_service',
+            RENT: 'tariffs_purpose_rent',
+            CONSTRUCTION: 'tariffs_purpose_construction',
+        };
+        const METER_UNIT_KEY = {
+            ELECTRIC: 'user_resident_unit_kwh',
+            GAS: 'user_resident_unit_m3',
+            WATER: 'user_resident_unit_m3',
+            SEWERAGE: 'user_resident_unit_m3',
+            SERVICE: 'user_resident_unit_month',
+            RENT: 'user_resident_unit_month',
+            CONSTRUCTION: 'user_resident_unit_month',
+        };
+        // Серверные авто-комментарии, которые тоже приходят по-русски.
+        const KNOWN_COMMENT_KEY = {
+            'Авто (от воды)': 'user_resident_comment_auto_water',
+            'Стабильный тариф': 'stable_tariff',
+        };
+
+        function escapeHtml(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+        function i18nAttr(key) {
+            return key ? ` data-i18n="${key}"` : '';
+        }
+        function commentHtml(comment) {
+            const raw = (comment == null ? '' : String(comment)).trim();
+            if (!raw || raw === '—') return '—';
+            const key = KNOWN_COMMENT_KEY[raw];
+            return key ? `<span data-i18n="${key}">${escapeHtml(raw)}</span>` : escapeHtml(raw);
+        }
+        // Динамически вставленный HTML переводчик i18n не видит (applyLanguage
+        // уже отработал на загрузке страницы) — прогоняем его повторно по DOM.
+        function applyDynamicTranslations() {
+            try {
+                if (window.i18n && typeof window.i18n.applyLanguage === 'function') {
+                    const lang = window.i18n.currentLanguage
+                        || (localStorage.getItem('language') || 'ru').toLowerCase();
+                    window.i18n.applyLanguage(lang);
+                }
+            } catch (e) { /* i18n ещё не готов — статичные подписи переведутся позже */ }
+        }
+
         const API_BASE_URL = window.getApiBase ? window.getApiBase() : (window.API_BASE_URL || window.BACKEND_API_BASE || 'http://localhost:8000');
         
         // Get resident ID from sessionStorage, dashboard data, or URL
@@ -223,6 +280,7 @@
                             ? window.i18n.translate('user_resident_no_meters', lang)
                             : 'Нет счётчиков';
                         metersList.innerHTML = `<div class="text-center p-4 text-muted" data-i18n="user_resident_no_meters">${noMetersText}</div>`;
+                        applyDynamicTranslations();
                         return;
                     }
 
@@ -231,6 +289,9 @@
                         const meterCard = createMeterCard(meter, index);
                         metersList.appendChild(meterCard);
                     });
+
+                    // Переводим только что вставленные карточки на текущий язык.
+                    applyDynamicTranslations();
                 }
 
                 // Create meter card element
@@ -246,37 +307,44 @@
 
                     const readings = meter.readings || [];
                     const isSewerage = meter.type === 'SEWERAGE';
-                    
+
+                    // Подписи — по enum-коду типа, с русским фолбэком из ответа сервера.
+                    const typeKey = METER_TYPE_LABEL_KEY[meter.type];
+                    const unitKey = METER_UNIT_KEY[meter.type];
+                    const typeFallback = escapeHtml(meter.display_type || '');
+                    const unitFallback = escapeHtml(meter.unit || '');
+                    const unitChip = `<span class="meter-head-unit"${i18nAttr(unitKey)}>${unitFallback}</span>`;
+
                     card.innerHTML = `
                         <div class="meter-card-header">
-                            <span class="meter-tag ${tagClass}">${meter.display_type}</span>
+                            <span class="meter-tag ${tagClass}"${i18nAttr(typeKey)}>${typeFallback}</span>
                             <div class="meter-meta">
-                                <span>№ ${meter.serial_number} &nbsp; Тариф: ${meter.tariff_name}</span>
-                                <span class="meter-unit">${meter.unit}</span>
+                                <span>№ ${escapeHtml(meter.serial_number)} &nbsp; <span data-i18n="user_resident_tariff_prefix">Тариф:</span> ${escapeHtml(meter.tariff_name)}</span>
+                                <span class="meter-unit"${i18nAttr(unitKey)}>${unitFallback}</span>
                             </div>
                         </div>
                         <div class="meter-table" data-meter-id="${meter.id}">
                             <div class="meter-row meter-head">
                                 <span data-i18n="user_resident_table_date">Дата</span>
-                                <span class="meter-head-label"><span data-i18n="user_resident_table_reading">Показание</span><span class="meter-head-unit">${meter.unit}</span></span>
-                                <span class="meter-head-label"><span data-i18n="user_resident_table_usage">Расход</span><span class="meter-head-unit">${meter.unit}</span></span>
+                                <span class="meter-head-label"><span data-i18n="user_resident_table_reading">Показание</span>${unitChip}</span>
+                                <span class="meter-head-label"><span data-i18n="user_resident_table_usage">Расход</span>${unitChip}</span>
                                 <span data-i18n="user_resident_table_charge">Начислено</span>
-                                <span>НДС, %</span>
+                                <span data-i18n="user_resident_table_vat">НДС, %</span>
                                 <span data-i18n="user_resident_table_comment">Комментарий</span>
                             </div>
                             <div class="meter-body">
                                 ${readings.length === 0 ? `
                                     <div class="meter-row meter-empty">
-                                        <span>Записей пока нет</span>
+                                        <span data-i18n="user_resident_table_empty">Записей пока нет</span>
                                     </div>
                                 ` : readings.map(reading => `
                                     <div class="meter-row">
-                                        <span>${reading.date}</span>
-                                        <span>${isSewerage ? '-' : (reading.reading ?? '—')}</span>
-                                        <span>${isSewerage ? '-' : (reading.consumption ?? '—')}</span>
+                                        <span>${escapeHtml(reading.date)}</span>
+                                        <span>${isSewerage ? '-' : escapeHtml(reading.reading ?? '—')}</span>
+                                        <span>${isSewerage ? '-' : escapeHtml(reading.consumption ?? '—')}</span>
                                         <span>₼${formatCurrency(reading.charge)}</span>
                                         <span>${formatCurrency(reading.vat)}%</span>
-                                        <span>${reading.comment || '—'}</span>
+                                        <span>${commentHtml(reading.comment)}</span>
                                     </div>
                                 `).join('')}
                             </div>
