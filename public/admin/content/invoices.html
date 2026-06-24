@@ -613,13 +613,13 @@
                 let errorMessage = `HTTP ${response.status}`;
                 try {
                     const errorData = await response.json();
-                    errorMessage = errorData.detail || JSON.stringify(errorData);
+                    errorMessage = window.localizeServerError(errorData.detail) || JSON.stringify(errorData);
                 } catch (e) {
                     const errorText = await response.text().catch(() => '');
                     if (errorText) {
                         try {
                             const errorJson = JSON.parse(errorText);
-                            errorMessage = errorJson.detail || errorText;
+                            errorMessage = window.localizeServerError(errorJson.detail) || errorText;
                         } catch {
                             errorMessage = errorText || errorMessage;
                         }
@@ -2463,13 +2463,13 @@
                 let errorMessage = `HTTP ${response.status}`;
                 try {
                     const errorData = await response.json();
-                    errorMessage = errorData.detail || JSON.stringify(errorData);
+                    errorMessage = window.localizeServerError(errorData.detail) || JSON.stringify(errorData);
                 } catch (e) {
                     const errorText = await response.text().catch(() => '');
                     if (errorText) {
                         try {
                             const errorJson = JSON.parse(errorText);
-                            errorMessage = errorJson.detail || errorText;
+                            errorMessage = window.localizeServerError(errorJson.detail) || errorText;
                         } catch {
                             errorMessage = errorText || errorMessage;
                         }
@@ -2563,13 +2563,13 @@
                 let errorMessage = `HTTP ${response.status}`;
                 try {
                     const errorData = await response.json();
-                    errorMessage = errorData.detail || JSON.stringify(errorData);
+                    errorMessage = window.localizeServerError(errorData.detail) || JSON.stringify(errorData);
                 } catch (e) {
                     const errorText = await response.text().catch(() => '');
                     if (errorText) {
                         try {
                             const errorJson = JSON.parse(errorText);
-                            errorMessage = errorJson.detail || errorText;
+                            errorMessage = window.localizeServerError(errorJson.detail) || errorText;
                         } catch {
                             errorMessage = errorText || errorMessage;
                         }

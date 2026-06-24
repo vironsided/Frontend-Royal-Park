@@ -555,7 +555,7 @@
             });
             if (!resp.ok) {
                 const errorData = await resp.json().catch(() => ({ detail: t('blocks_create_error', 'Ошибка создания блока') }));
-                throw new Error(errorData.detail || 'Failed to create block');
+                throw new Error(window.localizeServerError(errorData.detail) || 'Failed to create block');
             }
 
             await loadBlocks();
@@ -626,7 +626,7 @@
             });
             if (!resp.ok) {
                 const errorData = await resp.json().catch(() => ({ detail: t('blocks_rename_error', 'Ошибка переименования') }));
-                throw new Error(errorData.detail || 'Failed to rename block');
+                throw new Error(window.localizeServerError(errorData.detail) || 'Failed to rename block');
             }
 
             // Обновляем локальные переменные

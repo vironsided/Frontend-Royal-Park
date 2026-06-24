@@ -1047,7 +1047,7 @@
 
                     if (!response.ok) {
                         const errorData = await response.json().catch(() => ({ detail: 'Ошибка при изменении пароля' }));
-                        throw new Error(errorData.detail || 'Ошибка при изменении пароля');
+                        throw new Error(window.localizeServerError(errorData.detail) || 'Ошибка при изменении пароля');
                     }
 
                     const result = await response.json();
@@ -1159,7 +1159,7 @@
                             // Handle different error formats
                             if (errorData.detail) {
                                 if (typeof errorData.detail === 'string') {
-                                    errorMessage = errorData.detail;
+                                    errorMessage = window.localizeServerError(errorData.detail);
                                 } else if (Array.isArray(errorData.detail)) {
                                     // FastAPI validation errors format: [{loc: [...], msg: "...", type: "..."}, ...]
                                     errorMessage = errorData.detail.map(err => {

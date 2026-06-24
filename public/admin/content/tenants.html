@@ -343,13 +343,13 @@
                     let errorMessage = `HTTP ${response.status}`;
                     try {
                         const errorData = await response.json();
-                        errorMessage = errorData.detail || JSON.stringify(errorData);
+                        errorMessage = window.localizeServerError(errorData.detail) || JSON.stringify(errorData);
                     } catch (e) {
                         const errorText = await response.text().catch(() => '');
                         if (errorText) {
                             try {
                                 const errorJson = JSON.parse(errorText);
-                                errorMessage = errorJson.detail || errorText;
+                                errorMessage = window.localizeServerError(errorJson.detail) || errorText;
                             } catch {
                                 errorMessage = errorText;
                             }
@@ -1253,7 +1253,7 @@
                         const errorData = await response.json();
                         if (errorData.detail) {
                             if (typeof errorData.detail === 'string') {
-                                errorMessage = errorData.detail;
+                                errorMessage = window.localizeServerError(errorData.detail);
                             } else {
                                 errorMessage = JSON.stringify(errorData.detail);
                             }
@@ -1265,7 +1265,7 @@
                         if (errorText) {
                             try {
                                 const errorJson = JSON.parse(errorText);
-                                errorMessage = errorJson.detail || errorText;
+                                errorMessage = window.localizeServerError(errorJson.detail) || errorText;
                             } catch {
                                 errorMessage = errorText || errorMessage;
                             }
@@ -1292,7 +1292,7 @@
                     if (errorMsg.includes('{') && errorMsg.includes('}')) {
                         try {
                             const errorJson = JSON.parse(errorMsg);
-                            errorMsg = errorJson.detail || errorMsg;
+                            errorMsg = window.localizeServerError(errorJson.detail) || errorMsg;
                         } catch (e) {
                             // Оставляем как есть
                         }

@@ -1810,7 +1810,7 @@
             
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
-                throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                throw new Error(window.localizeServerError(errorData.detail) || `HTTP error! status: ${response.status}`);
             }
             
             const result = await response.json();

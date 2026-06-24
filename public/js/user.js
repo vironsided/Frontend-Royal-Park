@@ -1148,7 +1148,7 @@ async function applyAdvance(residentId) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.detail || 'Ошибка при применении аванса');
+            throw new Error(window.localizeServerError(errorData.detail) || 'Ошибка при применении аванса');
         }
 
         const result = await response.json();

@@ -1753,7 +1753,7 @@ html[data-theme="dark"] #newsTableContainer .table-pagination .custom-pag-select
             
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ detail: t('admin_news_error_save', 'Ошибка сохранения') }));
-                throw new Error(errorData.detail || 'Failed to save news');
+                throw new Error(window.localizeServerError(errorData.detail) || 'Failed to save news');
             }
             
             const modalEl = document.getElementById('newsModal');

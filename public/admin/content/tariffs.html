@@ -1543,7 +1543,7 @@
 
             if (!resp.ok) {
                 const errorData = await resp.json().catch(() => ({ detail: t('tariffs_save_error', 'Ошибка сохранения тарифа') }));
-                throw new Error(errorData.detail || 'Failed to save tariff');
+                throw new Error(window.localizeServerError(errorData.detail) || 'Failed to save tariff');
             }
 
             // Перезагружаем список тарифов

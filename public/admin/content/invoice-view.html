@@ -732,7 +732,7 @@
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ detail: response.statusText }));
                     console.error('Error response:', errorData);
-                    throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+                    throw new Error(window.localizeServerError(errorData.detail) || `HTTP ${response.status}: ${response.statusText}`);
                 }
 
                 await response.json();
@@ -856,7 +856,7 @@
 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ detail: response.statusText }));
-                    throw new Error(errorData.detail || `HTTP ${response.status}`);
+                    throw new Error(window.localizeServerError(errorData.detail) || `HTTP ${response.status}`);
                 }
 
                 await response.json();
@@ -1014,7 +1014,7 @@
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ detail: response.statusText }));
                     console.error('Error response:', errorData);
-                    throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+                    throw new Error(window.localizeServerError(errorData.detail) || `HTTP ${response.status}: ${response.statusText}`);
                 }
 
                 await response.json();

@@ -2109,7 +2109,7 @@ async function submitPayment(event) {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.detail || `Ошибка инициализации платежа: ${response.status}`);
+                throw new Error(window.localizeServerError(errorData.detail) || `Ошибка инициализации платежа: ${response.status}`);
             }
 
             const result = await response.json();
@@ -2152,7 +2152,7 @@ async function submitPayment(event) {
         
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || `Ошибка сервера: ${response.status}`);
+            throw new Error(window.localizeServerError(errorData.detail) || `Ошибка сервера: ${response.status}`);
         }
         
         const result = await response.json();

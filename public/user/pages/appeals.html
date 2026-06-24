@@ -588,7 +588,7 @@
                                 try {
                                     const errorData = await resp.json();
                                     if (errorData.detail) {
-                                        errorMessage = errorData.detail;
+                                        errorMessage = window.localizeServerError(errorData.detail);
                                     }
                                 } catch (e) {
                                     // Если не удалось распарсить JSON, используем стандартное сообщение

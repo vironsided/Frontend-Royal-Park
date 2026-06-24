@@ -112,6 +112,7 @@ const translations = {
         pwsetup_err_phone: "Введите телефон",
         pwsetup_err_email: "Введите email",
         pwsetup_err_password_min: "Пароль должен быть не менее 10 символов",
+        pwsetup_err_password_complexity: "Пароль должен содержать и буквы, и цифры",
         pwsetup_err_mismatch: "Пароли не совпадают",
         pwsetup_err_change_failed: "Не удалось изменить пароль",
         pwsetup_success: "Пароль успешно установлен! Перенаправление на страницу входа...",
@@ -1626,6 +1627,7 @@ const translations = {
         pwsetup_err_phone: "Telefonu daxil edin",
         pwsetup_err_email: "E-mail daxil edin",
         pwsetup_err_password_min: "Şifrə ən azı 10 simvol olmalıdır",
+        pwsetup_err_password_complexity: "Şifrədə həm hərflər, həm də rəqəmlər olmalıdır",
         pwsetup_err_mismatch: "Şifrələr uyğun gəlmir",
         pwsetup_err_change_failed: "Şifrəni dəyişmək mümkün olmadı",
         pwsetup_success: "Şifrə uğurla təyin edildi! Giriş səhifəsinə yönləndirilirsiniz...",
@@ -3141,6 +3143,7 @@ const translations = {
         pwsetup_err_phone: "Enter phone",
         pwsetup_err_email: "Enter email",
         pwsetup_err_password_min: "Password must be at least 10 characters",
+        pwsetup_err_password_complexity: "Password must contain both letters and digits",
         pwsetup_err_mismatch: "Passwords do not match",
         pwsetup_err_change_failed: "Failed to change password",
         pwsetup_success: "Password set successfully! Redirecting to the login page...",
@@ -4553,6 +4556,246 @@ if (typeof window !== 'undefined') {
 }
 
 // Language Manager
+// ===== Backend (FastAPI) error localization =====================================
+// The API returns error `detail` strings in Russian. Pages localize them to the
+// active UI language via window.i18n.localizeServerError(detail). RU = source.
+// Generated from a full backend audit (app/security.py, routers/*). Keep RU keys
+// byte-exact with the backend strings.
+const SERVER_ERROR_STATIC = {
+        "Пароль должен быть не менее 10 символов": {
+            "az": "Şifrə ən azı 10 simvol olmalıdır",
+            "en": "Password must be at least 10 characters"
+        },
+        "Пароль должен содержать и буквы, и цифры": {
+            "az": "Şifrədə həm hərflər, həm də rəqəmlər olmalıdır",
+            "en": "Password must contain both letters and digits"
+        },
+        "Слишком много попыток входа. Попробуйте позже.": {
+            "az": "Çox sayda giriş cəhdi. Sonra yenidən cəhd edin.",
+            "en": "Too many login attempts. Try again later."
+        },
+        "Неверное имя пользователя или пароль": {
+            "az": "Yanlış istifadəçi adı və ya şifrə",
+            "en": "Invalid username or password"
+        },
+        "Пароли не совпадают": {
+            "az": "Şifrələr uyğun gəlmir",
+            "en": "Passwords do not match"
+        },
+        "ФИО обязательно": {
+            "az": "Ad, soyad mütləqdir",
+            "en": "Full name is required"
+        },
+        "Телефон обязателен": {
+            "az": "Telefon mütləqdir",
+            "en": "Phone is required"
+        },
+        "Email обязателен": {
+            "az": "Email mütləqdir",
+            "en": "Email is required"
+        },
+        "Неверный текущий пароль": {
+            "az": "Cari şifrə yanlışdır",
+            "en": "Current password is incorrect"
+        },
+        "Неверный формат email": {
+            "az": "Email formatı yanlışdır",
+            "en": "Invalid email format"
+        },
+        "Недостаточно прав": {
+            "az": "Kifayət qədər icazə yoxdur",
+            "en": "Insufficient permissions"
+        },
+        "Недопустимый файл изображения": {
+            "az": "Yararsız şəkil faylı",
+            "en": "Invalid image file"
+        },
+        "Пользователь не найден": {
+            "az": "İstifadəçi tapılmadı",
+            "en": "User not found"
+        },
+        "Логин уже используется": {
+            "az": "Login artıq istifadə olunur",
+            "en": "Login is already in use"
+        },
+        "Недостаточно прав для смены роли": {
+            "az": "Rolu dəyişmək üçün kifayət qədər icazə yoxdur",
+            "en": "Insufficient permissions to change role"
+        },
+        "Нельзя удалить себя": {
+            "az": "Özünüzü silə bilməzsiniz",
+            "en": "You cannot delete yourself"
+        },
+        "Название не может быть пустым": {
+            "az": "Ad boş ola bilməz",
+            "en": "Name cannot be empty"
+        },
+        "Блок с таким названием уже существует": {
+            "az": "Bu adda blok artıq mövcuddur",
+            "en": "A block with this name already exists"
+        },
+        "Блок не найден": {
+            "az": "Blok tapılmadı",
+            "en": "Block not found"
+        },
+        "Тариф не найден": {
+            "az": "Tarif tapılmadı",
+            "en": "Tariff not found"
+        },
+        "Неверный тип счётчика": {
+            "az": "Sayğac tipi yanlışdır",
+            "en": "Invalid meter type"
+        },
+        "Неверный тип клиента": {
+            "az": "Müştəri tipi yanlışdır",
+            "en": "Invalid client type"
+        },
+        "НДС должен быть от 0 до 100": {
+            "az": "ƏDV 0 ilə 100 arasında olmalıdır",
+            "en": "VAT must be between 0 and 100"
+        },
+        "Стабильный тариф не может быть отрицательным": {
+            "az": "Sabit tarif mənfi ola bilməz",
+            "en": "Fixed tariff cannot be negative"
+        },
+        "Коэффициент должен быть больше 0": {
+            "az": "Əmsal 0-dan böyük olmalıdır",
+            "en": "Coefficient must be greater than 0"
+        },
+        "Процент канализации должен быть от 0 до 100": {
+            "az": "Kanalizasiya faizi 0 ilə 100 arasında olmalıdır",
+            "en": "Sewage percentage must be between 0 and 100"
+        },
+        "Тариф с таким названием уже существует": {
+            "az": "Bu adda tarif artıq mövcuddur",
+            "en": "A tariff with this name already exists"
+        },
+        "Тариф 'Канализация' создается автоматически от воды и не может быть создан вручную": {
+            "az": "'Kanalizasiya' tarifi sudan avtomatik yaradılır və əl ilə yaradıla bilməz",
+            "en": "The 'Sewage' tariff is created automatically from water and cannot be created manually"
+        },
+        "BIN должен содержать минимум 6 цифр": {
+            "az": "BIN ən azı 6 rəqəmdən ibarət olmalıdır",
+            "en": "BIN must contain at least 6 digits"
+        },
+        "У пользователя должен быть временный пароль для генерации QR-кода": {
+            "az": "QR-kod yaratmaq üçün istifadəçinin müvəqqəti şifrəsi olmalıdır",
+            "en": "The user must have a temporary password to generate a QR code"
+        },
+        "Недействительный токен": {
+            "az": "Etibarsız token",
+            "en": "Invalid token"
+        },
+        "Токен уже использован": {
+            "az": "Token artıq istifadə olunub",
+            "en": "Token has already been used"
+        },
+        "Срок действия токена истёк": {
+            "az": "Tokenin etibarlılıq müddəti bitib",
+            "en": "Token has expired"
+        },
+        "Пароль уже установлен": {
+            "az": "Şifrə artıq təyin edilib",
+            "en": "Password is already set"
+        },
+        "Выберите хотя бы одну строку счёта": {
+            "az": "Ən azı bir hesab sətri seçin",
+            "en": "Select at least one invoice line"
+        },
+        "Некорректный выбор строк счёта": {
+            "az": "Hesab sətirlərinin seçimi yanlışdır",
+            "en": "Invalid invoice line selection"
+        },
+        "Выбранные строки уже оплачены": {
+            "az": "Seçilmiş sətirlər artıq ödənilib",
+            "en": "The selected lines have already been paid"
+        },
+        "Счёт уже оплачен": {
+            "az": "Hesab artıq ödənilib",
+            "en": "The invoice has already been paid"
+        },
+        "Сумма оплаты из аванса не может превышать сумму счёта": {
+            "az": "Avansdan ödəniş məbləği hesab məbləğini keçə bilməz",
+            "en": "The amount paid from the advance cannot exceed the invoice amount"
+        },
+        "Нет выставленных счетов для оплаты из аванса": {
+            "az": "Avansdan ödəmək üçün təqdim edilmiş hesab yoxdur",
+            "en": "No issued invoices to pay from the advance"
+        },
+        "Договор не найден": {
+            "az": "Müqavilə tapılmadı",
+            "en": "Contract not found"
+        },
+        "Чужой договор": {
+            "az": "Yad müqavilə",
+            "en": "Someone else's contract"
+        },
+        "Договор нельзя редактировать в текущем статусе": {
+            "az": "Müqaviləni cari statusda redaktə etmək olmaz",
+            "en": "The contract cannot be edited in its current status"
+        },
+        "Нельзя удалить договор в текущем статусе": {
+            "az": "Müqaviləni cari statusda silmək olmaz",
+            "en": "The contract cannot be deleted in its current status"
+        },
+        "Договор уже отправлен или одобрен": {
+            "az": "Müqavilə artıq göndərilib və ya təsdiqlənib",
+            "en": "The contract has already been submitted or approved"
+        },
+        "Одобрять может только ROOT": {
+            "az": "Yalnız ROOT təsdiqləyə bilər",
+            "en": "Only ROOT can approve"
+        },
+        "Договор не находится в стадии ожидания одобрения": {
+            "az": "Müqavilə təsdiq gözləmə mərhələsində deyil",
+            "en": "The contract is not in the pending approval stage"
+        },
+        "Отклонять может только ROOT": {
+            "az": "Yalnız ROOT rədd edə bilər",
+            "en": "Only ROOT can reject"
+        },
+        "Печать доступна только после одобрения": {
+            "az": "Çap yalnız təsdiqdən sonra mümkündür",
+            "en": "Printing is available only after approval"
+        },
+        "Некорректный номер": {
+            "az": "Yanlış nömrə",
+            "en": "Invalid number"
+        },
+        "Не найдено": {
+            "az": "Tapılmadı",
+            "en": "Not found"
+        },
+        "Окончание должно быть позже начала": {
+            "az": "Bitmə başlanğıcdan sonra olmalıdır",
+            "en": "End must be later than start"
+        },
+        "Заявка не найдена": {
+            "az": "Müraciət tapılmadı",
+            "en": "Request not found"
+        },
+        "Номер в чёрном списке — открытие запрещено": {
+            "az": "Nömrə qara siyahıdadır — açılış qadağandır",
+            "en": "The plate is on the blacklist — opening is forbidden"
+        },
+        "Некорректный статус": {
+            "az": "Yanlış status",
+            "en": "Invalid status"
+        },
+        "Дата должна быть в формате ГГГГ-ММ-ДД": {
+            "az": "Tarix YYYY-MM-DD formatında olmalıdır",
+            "en": "Date must be in YYYY-MM-DD format"
+        }
+    };
+const SERVER_ERROR_DYNAMIC = [
+        {"ru":"Ошибка валидации ступеней: ","az":"Pillələrin yoxlanması xətası: ","en":"Steps validation error: "},
+        {"ru":"Ошибка создания тарифа: ","az":"Tarifin yaradılması xətası: ","en":"Error creating tariff: "},
+        {"ru":"Недостаточно средств на авансе (доступно ","az":"Avansda kifayət qədər vəsait yoxdur (mövcuddur ","en":"Insufficient advance funds (available "},
+        {"ru":"Ошибка при обработке аванса: ","az":"Avansın emalı zamanı xəta: ","en":"Error processing the advance: "},
+        {"ru":"Заполните обязательные поля: ","az":"Mütləq sahələri doldurun: ","en":"Fill in the required fields: "},
+        { re: /^Лимит (\d+) авто на жителя$/, az: "Sakin başına $1 avtomobil limiti", en: "Limit of $1 vehicles per resident" }
+    ];
+
 class LanguageManager {
     constructor() {
         const path = (typeof window !== 'undefined' && window.location && window.location.pathname)
@@ -5231,6 +5474,29 @@ class LanguageManager {
     t(key, lang = null) {
         return this.translate(key, lang);
     }
+
+    // Localize a backend error `detail` to the active UI language. Unknown strings
+    // (and RU) are returned unchanged, so it is always safe to wrap a detail value.
+    localizeServerError(msg) {
+        if (msg === null || msg === undefined) return msg;
+        const s = String(msg).trim();
+        if (!s) return msg;
+        const lang = this.currentLanguage || 'ru';
+        if (lang === 'ru') return msg;
+        const hit = SERVER_ERROR_STATIC[s];
+        if (hit && hit[lang]) return hit[lang];
+        for (let i = 0; i < SERVER_ERROR_DYNAMIC.length; i++) {
+            const d = SERVER_ERROR_DYNAMIC[i];
+            if (d.re) {
+                const m = s.match(d.re);
+                if (m) return (d[lang] || s).replace(/\$(\d)/g, (_, n) => m[n] || '');
+            } else if (s.indexOf(d.ru) === 0) {
+                return (d[lang] || d.ru) + s.slice(d.ru.length);
+            }
+        }
+        return msg;
+    }
+
     
     showNotification(message) {
         const notification = document.createElement('div');
@@ -5286,6 +5552,19 @@ if (document.readyState === 'loading') {
     window.i18n = new LanguageManager();
     initUiLanguageHelper();
 }
+
+// Global, guarded helper so any page can localize a backend error `detail`
+// string. Returns the input unchanged when i18n is unavailable, the language is
+// Russian, or the message is unknown — so it is always safe to wrap a detail.
+window.localizeServerError = function (msg) {
+    try {
+        return (window.i18n && typeof window.i18n.localizeServerError === 'function')
+            ? window.i18n.localizeServerError(msg)
+            : msg;
+    } catch (e) {
+        return msg;
+    }
+};
 
 function initUiLanguageHelper() {
     window.getUiLanguage = function getUiLanguage() {

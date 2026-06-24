@@ -2216,7 +2216,7 @@
                                 // Проверяем разные форматы ошибок
                                 if (errorData.detail) {
                                     errorMessage = typeof errorData.detail === 'string'
-                                        ? errorData.detail
+                                        ? window.localizeServerError(errorData.detail)
                                         : JSON.stringify(errorData.detail);
                                 } else if (errorData.message) {
                                     errorMessage = errorData.message;
@@ -2315,7 +2315,7 @@
                                 // Проверяем разные форматы ошибок
                                 if (errorData.detail) {
                                     errorMessage = typeof errorData.detail === 'string'
-                                        ? errorData.detail
+                                        ? window.localizeServerError(errorData.detail)
                                         : JSON.stringify(errorData.detail);
                                 } else if (errorData.message) {
                                     errorMessage = errorData.message;

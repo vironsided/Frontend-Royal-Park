@@ -1822,7 +1822,7 @@
                 
                 if (!resp.ok) {
                     const errorData = await resp.json().catch(() => ({ detail: t('residents_error_save', 'Ошибка сохранения') }));
-                    throw new Error(errorData.detail || 'Failed to save resident');
+                    throw new Error(window.localizeServerError(errorData.detail) || 'Failed to save resident');
                 }
                 
                 if (typeof showSuccess === 'function') {
