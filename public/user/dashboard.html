@@ -46,12 +46,15 @@
     <script>
         document.documentElement.classList.add('auth-pending');
 
+        // Захватываем ИСХОДНЫЙ URL сразу (до того как user-spa перепишет hash и сотрёт
+        // ?invoiceId — иначе __rpLoginUrl увидит пустой query из-за гонки с async checkSession).
+        window.__rpOrigUrl = window.location.pathname + window.location.search;
         // URL логина с сохранением deep-link (?invoiceId из QR на чеке): после входа
         // login.js вернёт на этот инвойс. На проде (split-domain) серверный ?next= не ставится.
         window.__rpLoginUrl = function () {
             try {
-                var here = window.location.pathname + window.location.search;
-                if (here.indexOf('/user/') === 0 && window.location.search) {
+                var here = window.__rpOrigUrl || (window.location.pathname + window.location.search);
+                if (here.indexOf('/user/') === 0 && here.indexOf('?') !== -1) {
                     return '/?next=' + encodeURIComponent(here);
                 }
             } catch (e) {}

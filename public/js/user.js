@@ -50,12 +50,9 @@ async function checkAuth() {
         if (!response.ok) {
             if (response.status === 401) {
                 // Not authenticated - redirect to login
-                // Сохраняем deep-link (?invoiceId из QR) для возврата после логина.
-                // На проде (split-domain) серверный guard не ставит ?next= — делаем на клиенте.
-                const _here = window.location.pathname + window.location.search;
-                window.location.href = (_here.startsWith('/user/') && window.location.search)
-                    ? ('/?next=' + encodeURIComponent(_here))
-                    : '/';
+                // Возврат на deep-link (?invoiceId из QR) после логина через общий __rpLoginUrl
+                // (он берёт ИСХОДНЫЙ URL, захваченный до перезаписи — иначе query теряется в гонке).
+                window.location.href = (typeof window.__rpLoginUrl === 'function') ? window.__rpLoginUrl() : '/';
                 return;
             }
             // For other errors, continue (might be temporary network issue)
@@ -408,12 +405,9 @@ window.loadDashboardData = async function loadDashboardData() {
         if (!response.ok) {
             if (response.status === 401) {
                 // Unauthorized - redirect to login
-                // Сохраняем deep-link (?invoiceId из QR) для возврата после логина.
-                // На проде (split-domain) серверный guard не ставит ?next= — делаем на клиенте.
-                const _here = window.location.pathname + window.location.search;
-                window.location.href = (_here.startsWith('/user/') && window.location.search)
-                    ? ('/?next=' + encodeURIComponent(_here))
-                    : '/';
+                // Возврат на deep-link (?invoiceId из QR) после логина через общий __rpLoginUrl
+                // (он берёт ИСХОДНЫЙ URL, захваченный до перезаписи — иначе query теряется в гонке).
+                window.location.href = (typeof window.__rpLoginUrl === 'function') ? window.__rpLoginUrl() : '/';
                 return;
             }
             throw new Error(`HTTP error! status: ${response.status}`);
