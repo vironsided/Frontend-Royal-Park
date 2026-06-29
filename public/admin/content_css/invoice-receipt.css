@@ -62,8 +62,15 @@ body {
 .r-vals { font-size: 10px; }
 .r-vals span { white-space: nowrap; }
 
-.r-total-row { display: flex; justify-content: space-between; }
-.r-total-row.strong { font-weight: 800; font-size: 13px; }
+/* Итоги: одна сетка на блок (подпись · двоеточие · сумма), чтобы двоеточия стояли в один ряд */
+.r-totals { display: grid; grid-template-columns: 1fr auto auto; column-gap: 5px; align-items: baseline; }
+.r-total-row { display: contents; }
+.r-tl { text-align: left; }
+.r-tc { text-align: center; }
+.r-tv { text-align: right; white-space: nowrap; }
+.r-total-row.strong .r-tl,
+.r-total-row.strong .r-tc,
+.r-total-row.strong .r-tv { font-weight: 800; font-size: 13px; }
 
 .r-qr { text-align: center; }
 .r-qr #rQr { display: inline-block; margin: 2px auto; }

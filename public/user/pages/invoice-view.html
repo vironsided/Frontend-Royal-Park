@@ -269,7 +269,21 @@
                         return;
                     }
                     if (response.status === 403 || response.status === 404) {
-                        throw new Error('Счёт не найден или у вас нет доступа');
+                        // Понятное сообщение: чек открыт под чужим аккаунтом (или счёт не существует).
+                        const _lang = (window.i18n && window.i18n.currentLanguage) || localStorage.getItem('language') || 'az';
+                        const _M = ({
+                            az: { t: 'Hesab əlçatan deyil', d: 'Bu hesab başqa sakinə aiddir və ya mövcud deyil. Zəhmət olmasa öz çekinizdəki QR kodu skan edin.', b: 'Hesablarıma keç' },
+                            ru: { t: 'Счёт недоступен', d: 'Этот счёт принадлежит другому жителю или не существует. Отсканируйте QR-код со своего чека.', b: 'К моим счетам' },
+                            en: { t: 'Invoice unavailable', d: 'This invoice belongs to another resident or does not exist. Please scan the QR code on your own receipt.', b: 'Go to my invoices' }
+                        })[_lang] || { t: 'Hesab əlçatan deyil', d: 'Bu hesab başqa sakinə aiddir və ya mövcud deyil.', b: 'Hesablarıma keç' };
+                        document.querySelector('.content-wrapper').innerHTML =
+                            `<div class="text-center p-4" style="max-width:520px;margin:48px auto;">
+                               <i class="bi bi-shield-lock text-secondary" style="font-size:44px;"></i>
+                               <h4 style="margin:14px 0 8px;">${_M.t}</h4>
+                               <p class="text-muted" style="margin-bottom:18px;">${_M.d}</p>
+                               <a href="/user/dashboard.html#bills" class="btn btn-primary">${_M.b}</a>
+                             </div>`;
+                        return;
                     }
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
