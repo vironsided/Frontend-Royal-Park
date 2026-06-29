@@ -46,16 +46,28 @@
     <script>
         document.documentElement.classList.add('auth-pending');
 
+        // URL логина с сохранением deep-link (?invoiceId из QR на чеке): после входа
+        // login.js вернёт на этот инвойс. На проде (split-domain) серверный ?next= не ставится.
+        window.__rpLoginUrl = function () {
+            try {
+                var here = window.location.pathname + window.location.search;
+                if (here.indexOf('/user/') === 0 && window.location.search) {
+                    return '/?next=' + encodeURIComponent(here);
+                }
+            } catch (e) {}
+            return '/';
+        };
+
         (function preAuthRedirectGuard() {
             try {
                 var role = (localStorage.getItem('userRole') || '').trim().toUpperCase();
                 // Redirect early only when role is explicitly non-resident.
                 // If role is empty, defer final decision to checkSession().
                 if (role && role !== 'RESIDENT') {
-                    window.location.replace('/');
+                    window.location.replace(window.__rpLoginUrl());
                 }
             } catch (_e) {
-                window.location.replace('/');
+                window.location.replace(window.__rpLoginUrl());
             }
         })();
     </script>
@@ -670,14 +682,14 @@
                     credentials: 'include'
                 });
                 if (!response.ok) {
-                    window.location.replace('/');
+                    window.location.replace(window.__rpLoginUrl());
                     return;
                 }
                 document.documentElement.classList.remove('auth-pending');
                 document.body.style.visibility = 'visible';
             } catch (error) {
                 console.error('Session check failed:', error);
-                window.location.replace('/');
+                window.location.replace(window.__rpLoginUrl());
             }
         })();
 
@@ -771,7 +783,7 @@
 
                     if (!response.ok) {
                         if (response.status === 401) {
-                            window.location.href = '/';
+                            window.location.href = window.__rpLoginUrl();
                             return;
                         }
                         throw new Error(`HTTP error! status: ${response.status}`);
@@ -1147,7 +1159,7 @@
 
                     if (!response.ok) {
                         if (response.status === 401) {
-                            window.location.href = '/';
+                            window.location.href = window.__rpLoginUrl();
                             return;
                         }
                         
