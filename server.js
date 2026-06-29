@@ -262,6 +262,15 @@ function pageGuard(allowedRoles) {
         const mode = (process.env.PAGE_GUARD_MODE || 'auto').toLowerCase();
         const enforce = mode === 'on' || (mode === 'auto' && req.hostname === API_HOSTNAME);
         if (!enforce) return next();
+        // Редирект на логин с сохранением исходного пути (?next=), чтобы после входа
+        // вернуть пользователя туда, куда он шёл (напр. на инвойс по QR с чека).
+        // Примечание: hash (#...) до сервера не доходит — целевой маршрут восстанавливаем по query.
+        const loginRedirect = () => {
+            const orig = req.originalUrl || req.url || '/';
+            return (orig && orig !== '/' && !orig.startsWith('/?'))
+                ? res.redirect(302, '/?next=' + encodeURIComponent(orig))
+                : res.redirect(302, '/');
+        };
         try {
             const r = await fetch(`${API_BASE}/api/auth/check`, {
                 headers: {
@@ -269,15 +278,15 @@ function pageGuard(allowedRoles) {
                     authorization: req.headers.authorization || '',
                 },
             });
-            if (!r.ok) return res.redirect(302, '/');
+            if (!r.ok) return loginRedirect();
             const data = await r.json().catch(() => null);
             if (!data || data.authenticated !== true || !allowedRoles.includes(data.role)) {
-                return res.redirect(302, '/');
+                return loginRedirect();
             }
             res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
             return next();
         } catch (_e) {
-            return res.redirect(302, '/');
+            return loginRedirect();
         }
     };
 }

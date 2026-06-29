@@ -187,7 +187,20 @@
             this.routes.dashboard.content = this.contentContainer.innerHTML;
             this.handleGatewayPaymentResult();
 
-            const initialRoute = this.getRouteFromLocation();
+            // Глубокая ссылка из QR на чеке: ?invoiceId=<id>. Кладём id и ПРИНУДИТЕЛЬНО
+            // открываем инвойс. Хэш #invoice теряется при редиректе через логин, поэтому
+            // маршрут задаём по query, а не по hash.
+            let _forcedRoute = null;
+            try {
+                const _qp = new URLSearchParams(window.location.search || '');
+                const _invId = (_qp.get('invoiceId') || '').trim();
+                if (_invId) {
+                    sessionStorage.setItem('currentInvoiceId', _invId);
+                    _forcedRoute = 'invoice';
+                }
+            } catch (e) { /* ignore */ }
+
+            const initialRoute = _forcedRoute || this.getRouteFromLocation();
             
             // Если мы не на дашборде, сразу показываем состояние загрузки, 
             // чтобы не мелькал контент дашборда из HTML

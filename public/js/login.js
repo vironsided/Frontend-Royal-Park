@@ -107,18 +107,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
 
+                // Возврат на исходную страницу (?next=) — напр. на инвойс по QR-коду с чека.
+                // Безопасность: только локальный путь (не //, не внешний URL).
+                let nextUrl = null;
+                try {
+                    const _n = new URLSearchParams(window.location.search).get('next');
+                    if (_n && _n.startsWith('/') && !_n.startsWith('//')) nextUrl = _n;
+                } catch (e) {}
+
                 if (data.role === 'RESIDENT') {
-                    // Redirect to user panel for residents
-                    window.location.href = '/user/dashboard.html';
+                    // Resident: вернуть на /user/... из next, иначе дашборд
+                    window.location.href = (nextUrl && nextUrl.startsWith('/user/')) ? nextUrl : '/user/dashboard.html';
                 } else if (data.role === 'GUARD') {
-                    // Охрана КПП — отдельная панель
-                    window.location.href = '/guard/dashboard.html';
+                    window.location.href = (nextUrl && nextUrl.startsWith('/guard/')) ? nextUrl : '/guard/dashboard.html';
                 } else if (data.role === 'SALES') {
                     // SALES видит только раздел «Продажи» — сразу туда
                     window.location.href = '/admin/#/sales';
                 } else {
-                    // Redirect to admin panel for all other roles (ADMIN, OPERATOR, ROOT)
-                    window.location.href = '/admin/#/dashboard';
+                    // ADMIN/OPERATOR/ROOT: вернуть на /admin/... из next, иначе дашборд
+                    window.location.href = (nextUrl && nextUrl.startsWith('/admin/')) ? nextUrl : '/admin/#/dashboard';
                 }
             }, 1500);
         } catch (error) {

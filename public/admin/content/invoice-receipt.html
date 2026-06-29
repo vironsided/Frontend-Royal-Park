@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="az" data-i18n-scope="local">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="user_invoice_print_title">Hesab</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/admin/content_css/invoice-receipt.css">
+    <script src="/js/config.js"></script>
+    <script src="/js/i18n.js"></script>
+    <script src="/js/invoice-format.js"></script>
+</head>
+<body>
+    <div class="receipt-actions no-print">
+        <button class="btn-print" onclick="window.print()">
+            <i class="bi bi-printer"></i> <span data-i18n="print">Печать</span>
+        </button>
+        <span class="lang-switch">
+            <a href="#" data-lang="az">AZ</a>
+            <a href="#" data-lang="ru">RU</a>
+            <a href="#" data-lang="en">EN</a>
+        </span>
+    </div>
+
+    <div class="receipt" id="receipt">
+        <div class="r-header">
+            <img class="r-logo" src="/assets/royal-park-logo-ink.png" alt="Royal Park">
+            <div class="r-sub" id="rAddress">Bakı ş.</div>
+            <div class="r-sub" id="rPhone">Tel: +994 XX XXX XX XX</div>
+        </div>
+        <div class="r-sep"></div>
+
+        <div class="r-doc">
+            <div class="r-doc-title" data-i18n="user_invoice_print_title">Hesab</div>
+            <div class="r-row"><span id="lblNumber">№</span> <span id="rNumber">—</span></div>
+            <div class="r-row"><span id="lblDate">Tarix</span>: <span id="rDate">—</span></div>
+            <div class="r-row"><span data-i18n="status">Status</span>: <span id="rStatus">—</span></div>
+        </div>
+        <div class="r-sep"></div>
+
+        <div class="r-party">
+            <div class="r-row"><span data-i18n="resident">Rezident</span>: <span id="rResident">—</span></div>
+            <div class="r-row"><span id="lblFullName">Ad</span>: <span id="rResidentUser">—</span></div>
+            <div class="r-row"><span data-i18n="user_invoice_period_label">Dövr</span>: <span id="rPeriod">—</span></div>
+            <div class="r-row"><span data-i18n="user_invoice_due_date_label">Ödəniş tarixi</span>: <span id="rDueDate">—</span></div>
+        </div>
+        <div class="r-sep"></div>
+
+        <div class="r-items-title" data-i18n="invoices_description">Xidmətlər</div>
+        <div class="r-items" id="rItems"></div>
+        <div class="r-sep"></div>
+
+        <div class="r-totals">
+            <div class="r-total-row"><span data-i18n="invoices_charged">Hesablanıb</span>:<span id="rNet">0.00</span></div>
+            <div class="r-total-row"><span data-i18n="invoices_vat">ƏDV</span>:<span id="rVat">0.00</span></div>
+            <div class="r-total-row strong"><span data-i18n="invoices_total_to_pay">Cəmi</span>:<span id="rTotal">0.00 ₼</span></div>
+            <div class="r-total-row"><span data-i18n="user_invoice_payments_summary_paid">Ödənilib</span>:<span id="rPaid">0.00</span></div>
+            <div class="r-total-row"><span data-i18n="payments_leftover">Qalıq</span>:<span id="rRemaining">0.00</span></div>
+        </div>
+        <div class="r-sep"></div>
+
+        <div class="r-qr"><div id="rQr"></div><div class="r-qr-cap" id="lblPayOnline">Onlayn ödəniş</div></div>
+        <div class="r-sep"></div>
+
+        <div class="r-footer" id="lblThanks">Təşəkkür edirik!</div>
+        <div class="r-sep"></div>
+        <div class="r-genat"><span id="lblGenAt">Qəbz yaradıldı</span>: <span id="rGenAt">—</span></div>
+    </div>
+
+    <script>
+        (function () {
+            const API_BASE = window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BASE || 'http://localhost:8000');
+            const params = new URLSearchParams(window.location.search);
+            const invoiceId = (params.get('id') || '').trim() || null;
+            const langParam = (params.get('lang') || '').trim().toLowerCase();
+            const autoprint = params.get('autoprint') === '1';
+            const t = (key, fallback = '') => (window.i18n && window.i18n.translate && window.i18n.translate(key)) || fallback || key;
+            const resolveLang = () => langParam || String((window.i18n && window.i18n.currentLanguage) || localStorage.getItem('language') || 'az').toLowerCase();
+            const localeFromLang = (l) => (l === 'az' ? 'az-AZ' : (l === 'en' ? 'en-US' : 'ru-RU'));
+            let currentData = null;
+
+            async function loadInvoice(id) {
+                if (!id) { document.getElementById('receipt').innerHTML = '<div style="padding:16px">' + t('invoices_no_id', 'Не указан ID счета') + '</div>'; return; }
+                try {
+                    const resp = await fetch(`${API_BASE}/api/invoices/${id}`, { credentials: 'include' });
+                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                    currentData = await resp.json();
+                    render(currentData);
+                } catch (e) {
+                    document.getElementById('receipt').innerHTML = '<div style="padding:16px">' + t('invoices_load_error', 'Ошибка загрузки') + ': ' + (e.message || '') + '</div>';
+                }
+            }
+
+            function render(data) {
+                const lang = resolveLang();
+                const locale = localeFromLang(lang);
+                const F = window.InvoiceFormat;
+                const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+
+                // Применяем выбранный язык ко всем [data-i18n] (корректный API — applyLanguage).
+                // Делаем ДО set(), чтобы статусы/позиции (через t()=translate) перевелись в нужный язык.
+                document.documentElement.lang = lang;
+                if (window.i18n && typeof window.i18n.applyLanguage === 'function') {
+                    try { window.i18n.applyLanguage(lang); } catch (e) {}
+                }
+
+                // Подписи, которых нет в общем i18n.js — локальная таблица AZ/RU/EN.
+                const LBLS = {
+                    az: { number: '№', date: 'Tarix', fullName: 'Ad', payOnline: 'Onlayn ödəniş', thanks: 'Təşəkkür edirik!', genAt: 'Qəbz yaradıldı' },
+                    ru: { number: '№', date: 'Дата', fullName: 'Ф.И.О.', payOnline: 'Оплатить онлайн', thanks: 'Спасибо!', genAt: 'Чек создан' },
+                    en: { number: 'No.', date: 'Date', fullName: 'Name', payOnline: 'Pay online', thanks: 'Thank you!', genAt: 'Receipt created' },
+                };
+                const LBL = LBLS[lang] || LBLS.az;
+                set('lblNumber', LBL.number);
+                set('lblDate', LBL.date);
+                set('lblFullName', LBL.fullName);
+                set('lblPayOnline', LBL.payOnline);
+                set('lblThanks', LBL.thanks);
+                set('lblGenAt', LBL.genAt);
+                set('rGenAt', new Date().toLocaleString(locale));
+
+                set('rNumber', data.number || ('INV-' + data.resident_id));
+                const dd = data.due_date ? new Date(data.due_date).toLocaleDateString(locale) : '—';
+                set('rDate', data.created_at ? new Date(data.created_at).toLocaleDateString(locale) : new Date().toLocaleDateString(locale));
+                set('rStatus', F.statusLabel(data.status, t));
+                set('rResident', data.resident_code || '—');
+                set('rResidentUser', data.resident_user_full_name || '—');
+                set('rPeriod', F.formatPeriod(data));
+                set('rDueDate', dd);
+                set('rNet', Number(data.amount_net || 0).toFixed(2));
+                set('rVat', Number(data.amount_vat || 0).toFixed(2));
+                set('rTotal', Number(data.amount_total || 0).toFixed(2) + ' ₼');
+                set('rPaid', Number(data.paid_amount || 0).toFixed(2));
+                set('rRemaining', Number(data.remaining_amount || 0).toFixed(2));
+
+                const itemsEl = document.getElementById('rItems');
+                const lines = data.lines || [];
+                const chargedL = t('invoices_charged', 'Hesablanıb');
+                const vatL = t('invoices_vat', 'ƏDV');
+                const cemiL = t('user_invoice_total_label', 'Cəmi');
+                const istL = t('user_invoice_items_th_consumed', 'İstehlak');
+                // Табличный вид: шапка из 4 колонок (İstehlak·Hesablanıb·ƏDV·Cəmi),
+                // под каждой услугой — название и 4 значения в колонках.
+                const head = `<div class="r-thead"><span>${istL}</span><span>${chargedL}</span><span>${vatL}</span><span>${cemiL}</span></div>`;
+                itemsEl.innerHTML = lines.length ? (head + lines.map(it => {
+                    const p = F.extractConsumption(it.description || '', t);
+                    const net = Number(it.amount_net || 0).toFixed(2);
+                    const vat = Number(it.amount_vat || 0).toFixed(2);
+                    const total = Number(it.amount_total || 0).toFixed(2);
+                    const consVal = (p.consumed && p.consumed !== '—') ? p.consumed : '—';
+                    return `<div class="r-name">${p.label}</div>`
+                         + `<div class="r-vals"><span>${consVal}</span><span>${net}</span><span>${vat}</span><span>${total}</span></div>`;
+                }).join('')) : `<div class="r-name">${t('readings_no_records', 'Нет данных')}</div>`;
+
+                renderQr(data, lang);
+
+                // Автопечать при ?autoprint=1 — ждём загрузки QR, чтобы он попал в распечатку.
+                if (autoprint) {
+                    const tryPrint = (n) => {
+                        if (window._qrLoaded || n <= 0) { try { window.print(); } catch (e) {} return; }
+                        setTimeout(() => tryPrint(n - 1), 150);
+                    };
+                    tryPrint(20);
+                }
+            }
+
+            // QR через api.qrserver.com (паттерн проекта, разрешён в CSP img-src).
+            // URL ведёт на инвойс в кабинете жителя (Task 5 учит панель читать ?invoiceId=).
+            function renderQr(data, lang) {
+                const holder = document.getElementById('rQr');
+                if (!holder) return;
+                holder.innerHTML = '';
+                window._qrLoaded = false;
+                const payUrl = `${window.location.origin}/user/dashboard.html?invoiceId=${data.id}#invoice`;
+                const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=0&data=${encodeURIComponent(payUrl)}`;
+                const img = new Image();
+                img.width = 150;
+                img.height = 150;
+                img.alt = 'QR';
+                img.onload = function () { window._qrLoaded = true; };
+                img.onerror = function () { window._qrLoaded = true; holder.textContent = payUrl; };
+                img.src = apiUrl;
+                holder.appendChild(img);
+            }
+
+            window._receiptRerender = () => { if (currentData) render(currentData); };
+
+            document.querySelectorAll('.lang-switch a').forEach(a => {
+                a.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const l = a.getAttribute('data-lang');
+                    const u = new URL(window.location.href);
+                    u.searchParams.set('lang', l);
+                    u.searchParams.delete('autoprint');
+                    window.location.href = u.toString();
+                });
+            });
+
+            // Применяем язык из ?lang до загрузки, чтобы и экраны ошибок были на нужном языке.
+            const start = () => {
+                try { if (window.i18n && window.i18n.applyLanguage) window.i18n.applyLanguage(resolveLang()); } catch (e) {}
+                loadInvoice(invoiceId);
+            };
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', start);
+            } else { start(); }
+        })();
+    </script>
+</body>
+</html>

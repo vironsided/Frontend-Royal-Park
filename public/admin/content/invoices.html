@@ -2197,8 +2197,9 @@
     };
     
     window.printInvoice = function(id) {
-        // Открыть страницу печати счета в новой вкладке
-        const printUrl = `/admin/content/invoice-print.html?id=${id}`;
+        // Чек 80 мм для BIXOLON SPP-R310: открыть и сразу отправить на печать.
+        const lang = (window.i18n && window.i18n.currentLanguage) || localStorage.getItem('language') || 'az';
+        const printUrl = `/admin/content/invoice-receipt.html?id=${id}&lang=${lang}&autoprint=1`;
         window.open(printUrl, '_blank');
     };
     

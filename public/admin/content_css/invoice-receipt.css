@@ -1,0 +1,82 @@
+:root { --w: 70mm; }
+
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    background: #d9d9d9;
+    font-family: "Cascadia Mono", "Consolas", "Courier New", monospace;
+    color: #000;
+}
+
+.receipt-actions {
+    display: flex; gap: 12px; align-items: center;
+    padding: 12px; background: #fff; border-bottom: 1px solid #ccc;
+}
+.btn-print {
+    background: #2f7d32; color: #fff; border: 0; border-radius: 6px;
+    padding: 8px 14px; cursor: pointer; font-size: 14px;
+}
+.lang-switch a {
+    margin: 0 4px; text-decoration: none; color: #333; font-weight: 700; font-size: 13px;
+}
+.lang-switch a:hover { text-decoration: underline; }
+
+/* i18n.js впрыскивает плавающий .language-selector в body (нет .top-bar-actions на этой
+   странице). У нас свой переключатель рядом с «Çap et» — глобальный прячем. */
+.language-selector { display: none !important; }
+
+.receipt {
+    width: var(--w);
+    margin: 16px auto;
+    background: #fff;
+    padding: 4mm 3mm;
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.r-header { text-align: center; }
+/* Логотип: сплошной чёрный силуэт (brightness(0)) — надёжно печатается на Ч/Б термопринтере. */
+.r-logo { display: block; width: 42mm; height: auto; margin: 0 auto 3px; filter: brightness(0); }
+.r-sub { font-size: 10px; }
+
+.r-sep { border-top: 1px dashed #000; margin: 6px 0; }
+
+.r-doc-title, .r-items-title { font-weight: 800; text-align: center; margin-bottom: 2px; }
+.r-row { display: block; word-break: break-word; }
+
+/* Табличный вид позиций: название на своей строке, числа выровнены в 3 колонки */
+.r-thead, .r-vals {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 0.8fr 1fr; /* İstehlak шире, ƏDV уже */
+    column-gap: 3px;
+    text-align: right;
+}
+.r-thead {
+    font-weight: 800;
+    font-size: 8.5px;
+    padding-bottom: 2px;
+    margin-bottom: 1px;
+    border-bottom: 1px dashed #000;
+}
+.r-name { margin-top: 3px; word-break: break-word; }
+.r-vals { font-size: 10px; }
+.r-vals span { white-space: nowrap; }
+
+.r-total-row { display: flex; justify-content: space-between; }
+.r-total-row.strong { font-weight: 800; font-size: 13px; }
+
+.r-qr { text-align: center; }
+.r-qr #rQr { display: inline-block; margin: 2px auto; }
+.r-qr img { display: block; margin: 0 auto; }
+.r-qr-cap { font-size: 10px; }
+
+.r-footer { text-align: center; font-weight: 700; }
+.r-genat { text-align: center; font-size: 9px; }
+
+@media print {
+    @page { size: 72mm auto; margin: 0; }
+    html, body { background: #fff; margin: 0; }
+    .no-print, .receipt-actions { display: none !important; }
+    /* ширина 70 мм + правый отступ 4 мм: правый край принтера обрезал суммы — отводим от края */
+    .receipt { width: 70mm; margin: 0; padding: 2mm 4mm 2mm 2mm; }
+}
