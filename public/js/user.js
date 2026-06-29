@@ -50,7 +50,12 @@ async function checkAuth() {
         if (!response.ok) {
             if (response.status === 401) {
                 // Not authenticated - redirect to login
-                window.location.href = '/';
+                // Сохраняем deep-link (?invoiceId из QR) для возврата после логина.
+                // На проде (split-domain) серверный guard не ставит ?next= — делаем на клиенте.
+                const _here = window.location.pathname + window.location.search;
+                window.location.href = (_here.startsWith('/user/') && window.location.search)
+                    ? ('/?next=' + encodeURIComponent(_here))
+                    : '/';
                 return;
             }
             // For other errors, continue (might be temporary network issue)
@@ -403,7 +408,12 @@ window.loadDashboardData = async function loadDashboardData() {
         if (!response.ok) {
             if (response.status === 401) {
                 // Unauthorized - redirect to login
-                window.location.href = '/';
+                // Сохраняем deep-link (?invoiceId из QR) для возврата после логина.
+                // На проде (split-domain) серверный guard не ставит ?next= — делаем на клиенте.
+                const _here = window.location.pathname + window.location.search;
+                window.location.href = (_here.startsWith('/user/') && window.location.search)
+                    ? ('/?next=' + encodeURIComponent(_here))
+                    : '/';
                 return;
             }
             throw new Error(`HTTP error! status: ${response.status}`);
