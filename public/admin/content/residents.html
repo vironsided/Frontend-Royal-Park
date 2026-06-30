@@ -366,7 +366,27 @@
                 console.error('Error loading blocks/tariffs:', e);
             }
         }
-        
+
+        // Лёгкая дозагрузка ТОЛЬКО тарифов (без перестройки блоков/residentBlock) с защитой
+        // от параллельных дублей — для self-heal в addService при гонке загрузки.
+        let _tariffsLoadingPromise = null;
+        async function ensureTariffsLoaded() {
+            if (tariffs && tariffs.length) return;
+            if (!_tariffsLoadingPromise) {
+                _tariffsLoadingPromise = (async () => {
+                    try {
+                        const resp = await fetch(`${API_BASE}/api/tariffs?include_inactive=1`, { credentials: 'include' });
+                        if (resp.ok) tariffs = await resp.json();
+                    } catch (e) {
+                        console.error('ensureTariffsLoaded failed:', e);
+                    } finally {
+                        _tariffsLoadingPromise = null;
+                    }
+                })();
+            }
+            return _tariffsLoadingPromise;
+        }
+
         // Загрузка резидентов из API
         async function loadResidents() {
             const tbody = document.getElementById('residentsTableBody');
@@ -1157,8 +1177,10 @@
                     console.log('Services container cleared completely');
                 }
                 
-                // Убеждаемся, что блоки загружены перед заполнением формы
-                if (blocks.length === 0) {
+                // Убеждаемся, что блоки И тарифы загружены перед заполнением формы,
+                // иначе строки счётчиков построятся с пустым тариф-селектом (и потеряют
+                // уже назначенный тариф при редактировании).
+                if (blocks.length === 0 || tariffs.length === 0) {
                     await loadBlocksAndTariffs();
                 }
                 
@@ -1523,6 +1545,17 @@
                     if (checkbox) {
                         toggleInitialReading(checkbox);
                     }
+                }
+                // ФИКС гонки загрузки: если тарифы ещё не пришли (форму открыли до завершения
+                // загрузки), тариф-селект построился пустым. Дозагружаем ТОЛЬКО тарифы (лёгкий
+                // ensureTariffsLoaded — без перестройки блоков, с защитой от параллельных дублей)
+                // и обновляем список; в режиме редактирования восстанавливаем назначенный тариф.
+                if (!tariffs || tariffs.length === 0) {
+                    const tariffSelectEl = newService.querySelector('.tariff-select');
+                    ensureTariffsLoaded().then(() => {
+                        updateTariffSelect(typeSelect);
+                        if (tariffId && tariffSelectEl) tariffSelectEl.value = String(tariffId);
+                    });
                 }
             }
         }
