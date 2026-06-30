@@ -265,7 +265,10 @@
 
                 if (!response.ok) {
                     if (response.status === 401) {
-                        window.location.href = '/';
+                        // Сохраняем deep-link (?invoiceId из QR) при 401 — общий __rpLoginUrl
+                        // (определён в dashboard.html, использует захваченный исходный URL).
+                        // Иначе этот редирект выигрывает гонку у checkSession и теряет ?next=.
+                        window.location.href = (typeof window.__rpLoginUrl === 'function') ? window.__rpLoginUrl() : '/';
                         return;
                     }
                     if (response.status === 403 || response.status === 404) {

@@ -190,7 +190,9 @@ app.get('/js/config.js', (req, res) => {
         // login/auth-check calls legitimately return 401 — never loop on them
         if (onLoginPage()) return;
         if (/\\/login|\\/api\\/auth\\//.test(url)) return;
-        window.location.href = "/";
+        // Сохраняем deep-link (?invoiceId из QR) при 401: этот ГЛОБАЛЬНЫЙ перехватчик
+        // гонится с page-level обработчиками и часто выигрывает — без __rpLoginUrl терялся бы ?next=.
+        window.location.href = (typeof window.__rpLoginUrl === "function") ? window.__rpLoginUrl() : "/";
     }
 
     // Preferred helper for new code.
