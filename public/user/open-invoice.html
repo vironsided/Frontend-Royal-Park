@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<!--
+  Royal Park — промежуточная страница для QR-кода чека.
+
+  Назначение: открыть мобильное приложение резидента на конкретном счёте, а если
+  приложение НЕ установлено — открыть веб-кабинет. Работает на Android и iOS
+  БЕЗ файлов верификации домена (assetlinks.json / apple-app-site-association),
+  потому что приложение открывается через кастомную схему royalpark://.
+
+  Куда положить: в каталог /user/ вашего фронтенда, чтобы файл был доступен по
+  адресу  https://frontend-production-5e2f.up.railway.app/user/open-invoice.html
+
+  Как формируется QR (приложение оператора): .../user/open-invoice.html?id=<ID>
+-->
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="noindex" />
+  <title>Royal Park</title>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: flex; align-items: center; justify-content: center;
+      background: #12131A; color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .box { text-align: center; padding: 24px; max-width: 320px; }
+    .spinner {
+      width: 36px; height: 36px; margin: 0 auto 18px;
+      border: 3px solid rgba(255,255,255,.22); border-top-color: #4C6FFF;
+      border-radius: 50%; animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .msg { font-size: 15px; opacity: .9; }
+    .link { margin-top: 18px; }
+    a { color: #4C6FFF; text-decoration: none; font-size: 15px; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="spinner"></div>
+    <div class="msg" id="msg">Открываем приложение…</div>
+    <div class="link"><a id="manual" href="#">Продолжить в браузере</a></div>
+  </div>
+
+  <script>
+    (function () {
+      // ---- Настройки (поменяйте при смене домена/схемы) ----
+      var WEB_FALLBACK = 'https://frontend-production-5e2f.up.railway.app/user/dashboard.html#invoice';
+      var APP_SCHEME = 'royalpark';
+      // -------------------------------------------------------
+
+      var params = new URLSearchParams(window.location.search);
+      var id = (params.get('id') || params.get('invoiceId') || '').trim();
+
+      var appUrl = id
+        ? (APP_SCHEME + '://invoice?id=' + encodeURIComponent(id))
+        : (APP_SCHEME + '://invoice');
+
+      // Ссылка "Продолжить в браузере" ведёт на веб-кабинет.
+      document.getElementById('manual').setAttribute('href', WEB_FALLBACK);
+
+      var didFallback = false;
+      function openWeb() {
+        if (didFallback) return;
+        didFallback = true;
+        window.location.replace(WEB_FALLBACK);
+      }
+
+      // Если приложение открылось, вкладка уходит в фон — отменяем веб-фолбэк.
+      function onHide() {
+        if (document.hidden) didFallback = true;
+      }
+      document.addEventListener('visibilitychange', onHide);
+      window.addEventListener('pagehide', function () { didFallback = true; });
+
+      // Пытаемся открыть приложение.
+      try {
+        window.location.href = appUrl;
+      } catch (e) {
+        // некоторые браузеры бросают исключение для неизвестной схемы
+      }
+
+      // Приложения нет → через короткую паузу уходим на веб-кабинет.
+      setTimeout(function () {
+        if (!document.hidden) openWeb();
+      }, 1500);
+    })();
+  </script>
+</body>
+</html>
