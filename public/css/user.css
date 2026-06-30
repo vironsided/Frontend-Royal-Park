@@ -116,6 +116,9 @@ body.user-app #userSpaContent {
         width: 80px !important;
         min-width: 80px !important;
         max-width: 80px !important;
+        /* Перебиваем admin.css (.sidebar{transform:translateX(-100%)} на мобильном) — иначе
+           сайдбар кабинета уезжает за экран: показ там по классу .open/.show, а ЛК тогглит .collapsed. */
+        transform: none !important;
     }
 
     body.user-app .sidebar:not(.collapsed) {

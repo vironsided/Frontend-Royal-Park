@@ -95,8 +95,11 @@ function initSidebarToggle() {
             }
         });
 
-        // Restore sidebar state on page load
-        const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        // Restore sidebar state on page load.
+        // На мобильном без сохранённого выбора — по умолчанию свёрнут (полоска иконок 80px),
+        // чтобы не открывался 260px-оверлей поверх контента при каждой загрузке.
+        const savedCollapsed = localStorage.getItem('sidebarCollapsed');
+        const sidebarCollapsed = savedCollapsed === 'true' || (savedCollapsed === null && window.innerWidth < 768);
         if (sidebarCollapsed) {
             sidebar.classList.add('collapsed');
             toggleBtn.style.transform = 'rotate(180deg)';
