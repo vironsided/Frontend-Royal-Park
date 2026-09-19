@@ -257,6 +257,19 @@
             if (lang === 'en') return 'en-US';
             return 'ru-RU';
         };
+        // audit adm-xss-1: ФИО/телефон/e-mail жителя резидент правит САМ через
+        // PUT /api/users/me (бэкенд их не санитизирует), а таблица открывается в
+        // сессии ROOT/ADMIN. Поэтому любые значения из API идут в разметку только
+        // через escape. esc — для текста, escAttr — для подстановки внутрь атрибута
+        // (window.escapeHtml кавычки НЕ закрывает).
+        const esc = (v) => (window.escapeHtml
+            ? window.escapeHtml(v)
+            : String(v === null || v === undefined ? '' : v)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+        const escAttr = (v) => (window.escapeAttr
+            ? window.escapeAttr(v)
+            : esc(v).replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
+
         let tenantsData = [];
         let blocks = [];
         let residents = [];
@@ -515,22 +528,22 @@
                     : t('tenants_no_homes', 'Нет домов');
                 const homesCount = tenant.homes ? tenant.homes.length : 0;
                 const homesDisplay = homesCount > 0
-                    ? `<span class="tenant-homes-count" title="${homesList}">${homesCount}</span>`
+                    ? `<span class="tenant-homes-count" title="${escAttr(homesList)}">${homesCount}</span>`
                     : '<span class="text-muted">—</span>';
 
                 // Формируем badge для пароля
                 const passwordBadge = tenant.passwordStatusType === 'temp'
-                    ? `<span class="tenant-password-badge temp-password">${tenant.passwordStatus}</span>`
-                    : `<span class="tenant-password-badge">${tenant.passwordStatus}</span>`;
+                    ? `<span class="tenant-password-badge temp-password">${esc(tenant.passwordStatus)}</span>`
+                    : `<span class="tenant-password-badge">${esc(tenant.passwordStatus)}</span>`;
 
                 return `
                 <tr data-tenant-id="${tenant.id}">
                     <td>${tenant.id}</td>
-                    <td>${tenant.login}</td>
-                    <td>${tenant.name || '—'}</td>
-                    <td>${tenant.phone || '—'}</td>
-                    <td>${tenant.email ? `<a class="tenant-email" href="mailto:${tenant.email}">${tenant.email}</a>` : '—'}</td>
-                    <td><div class="tenant-last-login">${tenant.lastLogin || '—'}</div></td>
+                    <td>${esc(tenant.login)}</td>
+                    <td>${esc(tenant.name || '—')}</td>
+                    <td>${esc(tenant.phone || '—')}</td>
+                    <td>${tenant.email ? `<a class="tenant-email" href="mailto:${escAttr(tenant.email)}">${esc(tenant.email)}</a>` : '—'}</td>
+                    <td><div class="tenant-last-login">${esc(tenant.lastLogin || '—')}</div></td>
                     <td>${passwordBadge}</td>
                     <td><div class="tenant-homes">${homesDisplay}</div></td>
                     <td>
@@ -539,7 +552,7 @@
                             <button class="action-btn reset" onclick="openTenantActionModal('reset', ${tenant.id})">${t('tenants_action_reset_password', 'Сброс пароля')}</button>
                             <button class="action-btn delete" onclick="openTenantActionModal('delete', ${tenant.id})">${t('action_delete', 'Удалить')}</button>
                                             ${tenant.require_password_change && tenant.temp_password_plain ? `
-                            <button class="btn-user-action btn-qr-user" onclick="showQRCodeForTenant(${tenant.id}, '${tenant.login}', '${tenant.temp_password_plain}')">QR</button>
+                            <button class="btn-user-action btn-qr-user" onclick="showQRCodeForTenant(${tenant.id})">QR</button>
                             ` : ''}
                         </div>
                     </td>
@@ -1111,7 +1124,9 @@
         };
 
         // Select Residents (multi-select)
-        window.toggleResidentSelection = function (id, block, number, checkbox) {
+        // block/number в сигнатуре не использовались, а их подстановка в onchange-атрибут
+        // была точкой инъекции — принимаем только id и сам чекбокс (audit adm-xss-1).
+        window.toggleResidentSelection = function (id, checkbox) {
             if (checkbox.checked) {
                 selectedResidentIds.add(id);
                 checkbox.closest('tr').classList.add('selected');
@@ -1155,12 +1170,12 @@
             tbody.innerHTML = residents.map(resident => `
             <tr>
                 <td>${resident.id}</td>
-                <td>${resident.block_name || '—'}</td>
-                <td>${resident.unit_number || '—'}</td>
+                <td>${esc(resident.block_name || '—')}</td>
+                <td>${esc(resident.unit_number || '—')}</td>
                 <td>
                     <label class="resident-checkbox">
                         <input type="checkbox" 
-                               onchange="toggleResidentSelection(${resident.id}, '${resident.block_name || ''}', '${resident.unit_number || ''}', this)" 
+                               onchange="toggleResidentSelection(${resident.id}, this)" 
                                hidden>
                         <span>${t('select', 'Выбрать')}</span>
                     </label>
@@ -1516,6 +1531,17 @@
                 const tenant = tenantsData.find(t => t.id === tenantId);
                 const homes = tenant ? (tenant.homes || []) : [];
 
+                // audit adm-xss-1: логин и ВРЕМЕННЫЙ ПАРОЛЬ больше не подставляются в
+                // onclick-атрибут кнопки QR (кавычка в значении разрывала атрибут и
+                // позволяла выполнить чужой JS). Берём их из уже загруженных данных
+                // строки; аргументы оставлены для совместимости со старыми вызовами.
+                // Сценарий выдачи временного пароля не меняется: бейдж в таблице и
+                // печать QR работают ровно как раньше.
+                const qrUsername = (username !== undefined && username !== null)
+                    ? username : (tenant ? tenant.login : '');
+                const qrTempPassword = (tempPassword !== undefined && tempPassword !== null)
+                    ? tempPassword : (tenant ? tenant.temp_password_plain : null);
+
                 // Создаем QR токен через API
                 let resp = await fetch(`${API_BASE}/api/qr/users/${tenantId}/qr-token`, {
                     method: 'POST',
@@ -1536,8 +1562,8 @@
 
                 // Сохраняем данные для печати
                 currentQRUserData = {
-                    username: username,
-                    tempPassword: tempPassword,
+                    username: qrUsername,
+                    tempPassword: qrTempPassword,
                     qrUrl: qrUrl,
                     homes: homes || []
                 };

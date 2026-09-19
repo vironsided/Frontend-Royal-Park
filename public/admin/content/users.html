@@ -119,6 +119,17 @@
             const base = t(key, fallback);
             return Object.entries(params).reduce((txt, [p, v]) => txt.replace(new RegExp(`\\{${p}\\}`, 'g'), String(v)), base);
         };
+        // audit adm-xss-1: username/full_name и временный пароль приходят из API и
+        // частично правятся самим пользователем (PUT /api/users/me) — в разметку они
+        // попадают только через escape. esc — для текста, escAttr — для атрибутов.
+        const esc = (v) => (window.escapeHtml
+            ? window.escapeHtml(v)
+            : String(v === null || v === undefined ? '' : v)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+        const escAttr = (v) => (window.escapeAttr
+            ? window.escapeAttr(v)
+            : esc(v).replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
+
         // Текущий список пользователей из backend
         let users = [];
         let usersData = {
@@ -250,7 +261,7 @@
                 if (passwordStatus === 'set') {
                     passwordBadge = `<span class="password-badge password-set">${t('tenants_password_set', 'установлен')}</span>`;
                 } else if (passwordStatus === 'temp' && tempPassword) {
-                    passwordBadge = `<span class="password-badge password-temp">${tr('tenants_password_temporary', { password: tempPassword }, 'временный: {password}')}</span>`;
+                    passwordBadge = `<span class="password-badge password-temp">${esc(tr('tenants_password_temporary', { password: tempPassword }, 'временный: {password}'))}</span>`;
                 }
 
                 // Actions (only for non-root users)
@@ -265,7 +276,7 @@
                             type="text" 
                             class="input-new-name" 
                             id="newName${user.id}" 
-                            placeholder="${t('users_new_name_placeholder', 'Новое имя')}"
+                            placeholder="${escAttr(t('users_new_name_placeholder', 'Новое имя'))}"
                             autocomplete="off"
                         />
                         <button class="btn-user-action btn-rename-user" onclick="renameUser(${user.id})">
@@ -275,7 +286,7 @@
                             ${t('action_delete', 'Удалить')}
                         </button>
                         ${user.require_password_change && user.temp_password_plain ? `
-                        <button class="btn-user-action btn-qr-user" onclick="showQRCode(${user.id}, '${user.username}', '${user.temp_password_plain}')">
+                        <button class="btn-user-action btn-qr-user" onclick="showQRCode(${user.id})">
                             QR
                         </button>
                         ` : ''}
@@ -285,9 +296,9 @@
 
                 row.innerHTML = `
                 <td>${user.id}</td>
-                <td>${user.username}</td>
-                <td><span class="role-badge ${roleClass}">${roleLabelMap[user.role] || user.role}</span></td>
-                <td>${formatUserDate(user.last_login_at)}</td>
+                <td>${esc(user.username)}</td>
+                <td><span class="role-badge ${escAttr(roleClass)}">${esc(roleLabelMap[user.role] || user.role)}</span></td>
+                <td>${esc(formatUserDate(user.last_login_at))}</td>
                 <td>${passwordBadge}</td>
                 <td>${actions}</td>
             `;
@@ -659,6 +670,16 @@
         // Show QR Code
         window.showQRCode = async function (userId, username, tempPassword) {
             try {
+                // audit adm-xss-1: логин и ВРЕМЕННЫЙ ПАРОЛЬ больше не подставляются в
+                // onclick-атрибут кнопки QR — берём их из уже загруженного списка.
+                // Аргументы оставлены для совместимости со старыми вызовами; сам
+                // сценарий выдачи временного пароля не меняется.
+                const fromData = users.find(u => u.id === userId);
+                const qrUsername = (username !== undefined && username !== null)
+                    ? username : (fromData ? fromData.username : '');
+                const qrTempPassword = (tempPassword !== undefined && tempPassword !== null)
+                    ? tempPassword : (fromData ? fromData.temp_password_plain : null);
+
                 // Создаем QR токен через API
                 let resp = await fetch(`${API_BASE}/api/qr/users/${userId}/qr-token`, {
                     method: 'POST',
@@ -679,8 +700,8 @@
 
                 // Сохраняем данные для печати
                 currentQRUserData = {
-                    username: username,
-                    tempPassword: tempPassword,
+                    username: qrUsername,
+                    tempPassword: qrTempPassword,
                     qrUrl: qrUrl
                 };
 

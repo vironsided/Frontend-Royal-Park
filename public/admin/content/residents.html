@@ -302,6 +302,18 @@
             const base = t(key, fallback);
             return Object.entries(params).reduce((txt, [p, v]) => txt.replace(new RegExp(`\\{${p}\\}`, 'g'), String(v)), base);
         };
+        // audit res-5: ФИО/телефон/e-mail владельца приходят из API и правятся самим
+        // резидентом (PUT /api/users/me, без санитизации), а таблица рисуется в сессии
+        // ROOT/ADMIN. Всё, что идёт в разметку, — только через escape. esc — для текста,
+        // escAttr — для подстановки внутрь атрибута (escapeHtml кавычки не закрывает).
+        const esc = (v) => (window.escapeHtml
+            ? window.escapeHtml(v)
+            : String(v === null || v === undefined ? '' : v)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+        const escAttr = (v) => (window.escapeAttr
+            ? window.escapeAttr(v)
+            : esc(v).replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
+
         let residents = [];
         let blocks = [];
         let tariffs = [];
@@ -845,7 +857,7 @@
                     'OFFICE': { text: t('residents_type_office', 'Офис'), class: 'bg-primary' }
                 };
                 const residentTypeInfo = residentTypeMap[resident.resident_type] || { text: resident.resident_type, class: 'bg-secondary' };
-                const residentTypeBadge = `<span class="badge ${residentTypeInfo.class}">${residentTypeInfo.text}</span>`;
+                const residentTypeBadge = `<span class="badge ${residentTypeInfo.class}">${esc(residentTypeInfo.text)}</span>`;
                 
                 // Маппинг типа клиента
                 const customerTypeBadge = resident.customer_type === 'INDIVIDUAL' 
@@ -870,21 +882,21 @@
                         'CONSTRUCTION': t('tariffs_purpose_construction', 'Строительство')
                     };
                     const meterTypeLabel = meterTypeMap[m.meter_type] || m.meter_type;
-                    const tariffName = m.tariff_name ? ` ${t('residents_meter_tariff_prefix', 'тариф')}: ${m.tariff_name}` : '';
-                    return `<span class="badge bg-info">${meterTypeLabel}:${tariffName}</span>`;
+                    const tariffName = m.tariff_name ? ` ${t('residents_meter_tariff_prefix', 'тариф')}: ${esc(m.tariff_name)}` : '';
+                    return `<span class="badge bg-info">${esc(meterTypeLabel)}:${tariffName}</span>`;
                 }).join(' ') || `<span class="text-muted">${t('residents_no', 'Нет')}</span>`;
                 
                 row.innerHTML = `
                     <td>${resident.id}</td>
-                    <td>${resident.block_name || '-'}</td>
-                    <td>${resident.unit_number}</td>
+                    <td>${esc(resident.block_name || '-')}</td>
+                    <td>${esc(resident.unit_number)}</td>
                     <td class="text-center">${residentTypeBadge}</td>
                     <td class="text-center">${customerTypeBadge}</td>
-                    <td>${resident.owner_full_name || '-'}</td>
+                    <td>${esc(resident.owner_full_name || '-')}</td>
                     <td class="text-center">${statusBadge}</td>
                     <td>
-                        ${resident.owner_phone ? `<div>${resident.owner_phone}</div>` : ''}
-                        ${resident.owner_email ? `<div class="text-muted small">${resident.owner_email}</div>` : ''}
+                        ${resident.owner_phone ? `<div>${esc(resident.owner_phone)}</div>` : ''}
+                        ${resident.owner_email ? `<div class="text-muted small">${esc(resident.owner_email)}</div>` : ''}
                     </td>
                     <td>${metersHtml}</td>
                     <td class="text-center actions-column">
@@ -893,7 +905,7 @@
                             ${t('action_edit', 'Редактировать')}
                         </button>
                         <button class="btn btn-sm btn-outline-danger"
-                            onclick="openDeleteModal(${resident.id}, '${(resident.owner_full_name || t('resident', 'Резидент')).replace(/'/g, "\\'")}')">
+                            onclick="openDeleteModal(${resident.id})">
                             ${t('action_delete', 'Удалить')}
                         </button>
                     </td>
@@ -1356,9 +1368,18 @@
         }
         
         function openDeleteModal(residentId, residentName) {
+            // audit res-5: раньше ФИО владельца подставлялось прямо в onclick-атрибут
+            // кнопки — кавычка в имени разрывала атрибут. Теперь передаётся только id,
+            // а имя берётся из уже загруженных данных. Текст модалки не изменился
+            // (он и раньше выводился через textContent). Параметр residentName оставлен
+            // для совместимости со старыми вызовами.
+            const fromData = residents.find(r => r.id === residentId);
+            const resolvedName = residentName
+                || (fromData ? fromData.owner_full_name : '')
+                || t('residents_delete_target_fallback', 'резидента');
             pendingDelete = {
                 id: residentId,
-                name: residentName || t('residents_delete_target_fallback', 'резидента')
+                name: resolvedName
             };
             
             document.getElementById('deleteResidentName').textContent = pendingDelete.name;
@@ -1479,7 +1500,7 @@
             }
             
             availableTariffs.forEach(tariff => {
-                tariffSelectHtml += `<option value="${tariff.id}" ${tariff.id === tariffId ? 'selected' : ''}>${tariff.name}</option>`;
+                tariffSelectHtml += `<option value="${tariff.id}" ${tariff.id === tariffId ? 'selected' : ''}>${esc(tariff.name)}</option>`;
             });
             
             // Получаем единицу измерения для типа счётчика
@@ -1510,7 +1531,7 @@
                 </div>
                 <div class="service-input-group" ${isFixedPrice ? 'style="display: none;"' : ''}>
                     <label>${t('residents_serial_number', 'Серийный №')} <span style="color: #ff6b6b;">*</span></label>
-                    <input type="text" class="serial-number-input" placeholder="${t('residents_serial_placeholder', 'например, АВ123')}" value="${serial}" ${isFixedPrice ? '' : 'required'}>
+                    <input type="text" class="serial-number-input" placeholder="${escAttr(t('residents_serial_placeholder', 'например, АВ123'))}" value="${escAttr(serial)}" ${isFixedPrice ? '' : 'required'}>
                 </div>
                 <div class="service-input-group" ${isFixedPrice ? 'style="display: none;"' : ''}>
                     <label>${t('residents_used_meter', 'Б/У?')}</label>

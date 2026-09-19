@@ -1,5 +1,21 @@
 // Admin Dashboard JavaScript
 
+// audit adm-xss-1/res-5: window.escapeHtml (из динамического /js/config.js) экранирует
+// только & < >, потому что построен на textContent→innerHTML. Для ТЕКСТОВОГО контента
+// этого достаточно, но для подстановки в АТРИБУТ (title="...", value="...", data-*="...")
+// нужно закрыть ещё кавычки — иначе значение с " вырывается из атрибута и дописывает
+// свой onerror=. Отдельный хелпер, чтобы не трогать генерируемый server.js config.js.
+// Двойного экранирования нет: escapeAttr — единственный проход, он НЕ вызывает escapeHtml.
+window.escapeAttr = function escapeAttr(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     // Check authentication
     checkAuth();
@@ -893,6 +909,18 @@ function showAdminConfirmModal(options) {
         cancelText = tr('cancel', 'Cancel')
     } = options || {};
 
+    // audit adm-xss-2: в title/message приходят имена пользователей, тарифов и блоков
+    // прямо из API (например «Удалить пользователя "{username}"?»). Резидент правит своё
+    // ФИО сам через PUT /api/users/me, поэтому сырая подстановка здесь = stored-XSS в
+    // сессии ROOT/ADMIN. Экранируем всё, что идёт в разметку модалки.
+    // Ни один вызывающий showConfirm() не передаёт намеренную HTML-разметку (проверено по
+    // всем call-site'ам), а перенос строк сохраняет CSS white-space:pre-wrap — вид не меняется.
+    const escHtml = window.escapeHtml || ((v) => {
+        const d = document.createElement('div');
+        d.textContent = String(v === null || v === undefined ? '' : v);
+        return d.innerHTML;
+    });
+
     return new Promise((resolve) => {
         const root = getAdminModalRoot();
         const overlay = document.createElement('div');
@@ -900,7 +928,7 @@ function showAdminConfirmModal(options) {
         overlay.innerHTML = `
             <div class="account-modal" style="max-width:520px">
                 <div class="account-modal-header">
-                    <h2>${title}</h2>
+                    <h2>${escHtml(title)}</h2>
                     <button class="account-modal-close" type="button">&times;</button>
                 </div>
                 <div class="account-modal-body">
@@ -908,12 +936,12 @@ function showAdminConfirmModal(options) {
                         <div style="width:38px; height:38px; border-radius:10px; background:#f59e0b; color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 20px rgba(0,0,0,.2); flex-shrink:0;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
                         </div>
-                        <div style="white-space:pre-wrap; color:#fff;">${message}</div>
+                        <div style="white-space:pre-wrap; color:#fff;">${escHtml(message)}</div>
                     </div>
                 </div>
                 <div class="account-modal-footer">
-                    <button class="account-btn account-btn-secondary btn-cancel" type="button">${cancelText}</button>
-                    <button class="account-btn account-btn-primary btn-ok" type="button">${confirmText}</button>
+                    <button class="account-btn account-btn-secondary btn-cancel" type="button">${escHtml(cancelText)}</button>
+                    <button class="account-btn account-btn-primary btn-ok" type="button">${escHtml(confirmText)}</button>
                 </div>
             </div>`;
 

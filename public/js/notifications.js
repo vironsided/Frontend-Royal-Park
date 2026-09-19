@@ -117,20 +117,30 @@ function showPrompt(message, defaultValue = '', onConfirm, onCancel) {
     const dialog = document.createElement('div');
     dialog.className = 'confirm-dialog';
     
+    // message и defaultValue приходят из API/пользовательских данных — экранируем
+    // (audit adm-xss-1). value подставляем не в разметку, а свойством input.value:
+    // так значение с кавычками не может вырваться из атрибута и не искажается.
+    const esc = window.escapeHtml || ((v) => {
+        const d = document.createElement('div');
+        d.textContent = String(v === null || v === undefined ? '' : v);
+        return d.innerHTML;
+    });
+
     dialog.innerHTML = `
-        <div class="confirm-message">${message}</div>
-        <input type="text" class="prompt-input" value="${defaultValue}">
+        <div class="confirm-message">${esc(message)}</div>
+        <input type="text" class="prompt-input" value="">
         <div class="confirm-actions">
             <button class="confirm-btn confirm-ok">OK</button>
             <button class="confirm-btn confirm-cancel">Отмена</button>
         </div>
     `;
-    
+
     overlay.appendChild(dialog);
     document.body.appendChild(overlay);
-    
+
     const input = dialog.querySelector('.prompt-input');
-    
+    input.value = (defaultValue === null || defaultValue === undefined) ? '' : String(defaultValue);
+
     // Show with animation
     setTimeout(() => {
         overlay.classList.add('show');

@@ -316,9 +316,52 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin', 'index.html'));
 });
 
+// Единственная директория, из которой SPA-роут админки имеет право отдавать
+// файлы по пути, пришедшему от клиента. Всё, что резолвится за её пределы, —
+// попытка path traversal.
+const PUBLIC_DIR = path.join(__dirname, 'public');
+
 app.get('/admin/*', (req, res) => {
     if (req.path.includes('/admin/content/')) {
-        return res.sendFile(path.join(__dirname, 'public', req.path));
+        // audit P0 (path traversal). Раньше здесь было:
+        //     res.sendFile(path.join(__dirname, 'public', req.path))
+        // то есть sendFile с АБСОЛЮТНЫМ путём. Встроенная в sendFile проверка на
+        // '..' работает ТОЛЬКО для относительного пути с опцией root — при
+        // абсолютном её нет вовсе, а path.join молча схлопывает '../' и выводит
+        // за пределы public/. Условие includes('/admin/content/') при этом
+        // проходит для '/admin/content/../../../../etc/passwd' (подстрока-то на
+        // месте), поэтому аноним читал любой файл на диске сервера — на проде
+        // реально утекали /etc/passwd, сам server.js и package-lock.json.
+        // Анонимно это достижимо потому, что pageGuard в режиме 'auto' не
+        // включается, когда hostname фронта и бэка различаются (прод, split-домен).
+        //
+        // Защита в глубину, слой 1: сами резолвим путь и требуем, чтобы он остался
+        // внутри public/. Декодируем, чтобы не проскочил '%2e%2e%2f'; NUL режем,
+        // так как он обрезает путь на уровне сисколла.
+        let decodedPath;
+        try {
+            decodedPath = decodeURIComponent(req.path);
+        } catch (_e) {
+            return res.status(400).end();
+        }
+        if (decodedPath.indexOf('\0') !== -1) return res.status(400).end();
+        // '.' + sep обязателен: без него path.resolve увидит ведущий слэш и
+        // сочтёт путь абсолютным, проигнорировав PUBLIC_DIR.
+        const resolved = path.resolve(PUBLIC_DIR, '.' + path.sep + decodedPath);
+        if (resolved !== PUBLIC_DIR && !resolved.startsWith(PUBLIC_DIR + path.sep)) {
+            return res.status(403).end();
+        }
+        // Слой 2: отдаём ОТНОСИТЕЛЬНЫЙ путь с опцией root — send() сам декодирует,
+        // нормализует и отвечает 403 на любой выход за root. Ведущий слэш
+        // складывается с root корректно: '/admin/content/x.html' -> public/admin/content/x.html.
+        // Колбэк ошибки обязателен: без него ENOENT/403 уходит в next(err) и
+        // отдаёт стандартную страницу Express с абсолютным путём в тексте.
+        return res.sendFile(req.path, { root: PUBLIC_DIR }, (err) => {
+            if (!err) return;
+            // Клиент отвалился или ответ уже начали писать — второй раз нельзя.
+            if (res.headersSent || err.code === 'ECONNABORTED') return;
+            res.status(err.status === 403 ? 403 : 404).end();
+        });
     }
     res.sendFile(path.join(__dirname, 'public', 'admin', 'index.html'));
 });

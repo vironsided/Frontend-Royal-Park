@@ -389,6 +389,16 @@
 <script>
     const API_BASE = window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BASE || 'http://localhost:8000');
     const t = (key, fallback = '') => window.i18n?.translate?.(key) || fallback || key;
+    // audit adm-xss-1: значения из API (коды/инфо резидента, комментарии к показаниям,
+    // серийники, пути к фото) идут в разметку только через escape.
+    // esc — для текста, escAttr — для подстановки внутрь атрибута.
+    const esc = (v) => (window.escapeHtml
+        ? window.escapeHtml(v)
+        : String(v === null || v === undefined ? '' : v)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+    const escAttr = (v) => (window.escapeAttr
+        ? window.escapeAttr(v)
+        : esc(v).replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
     const tr = (key, params = {}, fallback = '') => {
         const base = t(key, fallback);
         return Object.entries(params).reduce((txt, [p, v]) => txt.replace(new RegExp(`\\{${p}\\}`, 'g'), String(v)), base);
@@ -716,8 +726,8 @@
                 const chipClass = isFixedType ? 'meter-chip chip-warning' : 'meter-chip';
                 return `
                         <div class="meter-item">
-                            <span class="${chipClass}">${meterTypeLabel}</span>
-                            <span class="meter-value">${m.consumption.toFixed(3)} ${unitTranslated}</span>
+                            <span class="${chipClass}">${esc(meterTypeLabel)}</span>
+                            <span class="meter-value">${m.consumption.toFixed(3)} ${esc(unitTranslated)}</span>
                         </div>
                     `;
             }).join('');
@@ -736,7 +746,7 @@
                 : (isPaid ? t('status_paid', 'Оплачено') : (isPartial ? t('readings_status_partial', 'Частично') : t('readings_status_unpaid', 'Не оплачено')));
                 return `
                         <div class="amount-item">
-                            <span class="status-pill ${statusClass}">${statusText}</span>
+                            <span class="status-pill ${statusClass}">${esc(statusText)}</span>
                             <span class="amount-value ${amountClass}">${m.total.toFixed(2)} ₼</span>
                         </div>
                     `;
@@ -747,11 +757,11 @@
             const residentInfoTranslated = translateResidentInfo(row.resident_info);
             return `
                     <div class="reading-row-scroll">
-                    <div class="reading-row" data-reading-key="${readingKey}" data-resident-id="${row.resident_id}">
+                    <div class="reading-row" data-reading-key="${escAttr(readingKey)}" data-resident-id="${row.resident_id}">
                         <div class="reading-col reading-col-resident">
                             <div class="resident-badge">
-                                <span class="resident-code">${row.resident_code}</span>
-                                <span class="resident-info">${residentInfoTranslated}</span>
+                                <span class="resident-code">${esc(row.resident_code)}</span>
+                                <span class="resident-info">${esc(residentInfoTranslated)}</span>
                             </div>
                         </div>
                         <div class="reading-col">
@@ -2327,16 +2337,16 @@
                     const photoUrl = resolvePhotoUrl(reading.photo_url || '');
                     return `
                         <div class="detail-grid-row">
-                            <div>${reading.date}</div>
+                            <div>${esc(reading.date)}</div>
                             <div>${reading.value.toFixed(3)}</div>
                             <div>${reading.consumption.toFixed(3)}</div>
                             <div class="detail-amount ${reading.amount > 0 ? 'detail-amount-alert' : ''}">${reading.amount.toFixed(2)}</div>
-                            <div>${reading.vat_percent}</div>
-                            <div>${reading.comment}</div>
+                            <div>${esc(reading.vat_percent)}</div>
+                            <div>${esc(reading.comment)}</div>
                             <div>
                                 ${photoUrl ? `
-                                    <a href="${photoUrl}" target="_blank" class="detail-photo-link">
-                                        <img src="${photoUrl}" alt="Фото счётчика" loading="lazy"
+                                    <a href="${escAttr(photoUrl)}" target="_blank" class="detail-photo-link">
+                                        <img src="${escAttr(photoUrl)}" alt="Фото счётчика" loading="lazy"
                                              onerror="this.parentElement.outerHTML='<span class=\\'detail-photo-empty\\'>—</span>'">
                                     </a>
                                 ` : '<span class="detail-photo-empty">—</span>'}
@@ -2347,7 +2357,7 @@
 
                 // Показываем серийный номер, если он есть и не является фикс-услугой
                 const serialInfo = meter.serial_number && meter.serial_number !== '-'
-                    ? ` (№${meter.serial_number})`
+                    ? ` (№${esc(meter.serial_number)})`
                     : '';
 
                 const meterTypeText = localizeDetailMeterType(meter.type);
@@ -2355,11 +2365,11 @@
                 return `
                         <div class="detail-meter-card">
                             <div class="detail-meter-head">
-                                <span class="detail-meter-badge">${meterTypeText}${serialInfo}</span>
+                                <span class="detail-meter-badge">${esc(meterTypeText)}${serialInfo}</span>
                                 <div class="detail-meter-info">
-                                    <span>${t('tariff', 'тариф')}: ${meter.tariff_name || '—'}</span>
+                                    <span>${t('tariff', 'тариф')}: ${esc(meter.tariff_name || '—')}</span>
                                 </div>
-                                <span class="detail-unit-chip">${meterUnitText}</span>
+                                <span class="detail-unit-chip">${esc(meterUnitText)}</span>
                             </div>
                             <div class="detail-grid detail-grid-head">
                                 <div>${t('date', 'Дата')}</div>
@@ -2381,7 +2391,7 @@
             return data;
         } catch (error) {
             console.error('Error loading reading history:', error);
-            body.innerHTML = `<div class="detail-empty">${t('error_loading_data', 'Ошибка загрузки данных')}: ${error.message}</div>`;
+            body.innerHTML = `<div class="detail-empty">${t('error_loading_data', 'Ошибка загрузки данных')}: ${esc(error.message)}</div>`;
             throw error;
         }
     }
@@ -2428,7 +2438,7 @@
             await loadReadingDetailsData(residentId, defaultMonthValue, defaultMonthValue);
         } catch (error) {
             console.error('Error loading reading history:', error);
-            body.innerHTML = `<div class="detail-empty">${t('error_loading_data', 'Ошибка загрузки данных')}: ${error.message}</div>`;
+            body.innerHTML = `<div class="detail-empty">${t('error_loading_data', 'Ошибка загрузки данных')}: ${esc(error.message)}</div>`;
         }
     }
 
@@ -2452,7 +2462,7 @@
             await loadReadingDetailsData(currentReadingDetailsResidentId, fromMonth, toMonth);
         } catch (error) {
             console.error('Error loading filtered reading history:', error);
-            body.innerHTML = `<div class="detail-empty">${t('error_loading_data', 'Ошибка загрузки данных')}: ${error.message}</div>`;
+            body.innerHTML = `<div class="detail-empty">${t('error_loading_data', 'Ошибка загрузки данных')}: ${esc(error.message)}</div>`;
         }
     }
 
@@ -2473,12 +2483,12 @@
         const rows = (meter.rows && meter.rows.length)
             ? meter.rows.map(row => `
                     <div class="detail-grid-row">
-                        <div>${row.date || '—'}</div>
-                        <div>${row.value || '—'}</div>
-                        <div>${row.consumption || '—'}</div>
-                        <div class="detail-amount ${row.amount && Number(row.amount) > 0 ? 'detail-amount-alert' : ''}">${row.amount || '0.00'}</div>
-                        <div>${row.vat ?? '—'}</div>
-                        <div>${row.comment || '—'}</div>
+                        <div>${esc(row.date || '—')}</div>
+                        <div>${esc(row.value || '—')}</div>
+                        <div>${esc(row.consumption || '—')}</div>
+                        <div class="detail-amount ${row.amount && Number(row.amount) > 0 ? 'detail-amount-alert' : ''}">${esc(row.amount || '0.00')}</div>
+                        <div>${esc(row.vat ?? '—')}</div>
+                        <div>${esc(row.comment || '—')}</div>
                     </div>
                 `).join('')
             : '<div class="detail-empty-row">Нет записей</div>';
@@ -2488,12 +2498,12 @@
         return `
                 <div class="detail-meter-card">
                     <div class="detail-meter-head">
-                        <span class="detail-meter-badge">${meterTypeText}</span>
+                        <span class="detail-meter-badge">${esc(meterTypeText)}</span>
                         <div class="detail-meter-info">
-                            <span>${meter.meter}</span>
-                            <span>${t('tariff', 'тариф')}: ${meter.tariff}</span>
+                            <span>${esc(meter.meter)}</span>
+                            <span>${t('tariff', 'тариф')}: ${esc(meter.tariff)}</span>
                         </div>
-                        <span class="detail-unit-chip">${meterUnitText}</span>
+                        <span class="detail-unit-chip">${esc(meterUnitText)}</span>
                     </div>
                     <div class="detail-grid detail-grid-head">
                         <div>${t('date', 'Дата')}</div>

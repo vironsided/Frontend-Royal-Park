@@ -167,6 +167,17 @@
         const API_BASE = window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BASE || 'http://localhost:8000');
         const t = (key, fallback = '') => window.i18n?.translate?.(key) || fallback || key;
 
+        // audit adm-xss-1: описания строк счёта, комментарии и reference платежей
+        // приходят из API и попадают в разметку в сессии ROOT/ADMIN — только через escape.
+        // esc — для текста, escAttr — для подстановки внутрь атрибута.
+        const esc = (v) => (window.escapeHtml
+            ? window.escapeHtml(v)
+            : String(v === null || v === undefined ? '' : v)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+        const escAttr = (v) => (window.escapeAttr
+            ? window.escapeAttr(v)
+            : esc(v).replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
+
         // URL params - need to be accessible globally
         const urlParams = new URLSearchParams(window.location.search);
 
@@ -584,15 +595,15 @@
 
                     return `
                 <tr>
-                    <td data-original-description="${item.description || ''}" data-service-key="${displayServiceKey}">${displayLabel}</td>
-                    <td data-consumed-qty="${parsed.qty || ''}" data-consumed-unit-key="${parsed.unitKey || ''}">${parsed.consumed}</td>
+                    <td data-original-description="${escAttr(item.description || '')}" data-service-key="${escAttr(displayServiceKey)}">${esc(displayLabel)}</td>
+                    <td data-consumed-qty="${escAttr(parsed.qty || '')}" data-consumed-unit-key="${escAttr(parsed.unitKey || '')}">${esc(parsed.consumed)}</td>
                     <td>${(item.amount_net || 0).toFixed(2)}</td>
                     <td>${(item.amount_vat || 0).toFixed(2)}</td>
                     <td class="total-value">${totalAmount.toFixed(2)}</td>
                     <td>
                         <div class="payment-status-card ${statusClass}">
-                            <div class="payment-status-head">${statusText}</div>
-                            <div class="payment-status-meta">${paidMeta}</div>
+                            <div class="payment-status-head">${esc(statusText)}</div>
+                            <div class="payment-status-meta">${esc(paidMeta)}</div>
                             <div class="payment-status-track">
                                 <span style="width:${ratio.toFixed(2)}%"></span>
                             </div>
@@ -638,8 +649,8 @@
                         }
                         return `
                     <tr>
-                        <td>${dateStr}</td>
-                        <td>${p.method || '—'}</td>
+                        <td>${esc(dateStr)}</td>
+                        <td>${esc(p.method || '—')}</td>
                         <td class="payments-amount-cell">${(p.amount || 0).toFixed(2)}</td>
                         <td>
                             <a 
@@ -647,10 +658,10 @@
                                 class="payment-link"
                                 onclick="if (window.viewPayment) { viewPayment(${p.payment_id}); } else { window.location.href = '/admin/#/payment-view?id=${p.payment_id}'; } return false;"
                             >
-                                #${p.payment_id}${p.reference ? ' / ' + p.reference : ''}
+                                #${p.payment_id}${p.reference ? ' / ' + esc(p.reference) : ''}
                             </a>
                         </td>
-                        <td>${p.comment || '—'}</td>
+                        <td>${esc(p.comment || '—')}</td>
                     </tr>
                 `;
                     }).join('');

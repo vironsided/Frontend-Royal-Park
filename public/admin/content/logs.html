@@ -124,6 +124,15 @@
         totalPages: 1
     };
     
+    // audit adm-xss-2: в журнал попадают значения, введённые пользователями
+    // (ФИО из профиля резидента, детали изменения), а страница открывается в сессии
+    // ROOT. Всё содержимое строки выводим только через escape — иначе HTML/JS из
+    // «деталей» лога исполнится в админской сессии (log injection -> stored XSS).
+    const esc = (v) => (window.escapeHtml
+        ? window.escapeHtml(v)
+        : String(v === null || v === undefined ? '' : v)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+
     let residents = [];
     let users = [];
     
@@ -381,7 +390,7 @@
             console.error('Error loading logs:', error);
             const tbody = document.getElementById('logsTableBody');
             if (tbody) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">' + t('logs_load_error', 'Ошибка загрузки логов') + ': ' + error.message + '</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">' + esc(t('logs_load_error', 'Ошибка загрузки логов')) + ': ' + esc(error.message) + '</td></tr>';
             }
             // Reset pagination state on error
             paginationState.totalItems = 0;
@@ -488,13 +497,13 @@
             
             return `
                 <tr>
-                    <td>${log.id}</td>
-                    <td>${dateDisplay}</td>
-                    <td><span class="badge ${actionInfo.className}"${actionInfo.key ? ` data-i18n="${actionInfo.key}"` : ''}>${actionText}</span></td>
-                    <td>${log.resident}</td>
-                    <td>${meterText}</td>
-                    <td>${log.user}</td>
-                    <td>${log.details}</td>
+                    <td>${esc(log.id)}</td>
+                    <td>${esc(dateDisplay)}</td>
+                    <td><span class="badge ${actionInfo.className}"${actionInfo.key ? ` data-i18n="${actionInfo.key}"` : ''}>${esc(actionText)}</span></td>
+                    <td>${esc(log.resident)}</td>
+                    <td>${esc(meterText)}</td>
+                    <td>${esc(log.user)}</td>
+                    <td>${esc(log.details)}</td>
                 </tr>
             `;
         }).join('');

@@ -1306,24 +1306,26 @@
         const serviceSummaryRows = summary.selectedServices.map((key) => {
             const s = summary.serviceStats[key] || { count: 0, amount: 0 };
             return `<tr>
-                <td>${getServiceDisplayLabel(key)}</td>
-                <td>${s.count}</td>
-                <td>${toMoney(s.amount)}</td>
+                <td>${escapeHtml(getServiceDisplayLabel(key))}</td>
+                <td>${escapeHtml(s.count)}</td>
+                <td>${escapeHtml(toMoney(s.amount))}</td>
             </tr>`;
         }).join('');
 
+        // audit adm-xss-1: печатная форма открывается в окне того же origin, поэтому
+        // сырой HTML из ФИО/ссылки платежа исполнялся бы здесь так же, как в таблице.
         const tableRows = rows.map(row => `
             <tr>
-                <td>${row.date}</td>
-                <td>${row.resident}</td>
-                <td>${row.resident_user_full_name}</td>
-                <td>${row.amount}</td>
-                <td>${row.method}</td>
-                <td>${row.leftover}</td>
-                <td>${row.reference}</td>
+                <td>${escapeHtml(row.date)}</td>
+                <td>${escapeHtml(row.resident)}</td>
+                <td>${escapeHtml(row.resident_user_full_name)}</td>
+                <td>${escapeHtml(row.amount)}</td>
+                <td>${escapeHtml(row.method)}</td>
+                <td>${escapeHtml(row.leftover)}</td>
+                <td>${escapeHtml(row.reference)}</td>
                 <td>${renderAllocationCell(row.invoice_allocations, 'invoice')}</td>
                 <td>${renderAllocationCell(row.invoice_allocations, 'services')}</td>
-                <td>${row.selected_services_amount}</td>
+                <td>${escapeHtml(row.selected_services_amount)}</td>
             </tr>
         `).join('');
 

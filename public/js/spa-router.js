@@ -184,6 +184,80 @@ class SPARouter {
         // To RE-ENABLE a section, remove its route here AND remove the
         // `nav-item--soon` class/badge from the matching nav item in admin/index.html.
         this.disabledRoutes = new Set(['/access']);
+
+        // --- Ролевой guard маршрутов (audit adm-authz-2) -------------------
+        // ДО этого ограничение роли жило только в admin/index.html: там патчился
+        // spaRouter.navigate(). Но navigate() — лишь ОДИН из трёх входов в загрузку
+        // контента: hashchange и popstate зовут loadContent() напрямую. Поэтому
+        // SALES/OPERATOR достаточно было вписать #/users в адресную строку (или нажать
+        // «Назад»), чтобы открыть любой раздел админки. Проверку переносим в
+        // loadContent() — единственную общую точку.
+        //
+        // Наборы разрешённых роутов ПОВТОРЯЮТ уже действующие в admin/index.html
+        // (applySalesRouteGuard / applyOperatorRouteGuard), чтобы ничей рабочий
+        // сценарий не изменился: это тот же список, просто теперь его нельзя обойти.
+        // ROOT и ADMIN намеренно без ограничений — как и сейчас.
+        // Настоящая граница доступа — на бэкенде; здесь защита в глубину.
+        this.roleRoutePolicies = {
+            SALES: {
+                allowed: new Set(['/sales']),
+                fallback: '/sales'
+            },
+            OPERATOR: {
+                allowed: new Set([
+                    '/tariffs',
+                    '/residents',
+                    '/readings',
+                    '/payments',
+                    '/payment-view',
+                    '/invoices',
+                    '/invoice-view',
+                    '/account'
+                ]),
+                fallback: '/tariffs'
+            }
+        };
+
+        // null = роль без ограничений (ROOT/ADMIN) либо роль ещё не определена.
+        this.allowedRoutes = null;
+        this.roleFallbackRoute = '/dashboard';
+    }
+
+    // Применяет политику маршрутов для роли. role === '' снимает ограничения.
+    applyRolePolicy(role) {
+        const normalized = String(role || '').trim().toUpperCase();
+        const policy = this.roleRoutePolicies[normalized] || null;
+        this.allowedRoutes = policy ? policy.allowed : null;
+        this.roleFallbackRoute = policy ? policy.fallback : '/dashboard';
+        return policy;
+    }
+
+    isRouteAllowed(baseRoute) {
+        if (!this.allowedRoutes) return true;
+        return this.allowedRoutes.has(baseRoute);
+    }
+
+    // Роль из localStorage правит сам пользователь, поэтому она нужна только чтобы
+    // не мигать чужим разделом до ответа сервера. Авторитетный источник —
+    // /api/auth/check; после ответа политика переприменяется и, если текущий роут
+    // роли не положен, происходит возврат на её стартовый раздел.
+    initRoleGuard() {
+        try {
+            this.applyRolePolicy(localStorage.getItem('userRole') || '');
+        } catch (_e) { /* приватный режим / отключённый storage — просто ждём API */ }
+
+        const base = (window.getApiBase ? window.getApiBase() : (window.API_BASE || ''));
+        fetch(base + '/api/auth/check', { credentials: 'include' })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((data) => {
+                if (!data || data.authenticated !== true) return;
+                this.applyRolePolicy(data.role);
+                const current = this.normalizeRoute(this.getRouteFromHash());
+                if (!this.isRouteAllowed(current)) {
+                    this.navigate(this.roleFallbackRoute);
+                }
+            })
+            .catch(() => { /* сеть/сессия — оставляем оптимистичную политику */ });
     }
     
     normalizeRoute(route) {
@@ -201,6 +275,10 @@ class SPARouter {
             return;
         }
         
+        // Ролевой guard поднимаем ДО первой навигации: сначала по сохранённой роли
+        // (чтобы не мелькнул чужой раздел), затем уточняем по /api/auth/check.
+        this.initRoleGuard();
+
         // Обрабатываем клики на ссылки меню
         this.setupNavigationListeners();
         
@@ -405,6 +483,20 @@ class SPARouter {
             // Strip the stale #<route> from the address bar so it doesn't linger.
             try { history.replaceState({ route: '/dashboard' }, '', '#/dashboard'); } catch (_) { /* ignore */ }
             return this.navigate('/dashboard');
+        }
+
+        // Раздел не положен текущей роли (audit adm-authz-2). Проверка стоит именно
+        // здесь, а не в navigate(), потому что hashchange и popstate приходят прямо
+        // сюда — раньше ручной ввод #/users или кнопка «Назад» обходили guard.
+        if (!this.isRouteAllowed(baseRoute)) {
+            const fallback = this.roleFallbackRoute;
+            try { history.replaceState({ route: fallback }, '', `#${fallback}`); } catch (_) { /* ignore */ }
+            if (this.currentRoute === fallback) {
+                // Контент уже правильный — только чиним подсветку меню.
+                this.updateActiveMenuItem(fallback);
+                return;
+            }
+            return this.navigate(fallback);
         }
 
         const contentPath = this.routes[baseRoute] || this.routes['/dashboard'];
