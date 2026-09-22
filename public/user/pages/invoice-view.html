@@ -1049,13 +1049,19 @@
             const lang = localStorage.getItem('language') || 'ru';
             const waterSewerBundle = getWaterSewerBundle(lines);
             const sewerIds = new Set((waterSewerBundle?.sewerIds || []).map(Number));
+            const hasOutstandingSewerage = lines.some(line => {
+                const lineId = Number(line?.id || 0);
+                if (!lineId || !sewerIds.has(lineId)) return false;
+                return Number(line?.remaining_amount ?? line?.amount_total ?? 0) > 0;
+            });
             const idsFromData = new Set(
                 lines
                     .filter(line => {
                         const lineId = Number(line?.id || 0);
                         if (lineId <= 0) return false;
                         if (sewerIds.has(lineId)) return false;
-                        return Number(line?.remaining_amount ?? line?.amount_total ?? 0) > 0;
+                        const remaining = Number(line?.remaining_amount ?? line?.amount_total ?? 0);
+                        return remaining > 0 || (isWaterDescription(line?.description) && hasOutstandingSewerage);
                     })
                     .map(line => Number(line.id))
             );
@@ -1081,7 +1087,9 @@
                 const isSewerageLine = parsed.serviceKey === 'meter_sewerage' || isSewerageDescription(line.description);
                 let checkboxLineId = lineId;
                 let showCheckbox = isFirstForId;
-                let selectable = lineId > 0 && remainingAmount > 0;
+                let selectable = lineId > 0 && (
+                    remainingAmount > 0 || (isWaterDescription(line.description) && hasOutstandingSewerage)
+                );
 
                 if (isSewerageLine || sewerIds.has(lineId)) {
                     // Подстраховка: у канализации отдельного чекбокса быть не должно.

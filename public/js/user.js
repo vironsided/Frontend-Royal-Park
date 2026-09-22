@@ -1490,6 +1490,17 @@ function ensureDashboardNewsModal() {
     return overlay;
 }
 
+function dashboardPublicNewsUrl() {
+    const params = new URLSearchParams({ limit: '100' });
+    const residentBlocks = (window.dashboardData?.residents || [])
+        .map(r => (r.code || '').split('/')[0].trim())
+        .filter(Boolean);
+    if (residentBlocks.length) {
+        params.set('blocks', Array.from(new Set(residentBlocks)).join(','));
+    }
+    return `${API_BASE_URL}/api/news/public?${params.toString()}`;
+}
+
 // Load latest 3 news for dashboard
 window.loadDashboardNews = async function loadDashboardNews() {
     const newsGrid = document.getElementById('dashboardNewsGrid');
@@ -1497,7 +1508,7 @@ window.loadDashboardNews = async function loadDashboardNews() {
     
     try {
         const lang = resolveUiLanguage();
-        const response = await fetch(`${API_BASE_URL}/api/news/admin?per_page=100`, {
+        const response = await fetch(dashboardPublicNewsUrl(), {
             credentials: 'include'
         });
         
@@ -1594,7 +1605,10 @@ window.resolveUserNewsIconColor = function resolveUserNewsIconColor(icon, stored
     if (stored == null || String(stored).trim() === '') return fallback;
     const key = String(stored).trim().toLowerCase();
     if (USER_NEWS_LEGACY_ICON_COLORS[key]) return USER_NEWS_LEGACY_ICON_COLORS[key];
-    return String(stored).trim();
+    // News data is persisted and later interpolated into style attributes.  Only
+    // accept a plain hex color; quotes/semicolons in legacy or tampered rows must
+    // never be able to break out of the attribute.
+    return /^#[0-9a-f]{6}$/i.test(key) ? key : fallback;
 };
 
 /** Класс модификатора для карточки новости (пастельный фон в user-theme по типу иконки) */
@@ -1626,7 +1640,7 @@ window.openDashboardNewsDetail = async function openDashboardNewsDetail(newsId) 
         let news = (window._dashboardNewsCache || []).find(n => n.id === id);
 
         if (!news) {
-            const response = await fetch(`${API_BASE_URL}/api/news/admin?per_page=100`, {
+            const response = await fetch(dashboardPublicNewsUrl(), {
                 credentials: 'include'
             });
             if (!response.ok) throw new Error('Failed to load news');

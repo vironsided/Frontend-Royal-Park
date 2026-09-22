@@ -2093,6 +2093,7 @@ async function submitPayment(event) {
                 resident_id: residentId,
                 amount: amount,
                 invoice_id: invoiceIdForRequest || null,
+                selected_line_ids: (invoiceIdForRequest && selectedLineIdsForRequest.length) ? selectedLineIdsForRequest : null,
                 description,
                 terminal_category: terminalCategory,
                 terminal_group: terminalGroup

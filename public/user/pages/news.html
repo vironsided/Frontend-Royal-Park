@@ -779,10 +779,7 @@ html[data-theme="dark"] body.user-app .user-news-modal-date {
                 publishedDate = `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()}`;
             }
             
-            const iconColor =
-                typeof window.resolveUserNewsIconColor === 'function'
-                    ? window.resolveUserNewsIconColor(news.icon, news.icon_color)
-                    : news.icon_color || '#c5cd9f';
+            const iconColor = safeNewsColor(news.icon, news.icon_color);
             const modClass =
                 typeof window.newsItemModifierClass === 'function'
                     ? window.newsItemModifierClass(news.icon)
@@ -798,10 +795,7 @@ html[data-theme="dark"] body.user-app .user-news-modal-date {
             return `
                 <div class="news-item ${modClass}" style="--cat: ${iconColor}; --i: ${pageItems.indexOf(news)}"
                      onclick="window.openNewsDetail(${news.id})"
-                     data-news-id="${news.id}"
-                     data-published-at="${news.published_at}"
-                     data-title='${JSON.stringify(title)}'
-                     data-content='${JSON.stringify(content)}'>
+                     data-news-id="${news.id}">
                     <div class="news-icon">
                         <i class="bi ${iconMap[news.icon] || 'bi-info-circle-fill'}"></i>
                     </div>
@@ -831,6 +825,14 @@ html[data-theme="dark"] body.user-app .user-news-modal-date {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    function safeNewsColor(icon, storedColor) {
+        const candidate = typeof window.resolveUserNewsIconColor === 'function'
+            ? window.resolveUserNewsIconColor(icon, storedColor)
+            : storedColor;
+        const normalized = String(candidate || '').trim();
+        return /^#[0-9a-f]{6}$/i.test(normalized) ? normalized : '#c5cd9f';
     }
     
     async function openNewsDetail(newsId) {
@@ -924,15 +926,12 @@ html[data-theme="dark"] body.user-app .user-news-modal-date {
             };
             
             // Заполняем модальное окно
-            modalTitle.textContent = escapeHtml(titleText);
-            modalContent.textContent = escapeHtml(contentText);
+            modalTitle.textContent = titleText;
+            modalContent.textContent = contentText;
             modalDate.textContent = publishedDate;
             
             if (modalIcon) {
-                const catColor =
-                    typeof window.resolveUserNewsIconColor === 'function'
-                        ? window.resolveUserNewsIconColor(news.icon, news.icon_color)
-                        : news.icon_color || '#c5cd9f';
+                const catColor = safeNewsColor(news.icon, news.icon_color);
                 modalIcon.style.setProperty('--cat', catColor);
                 modalIcon.innerHTML = `<i class="bi ${iconMap[news.icon] || 'bi-info-circle-fill'}"></i>`;
             }

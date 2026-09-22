@@ -1380,6 +1380,16 @@ html[data-theme="dark"] #newsTableContainer .table-pagination .custom-pag-select
         }
     }
 
+    function normalizeNewsIcon(icon) {
+        const allowed = ['info', 'announcement', 'star', 'warning', 'calendar', 'tools'];
+        return allowed.includes(String(icon || '')) ? String(icon) : 'info';
+    }
+
+    function normalizeNewsColor(color) {
+        const value = String(color || '').trim();
+        return /^#[0-9a-f]{6}$/i.test(value) ? value : '#667eea';
+    }
+
     function renderNewsTable() {
         const tbody = document.getElementById('newsTableBody');
         if (!tbody) return;
@@ -1433,12 +1443,14 @@ html[data-theme="dark"] #newsTableContainer .table-pagination .custom-pag-select
             
             const targetBlocks = Array.isArray(news.target_blocks) ? news.target_blocks : [];
             const blockLabel = targetBlocks.length ? targetBlocks.join(', ') : t('all', 'Всем');
+            const safeIcon = normalizeNewsIcon(news.icon);
+            const safeIconColor = normalizeNewsColor(news.icon_color);
 
             return `
                 <tr>
                     <td>
-                        <div class="news-icon-preview" style="background: ${news.icon_color}">
-                            <i class="bi ${iconMap[news.icon] || 'bi-info-circle-fill'}"></i>
+                        <div class="news-icon-preview" style="background: ${safeIconColor}">
+                            <i class="bi ${iconMap[safeIcon]}"></i>
                         </div>
                     </td>
                     <td>${escapeHtml(titleText)}</td>
@@ -1632,12 +1644,14 @@ html[data-theme="dark"] #newsTableContainer .table-pagination .custom-pag-select
             
             // Set icon selection
             document.querySelectorAll('.icon-option').forEach(opt => opt.classList.remove('selected'));
-            const selectedIconOpt = document.querySelector(`.icon-option[data-icon="${news.icon}"]`);
+            const safeIcon = normalizeNewsIcon(news.icon);
+            const selectedIconOpt = Array.from(document.querySelectorAll('.icon-option'))
+                .find(opt => opt.dataset.icon === safeIcon);
             if (selectedIconOpt) {
                 selectedIconOpt.classList.add('selected');
             }
-            document.getElementById('selectedIcon').value = news.icon;
-            document.getElementById('selectedIconColor').value = news.icon_color;
+            document.getElementById('selectedIcon').value = safeIcon;
+            document.getElementById('selectedIconColor').value = normalizeNewsColor(news.icon_color);
 
             await loadBlocksForNews();
             const targetAll = document.getElementById('newsTargetAll');
