@@ -54,13 +54,19 @@
       box-shadow:0 4px 12px -6px rgba(86,86,92,.35)}
     body.user-app .user-payment-page .order-logo-img{
       width:100%;height:100%;object-fit:contain;display:block}
+    body.user-app .user-payment-page #selectedLinesInfoWrap{
+      align-items:flex-start;gap:1rem}
+    body.user-app .user-payment-page #selectedLinesInfoWrap .detail-label{
+      flex:0 0 auto}
+    body.user-app .user-payment-page #selectedLinesInfoWrap .detail-value{
+      min-width:0;text-align:right;line-height:1.5}
     </style>
     <div class="payment-page-inner">
     <aside class="payment-howto-block" aria-labelledby="payment-howto-heading">
         <h3 class="payment-section-title payment-howto-title" id="payment-howto-heading" data-i18n="payment_howto_title">Описание: как оплатить по счёту</h3>
         <ol class="payment-howto-list">
             <li data-i18n="payment_howto_step1">В разделе «Мои счета» откройте счёт и нажмите «Оплатить», либо перейдите на эту страницу из списка неоплаченных счетов.</li>
-            <li data-i18n="payment_howto_step2">Выберите способ оплаты: Royal Park Advance (аванс), кнопка «Оплатить» (Bank Card) или «Оплатить Apple Pay / Google Pay».</li>
+            <li data-i18n="payment_howto_step2">Выберите способ оплаты: Royal Park Advance (аванс) или кнопка «Оплатить» (Bank Card).</li>
             <li data-i18n="payment_howto_step3">Проверьте сумму в блоке «Детали оплаты» и нажмите нужную кнопку оплаты. Далее вы будете перенаправлены на страницу AzeriCard, а результат отобразится в кабинете.</li>
         </ol>
     </aside>
@@ -164,7 +170,7 @@
                         <span class="detail-value" id="invoiceNumber">—</span>
                     </div>
                     <div class="order-detail-item" id="selectedLinesInfoWrap" style="display:none;">
-                        <span class="detail-label">Выбранные услуги</span>
+                        <span class="detail-label" data-i18n="payment_selected_services_label">Выбранные услуги</span>
                         <span class="detail-value" id="selectedLinesInfo">—</span>
                     </div>
                 </div>
@@ -225,7 +231,9 @@
             <!-- Default pay action when user doesn't add a new card -->
             <div class="default-pay-actions">
                 <button type="button" class="pay-button default-pay-button" data-i18n="payment_pay_button">Оплатить</button>
+                <!-- TEMP: Apple Pay / Google Pay скрыт от пользователя.
                 <button type="button" class="pay-button wallet-pay-button" data-i18n="payment_wallet_pay_button" style="margin-left: 10px;">Оплатить Apple Pay / Google Pay</button>
+                -->
             </div>
         </div>
     </div>
@@ -1236,6 +1244,81 @@ function formatPaymentDateNow() {
     });
 }
 
+function getPaymentUiLanguage() {
+    if (typeof window.getUiLanguage === 'function') {
+        return window.getUiLanguage();
+    }
+    return window.i18n?.currentLanguage || localStorage.getItem('language') || 'az';
+}
+
+function paymentText(key, fallback, replacements = {}) {
+    const lang = getPaymentUiLanguage();
+    let value = window.i18n?.translate?.(key, lang) || fallback;
+    Object.entries(replacements).forEach(([name, replacement]) => {
+        value = value.replace(new RegExp(`\\{${name}\\}`, 'g'), String(replacement));
+    });
+    return value;
+}
+
+function renderSelectedPaymentLines(selectedInvoiceId, selectedLineIds, selectedLinesSummary) {
+    const wrap = document.getElementById('selectedLinesInfoWrap');
+    const info = document.getElementById('selectedLinesInfo');
+    const lineIds = Array.isArray(selectedLineIds) ? selectedLineIds : [];
+    const lines = Array.isArray(selectedLinesSummary) ? selectedLinesSummary : [];
+
+    if (!wrap || !info) return;
+    if (!selectedInvoiceId || !lineIds.length) {
+        wrap.style.display = 'none';
+        return;
+    }
+
+    wrap.style.display = '';
+    const lang = getPaymentUiLanguage();
+
+    if (!lines.length) {
+        info.textContent = paymentText(
+            'payment_selected_positions',
+            '{count} выбранных позиций',
+            { count: lineIds.length }
+        );
+        return;
+    }
+
+    const locale = lang === 'az' ? 'az-AZ' : (lang === 'en' ? 'en-US' : 'ru-RU');
+    const amountFormatter = new Intl.NumberFormat(locale, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    const serviceFallback = paymentText('payment_service_fallback', 'Услуга');
+    const preview = lines
+        .slice(0, 3)
+        .map(line => {
+            const rawDescription = String(line?.description || '').trim();
+            const localizedDescription = window.invoiceLineI18n?.formatInvoiceLineDescription
+                ? window.invoiceLineI18n.formatInvoiceLineDescription(rawDescription, lang)
+                : (rawDescription || serviceFallback);
+            const remainingAmount = amountFormatter.format(Number(line?.remaining_amount || 0));
+            return `${localizedDescription || serviceFallback} (${remainingAmount})`;
+        })
+        .join(', ');
+    const countText = paymentText('payment_selected_count', '{count} шт.', { count: lines.length });
+    const moreText = lines.length > 3
+        ? paymentText('payment_selected_more', 'и ещё {count}', { count: lines.length - 3 })
+        : '';
+
+    info.textContent = `${countText} — ${preview}${moreText ? `, ${moreText}` : ''}`;
+}
+
+function refreshSelectedPaymentLines() {
+    const invoiceIdRaw = sessionStorage.getItem('paymentInvoiceId');
+    const invoiceId = invoiceIdRaw ? parseInt(invoiceIdRaw, 10) : null;
+    let lineIds = [];
+    let lines = [];
+    try { lineIds = JSON.parse(sessionStorage.getItem('paymentSelectedLineIds') || '[]') || []; } catch (e) { lineIds = []; }
+    try { lines = JSON.parse(sessionStorage.getItem('paymentSelectedLinesSummary') || '[]') || []; } catch (e) { lines = []; }
+    renderSelectedPaymentLines(invoiceId, lineIds, lines);
+}
+
 // Главная инициализация страницы оплаты
 async function initPaymentPage() {
     // Изначально очищаем превью карты
@@ -1428,8 +1511,6 @@ async function initPaymentPage() {
         const paymentResidentEl = document.getElementById('paymentResident');
         const paymentDateEl = document.getElementById('paymentDate');
         const paymentCommissionEl = document.getElementById('paymentCommission');
-        const selectedLinesInfoWrap = document.getElementById('selectedLinesInfoWrap');
-        const selectedLinesInfo = document.getElementById('selectedLinesInfo');
 
         // Проверяем, есть ли актуальные данные в sessionStorage (пользователь перешел через кнопку)
         // Данные считаются актуальными только если есть временная метка и она не устарела
@@ -1507,21 +1588,7 @@ async function initPaymentPage() {
                 paymentTypeEl.textContent = scopeLabelStored || defaultScopeText;
             }
 
-            if (selectedLinesInfoWrap && selectedLinesInfo && selectedInvoiceId && selectedLineIds.length) {
-                selectedLinesInfoWrap.style.display = '';
-                if (selectedLinesSummary.length) {
-                    const preview = selectedLinesSummary
-                        .slice(0, 3)
-                        .map(x => `${x.description || 'Услуга'} (${new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(x.remaining_amount || 0))})`)
-                        .join(', ');
-                    const suffix = selectedLinesSummary.length > 3 ? ` и еще ${selectedLinesSummary.length - 3}` : '';
-                    selectedLinesInfo.textContent = `${selectedLinesSummary.length} шт. — ${preview}${suffix}`;
-                } else {
-                    selectedLinesInfo.textContent = `${selectedLineIds.length} выбранных позиций`;
-                }
-            } else if (selectedLinesInfoWrap) {
-                selectedLinesInfoWrap.style.display = 'none';
-            }
+            renderSelectedPaymentLines(selectedInvoiceId, selectedLineIds, selectedLinesSummary);
 
             if (paymentResidentEl) {
                 paymentResidentEl.textContent = isAdvanceTopupMode ? '—' : (residentCodeStored || '—');
@@ -2782,6 +2849,12 @@ function setupPaymentDataCleanup() {
         }
     });
 }
+
+if (window.__reportPaymentLanguageHandler) {
+    window.removeEventListener('languageChanged', window.__reportPaymentLanguageHandler);
+}
+window.__reportPaymentLanguageHandler = () => refreshSelectedPaymentLines();
+window.addEventListener('languageChanged', window.__reportPaymentLanguageHandler);
 
 // Инициализируем страницу как при обычной загрузке, так и при загрузке через SPA
 if (document.readyState === 'loading') {
