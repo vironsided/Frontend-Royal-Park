@@ -88,12 +88,15 @@ function apiProxy(req, res) {
         // backend host (we forward Host: <backend>). If passed through, the browser
         // follows it cross-site, OUT of this proxy, where the first-party session
         // cookie doesn't exist -> 401 -> the SPA bounces to login. Rewrite any
-        // Location that points at the backend origin to a relative path so the
-        // redirect is re-proxied with the cookie intact. (Redirects to the frontend,
-        // e.g. AzeriCard success/fail, don't match and pass through untouched.)
+        // Location that points at the configured backend host/port to a relative
+        // path so the redirect is re-proxied with the cookie intact. Match the
+        // backend independently of the scheme: behind an HTTPS reverse proxy,
+        // FastAPI can legitimately return https://<backend-host>:<port> even when
+        // this Node process reaches that same backend over HTTP. Redirects to any
+        // other host/port (e.g. AzeriCard) pass through untouched.
         const loc = headers.location || headers.Location;
-        if (loc && API_URL && String(loc).indexOf(API_URL.origin) === 0) {
-            const rel = String(loc).slice(API_URL.origin.length) || '/';
+        const rel = backendRedirectPath(loc);
+        if (rel) {
             headers.location = rel;
             delete headers.Location;
         }
@@ -102,6 +105,26 @@ function apiProxy(req, res) {
     });
     pReq.on('error', () => { if (!res.headersSent) res.status(502).json({ detail: 'Upstream unavailable' }); });
     req.pipe(pReq);
+}
+
+function backendRedirectPath(location) {
+    if (!location || !API_URL) return null;
+
+    const value = String(location).trim();
+    // Relative redirects are already same-origin from the browser's perspective.
+    if (!/^(?:[a-z][a-z\d+.-]*:)?\/\//i.test(value)) return null;
+
+    try {
+        const target = new URL(value, API_URL);
+        const apiPort = API_URL.port || (API_URL.protocol === 'https:' ? '443' : '80');
+        const targetPort = target.port || (target.protocol === 'https:' ? '443' : '80');
+        if (target.hostname.toLowerCase() !== API_URL.hostname.toLowerCase() || targetPort !== apiPort) {
+            return null;
+        }
+        return `${target.pathname}${target.search}${target.hash}` || '/';
+    } catch (_) {
+        return null;
+    }
 }
 
 app.use('/api', apiProxy);
