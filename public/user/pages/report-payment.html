@@ -246,6 +246,9 @@ var API_BASE = window.getApiBase ? window.getApiBase() : (window.BACKEND_API_BAS
 var BIN_LOOKUP_URL = API_BASE + '/api/payment/bin-lookup';
 // Флаг демо-режима оплаты: true — имитация платежа без реального запроса на backend
 var ENABLE_FAKE_PAYMENT = false;
+// Wallet payments are temporarily disabled. The backend independently rejects
+// wallet initiation as the authoritative security boundary.
+var ENABLE_WALLET_PAYMENTS = false;
 
 // Current card data
 var currentCardData = {
@@ -1817,6 +1820,9 @@ async function submitPayment(event) {
     }
     const originalText = payButton ? payButton.textContent : 'Оплатить';
     const useWalletTerminal = !!(event && event.useWalletTerminal === true);
+    if (useWalletTerminal && !ENABLE_WALLET_PAYMENTS) {
+        return false;
+    }
 
     // Понимаем, использует ли пользователь форму "новая карта" или сохранённые карты / аванс
     const isUsingNewCardForm = !!(event && event.target && event.target.closest && event.target.closest('.payment-middle-column'));
@@ -2482,7 +2488,10 @@ function bindPayButton() {
         });
     }
 
-    if (walletPayButton && !walletPayButton.dataset.bound) {
+    if (walletPayButton && !ENABLE_WALLET_PAYMENTS) {
+        walletPayButton.hidden = true;
+        walletPayButton.disabled = true;
+    } else if (walletPayButton && !walletPayButton.dataset.bound) {
         walletPayButton.dataset.bound = 'true';
         walletPayButton.addEventListener('click', function(e) {
             submitPayment({
