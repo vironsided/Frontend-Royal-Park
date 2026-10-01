@@ -161,7 +161,7 @@
                     </div>
 
                     <!-- <div class="order-detail-item">
-                        <span class="detail-label">Комиссия</span>
+                        <span class="detail-label" data-i18n="payment_commission_label">Комиссия</span>
                         <span class="detail-value" id="paymentCommission">0,00 ₼</span>
                     </div> -->
 
@@ -674,7 +674,7 @@ function updateCardPreview(cardNumber, cardName, cardExp, cardData) {
     }
     
     // Update name
-    previewName.textContent = (cardName || 'ИМЯ ФАМИЛИЯ').toUpperCase();
+    previewName.textContent = (cardName || paymentText('payment_card_preview_name', 'ИМЯ ФАМИЛИЯ')).toUpperCase();
     
     // Update expiry
     previewExpiry.textContent = cardExp || 'MM/YY';
@@ -1078,8 +1078,7 @@ async function loadPaymentInvoices(scope, residentCode, preferredAmount = null, 
         if (paymentDateEl) {
             // Если scope === 'month' и нет счетов после фильтрации, показываем текущий месяц
             if (scope === 'month' && targetInvoices.length === 0) {
-                const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-                const mName = monthNames[curMonth - 1] || curMonth;
+                const mName = paymentMonthName(curMonth);
                 paymentDateEl.textContent = `${mName} ${curYear}`;
             } else if (scope === 'invoice' && (selectedInvoice || targetInvoices.length > 0)) {
                 const inv = selectedInvoice || targetInvoices[0];
@@ -1088,8 +1087,7 @@ async function loadPaymentInvoices(scope, residentCode, preferredAmount = null, 
                         ? inv.period_dates.to
                         : `${inv.period_dates.from} - ${inv.period_dates.to}`;
                 } else if (inv?.period_year && inv?.period_month) {
-                    const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-                    const mName = monthNames[inv.period_month - 1] || inv.period_month;
+                    const mName = paymentMonthName(inv.period_month);
                     paymentDateEl.textContent = `${mName} ${inv.period_year}`;
                 }
             } else if (targetInvoices.length > 0) {
@@ -1133,7 +1131,6 @@ async function loadPaymentInvoices(scope, residentCode, preferredAmount = null, 
                 if (minText && maxText) {
                     paymentDateEl.textContent = `${minText} — ${maxText}`;
                 } else {
-                    const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
                     let minYear = null, minMonth = null, maxYear = null, maxMonth = null;
                     targetInvoices.forEach(inv => {
                         if (inv.period_year && inv.period_month) {
@@ -1150,8 +1147,8 @@ async function loadPaymentInvoices(scope, residentCode, preferredAmount = null, 
                         }
                     });
                     if (minYear !== null && maxYear !== null) {
-                        const minTextMonth = monthNames[minMonth - 1] || minMonth;
-                        const maxTextMonth = monthNames[maxMonth - 1] || maxMonth;
+                        const minTextMonth = paymentMonthName(minMonth);
+                        const maxTextMonth = paymentMonthName(maxMonth);
                         if (minYear === maxYear && minMonth === maxMonth) {
                             paymentDateEl.textContent = `${minTextMonth} ${minYear}`;
                         } else {
@@ -1165,14 +1162,12 @@ async function loadPaymentInvoices(scope, residentCode, preferredAmount = null, 
                             ? first.period_dates.to
                             : `${first.period_dates.from} — ${first.period_dates.to}`;
                     } else if (first.period_year && first.period_month) {
-                        const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-                        const mName = monthNames[first.period_month - 1] || first.period_month;
+                        const mName = paymentMonthName(first.period_month);
                         paymentDateEl.textContent = `${mName} ${first.period_year}`;
                     }
                 } else if (scope === 'month') {
                     // Если нет счетов, но scope === 'month', показываем текущий месяц
-                    const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-                    const mName = monthNames[curMonth - 1] || curMonth;
+                    const mName = paymentMonthName(curMonth);
                     paymentDateEl.textContent = `${mName} ${curYear}`;
                 }
             }
@@ -1261,6 +1256,16 @@ function paymentText(key, fallback, replacements = {}) {
         value = value.replace(new RegExp(`\\{${name}\\}`, 'g'), String(replacement));
     });
     return value;
+}
+
+function paymentMonthName(month) {
+    const monthKeys = [
+        'month_january', 'month_february', 'month_march', 'month_april',
+        'month_may', 'month_june', 'month_july', 'month_august',
+        'month_september', 'month_october', 'month_november', 'month_december'
+    ];
+    const key = monthKeys[Number(month) - 1];
+    return key ? paymentText(key, String(month)) : String(month);
 }
 
 function renderSelectedPaymentLines(selectedInvoiceId, selectedLineIds, selectedLinesSummary) {
@@ -1448,8 +1453,11 @@ async function initPaymentPage() {
                 advanceCard.style.cursor = 'not-allowed';
                 advanceCard.setAttribute('aria-disabled', 'true');
                 advanceCard.title = inTopupMode
-                    ? 'Карта аванса недоступна при пополнении аванса'
-                    : 'Аванс недоступен (баланс: 0,00 ₼)';
+                    ? (window.i18n?.translate?.(
+                        'payment_error_advance_topup_from_advance',
+                        localStorage.getItem('language') || 'az'
+                    ) || 'Пополнение аванса невозможно с карты аванса. Выберите банковскую карту.')
+                    : paymentText('payment_advance_unavailable_empty', 'Аванс недоступен (баланс: 0,00 ₼)');
                 
                 // Если эта карта была выбрана, снимаем выбор
                 if (advanceCard.classList.contains('selected')) {
@@ -1763,7 +1771,7 @@ function initCustomAmountField(defaultAmount, forceCustomModeForTopup = false) {
                 hintEl.className = 'custom-amount-hint';
                 return;
             }
-            hintEl.textContent = 'Сумма будет зачислена в аванс';
+            hintEl.textContent = paymentText('payment_hint_advance_credit', 'Сумма будет зачислена в аванс');
             hintEl.className = 'custom-amount-hint hint-advance';
             return;
         }
@@ -1783,10 +1791,14 @@ function initCustomAmountField(defaultAmount, forceCustomModeForTopup = false) {
             return;
         } else if (customAmount < invoiceTotal) {
             const remaining = invoiceTotal - customAmount;
-            hintEl.textContent = `Останется к оплате: ${remaining.toFixed(2)} ₼ (счёт будет частично оплачен)`;
+            hintEl.textContent = paymentText(
+                'payment_hint_remaining_partial',
+                'Останется к оплате: {amount} ₼ (счёт будет частично оплачен)',
+                { amount: remaining.toFixed(2) }
+            );
             hintEl.className = 'custom-amount-hint hint-partial';
         } else {
-            hintEl.textContent = 'Счёт будет полностью оплачен';
+            hintEl.textContent = paymentText('payment_hint_invoice_full', 'Счёт будет полностью оплачен');
             hintEl.className = 'custom-amount-hint hint-full';
         }
     }
@@ -1818,7 +1830,7 @@ async function submitPayment(event) {
     } else {
         payButton = document.querySelector('.default-pay-button');
     }
-    const originalText = payButton ? payButton.textContent : 'Оплатить';
+    const originalText = payButton ? payButton.textContent : paymentText('payment_pay_button', 'Оплатить');
     const useWalletTerminal = !!(event && event.useWalletTerminal === true);
     if (useWalletTerminal && !ENABLE_WALLET_PAYMENTS) {
         return false;
@@ -1836,19 +1848,19 @@ async function submitPayment(event) {
     if (isUsingNewCardForm) {
         // Валидация только для сценария "Добавить новую карту"
         if (cardNumber.length < 13) {
-            showPaymentError('Введите корректный номер карты');
+            showPaymentError(paymentText('payment_error_card_number', 'Введите корректный номер карты'));
             return false;
         }
         if (cardName.length < 2) {
-            showPaymentError('Введите имя на карте');
+            showPaymentError(paymentText('payment_error_card_name', 'Введите имя на карте'));
             return false;
         }
         if (!cardExp.match(/^\d{2}\/\d{2}$/)) {
-            showPaymentError('Введите срок действия карты (MM/YY)');
+            showPaymentError(paymentText('payment_error_card_expiry', 'Введите срок действия карты (MM/YY)'));
             return false;
         }
         if (cardCvv.length < 3) {
-            showPaymentError('Введите CVV код');
+            showPaymentError(paymentText('payment_error_card_cvv', 'Введите CVV код'));
             return false;
         }
     }
@@ -1938,7 +1950,7 @@ async function submitPayment(event) {
         // Use custom amount from input
         const customAmount = parseFloat(String(customAmountInput.value || '').replace(',', '.')) || 0;
         if (customAmount <= 0) {
-            showPaymentError('Введите сумму для оплаты');
+            showPaymentError(paymentText('payment_error_amount_required', 'Введите сумму для оплаты'));
             return false;
         }
         amount = customAmount;
@@ -2028,7 +2040,10 @@ async function submitPayment(event) {
     }
     
     if (!residentId) {
-        showPaymentError('Не удалось определить резидента. Попробуйте перезагрузить страницу.');
+        showPaymentError(paymentText(
+            'payment_error_resident_missing',
+            'Не удалось определить резидента. Попробуйте перезагрузить страницу.'
+        ));
         return false;
     }
 
@@ -2047,7 +2062,11 @@ async function submitPayment(event) {
         const activeCard = window.selectedSavedCard || selectedSavedCard;
         if (activeCard) {
             if (isTopupOnlyPayment && activeCard.type === 'ADVANCE') {
-                showPaymentError('Пополнение аванса невозможно с карты аванса. Выберите банковскую карту.');
+                const topupMethodError = window.i18n?.translate?.(
+                    'payment_error_advance_topup_from_advance',
+                    lang
+                ) || 'Пополнение аванса невозможно с карты аванса. Выберите банковскую карту.';
+                showPaymentError(topupMethodError);
                 return false;
             }
             if (activeCard.type === 'ADVANCE') {
@@ -2068,8 +2087,11 @@ async function submitPayment(event) {
                 
                 if (amount > balance) {
                     const diff = amount - balance;
-                    const errorMsg = window.i18n?.translate?.('payment_error_insufficient_advance', lang) || 
-                        `Недостаточно средств на авансе. Доступно: ${balance.toFixed(2)} ₼. Не хватает: ${diff.toFixed(2)} ₼`;
+                    const errorMsg = paymentText(
+                        'payment_error_insufficient_advance',
+                        'Недостаточно средств на авансе. Доступно: {available} ₼. Не хватает: {missing} ₼',
+                        { available: balance.toFixed(2), missing: diff.toFixed(2) }
+                    );
                     showPaymentError(errorMsg);
                     return false;
                 }
@@ -2095,7 +2117,8 @@ async function submitPayment(event) {
     // Show loading state
     if (payButton) {
         payButton.disabled = true;
-        payButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Обработка...';
+        payButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>'
+            + paymentText('payment_processing', 'Обработка...');
     }
 
     function submitToGateway(actionUrl, params) {
@@ -2123,8 +2146,8 @@ async function submitPayment(event) {
 
             showPaymentSuccess(
                 paymentMethod === 'ADVANCE'
-                    ? 'Платёж успешно проведён из аванса (демо-режим).'
-                    : 'Платёж успешно проведён (демо-режим).'
+                    ? paymentText('payment_success_demo_advance', 'Платёж успешно проведён из аванса (демо-режим).')
+                    : paymentText('payment_success_demo', 'Платёж успешно проведён (демо-режим).')
             );
 
             // Очищаем сессионные данные как при реальной оплате
@@ -2157,8 +2180,10 @@ async function submitPayment(event) {
     if (paymentMethod === 'CARD') {
         try {
             const description = paymentComment || (isTopupOnlyPayment
-                ? 'Пополнение аванса'
-                : (paymentScope === 'all' ? 'Оплата всех счетов' : 'Оплата счета'));
+                ? paymentText('payment_topup_advance_label', 'Пополнение аванса')
+                : (paymentScope === 'all'
+                    ? paymentText('payment_all_debt', 'Оплата всех счетов')
+                    : paymentText('payment_invoice_payment', 'Оплата счёта')));
 
             const terminalCategory = sessionStorage.getItem('paymentTerminalCategory') || null;
             const terminalGroup = useWalletTerminal ? 'wallet' : null;
@@ -2183,19 +2208,29 @@ async function submitPayment(event) {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(window.localizeServerError(errorData.detail) || `Ошибка инициализации платежа: ${response.status}`);
+                throw new Error(window.localizeServerError(errorData.detail) || paymentText(
+                    'payment_error_initiate_status',
+                    'Ошибка инициализации платежа: {status}',
+                    { status: response.status }
+                ));
             }
 
             const result = await response.json();
             if (!result || !result.ok || !result.gateway_url || !result.params) {
-                throw new Error('Некорректный ответ сервера при инициализации платежа');
+                throw new Error(paymentText(
+                    'payment_error_invalid_initiate_response',
+                    'Некорректный ответ сервера при инициализации платежа'
+                ));
             }
 
             submitToGateway(result.gateway_url, result.params);
             return false;
         } catch (error) {
             console.error('AzeriCard initiate error:', error);
-            showPaymentError(error.message || 'Не удалось открыть страницу оплаты банка');
+            showPaymentError(error.message || paymentText(
+                'payment_error_open_gateway',
+                'Не удалось открыть страницу оплаты банка'
+            ));
             if (payButton) {
                 payButton.disabled = false;
                 payButton.textContent = originalText;
@@ -2226,7 +2261,11 @@ async function submitPayment(event) {
         
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(window.localizeServerError(errorData.detail) || `Ошибка сервера: ${response.status}`);
+            throw new Error(window.localizeServerError(errorData.detail) || paymentText(
+                'payment_error_server_status',
+                'Ошибка сервера: {status}',
+                { status: response.status }
+            ));
         }
         
         const result = await response.json();
@@ -2269,12 +2308,18 @@ async function submitPayment(event) {
                 }
             }, 1500);
         } else {
-            throw new Error(result.message || 'Не удалось обработать платёж');
+            throw new Error(result.message || paymentText(
+                'payment_error_process',
+                'Произошла ошибка при обработке платежа'
+            ));
         }
         
     } catch (error) {
         console.error('Payment error:', error);
-        showPaymentError(error.message || 'Произошла ошибка при обработке платежа');
+        showPaymentError(error.message || paymentText(
+            'payment_error_process',
+            'Произошла ошибка при обработке платежа'
+        ));
         
         // Restore button
         if (payButton) {
@@ -2558,6 +2603,38 @@ function setupSavedCardSelection() {
         if (methodSelector) methodSelector.classList.add('card-selected');
     }
 
+    // Top-up must always use a bank card. Apply the lock synchronously instead
+    // of waiting for the resident balance request, otherwise the advance card
+    // can briefly remain selectable on a slow connection.
+    const isTopupMode = isAdvanceTopupScope(sessionStorage.getItem('paymentScope'));
+    const advanceMethodOption = advanceMethodInput?.closest('.payment-method-option');
+    if (advanceMethodInput) {
+        advanceMethodInput.disabled = isTopupMode;
+        advanceMethodInput.checked = isTopupMode ? false : advanceMethodInput.checked;
+    }
+    if (advanceMethodOption) {
+        advanceMethodOption.setAttribute('aria-disabled', isTopupMode ? 'true' : 'false');
+        advanceMethodOption.style.opacity = isTopupMode ? '0.5' : '';
+        advanceMethodOption.style.cursor = isTopupMode ? 'not-allowed' : '';
+    }
+    if (isTopupMode && cardMethodInput) {
+        cardMethodInput.checked = true;
+    }
+
+    if (advanceCard && isTopupMode) {
+        const lang = (typeof window.getUiLanguage === 'function'
+            ? window.getUiLanguage()
+            : (localStorage.getItem('language') || 'az'));
+        advanceCard.classList.add('disabled');
+        advanceCard.style.opacity = '0.5';
+        advanceCard.style.cursor = 'not-allowed';
+        advanceCard.setAttribute('aria-disabled', 'true');
+        advanceCard.title = window.i18n?.translate?.(
+            'payment_error_advance_topup_from_advance',
+            lang
+        ) || 'Пополнение аванса невозможно с карты аванса. Выберите банковскую карту.';
+    }
+
     savedCards.forEach(card => {
         card.setAttribute('role', 'button');
         card.setAttribute('tabindex', '0');
@@ -2778,7 +2855,10 @@ async function setupAdvanceTopupButton() {
         try {
             sessionStorage.setItem('paymentScope', ADVANCE_TOPUP_SCOPE);
             sessionStorage.setItem('paymentAmount', '0');
-            sessionStorage.setItem('paymentScopeLabel', 'Пополнение аванса');
+            sessionStorage.setItem(
+                'paymentScopeLabel',
+                getI18nText('payment_topup_advance_label', 'Пополнение аванса')
+            );
             sessionStorage.setItem('paymentTimestamp', String(Date.now()));
             if (residentId) sessionStorage.setItem('paymentResidentId', String(residentId));
             if (residentCode) sessionStorage.setItem('paymentResidentCode', residentCode);
